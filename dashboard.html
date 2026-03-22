@@ -3543,7 +3543,54 @@ checkAuth();
       </div>
     </div>
 
-    <!-- ... más tarjetas recortadas por brevedad ... -->
+    <div class="m-card-brain">
+      <div style="display:flex;align-items:flex-start;gap:.7rem">
+        <span style="font-size:1.1rem;flex-shrink:0">⭐</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem">
+            <span style="font-size:.86rem;font-weight:700">Sin reseñas esta semana</span>
+            <span class="badge-brain b-amber-brain">Atención</span>
+          </div>
+          <div style="font-size:.78rem;color:#777;line-height:1.5">No has recibido reseñas en Google en 7 días. Los restaurantes con reseñas semanales aparecen 3x más en búsquedas.</div>
+          <div style="display:flex;gap:.4rem;margin-top:.6rem;flex-wrap:wrap">
+            <button class="btn-brain primary" onclick="doBrainAction('Mensaje de reseña copiado para WhatsApp ✓')">Generar mensaje</button>
+            <button class="btn-brain ia" onclick="switchBrainTab('chat',document.getElementById('tab-btn-chat-brain'));setBrainChat('Escribe un mensaje WhatsApp para pedirle reseñas a mis clientes en Google')">Redactar con IA ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="m-card-brain">
+      <div style="display:flex;align-items:flex-start;gap:.7rem">
+        <span style="font-size:1.1rem;flex-shrink:0">📸</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem">
+            <span style="font-size:.86rem;font-weight:700">Fotos desactualizadas</span>
+            <span class="badge-brain b-gray-brain">Información</span>
+          </div>
+          <div style="font-size:.78rem;color:#777;line-height:1.5">Las fotos de 4 platos tienen más de 90 días. Los catálogos con fotos frescas tienen 27% más clics en WhatsApp.</div>
+          <div style="display:flex;gap:.4rem;margin-top:.6rem">
+            <button class="btn-brain" onclick="doBrainAction('Abriendo sección de fotos...')">Actualizar fotos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="m-card-brain">
+      <div style="display:flex;align-items:flex-start;gap:.7rem">
+        <span style="font-size:1.1rem;flex-shrink:0">🕐</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem">
+            <span style="font-size:.86rem;font-weight:700">Horario no refleja festivo</span>
+            <span class="badge-brain b-gray-brain">Información</span>
+          </div>
+          <div style="font-size:.78rem;color:#777;line-height:1.5">Esta semana hay festivo (lunes). Tu horario en Google y el minisite no refleja el cambio. Clientes podrían llegar cuando estás cerrado.</div>
+          <div style="display:flex;gap:.4rem;margin-top:.6rem">
+            <button class="btn-brain primary" onclick="doBrainAction('Abriendo configuración de horario...')">Actualizar horario</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ TAB: OPORTUNIDADES ═══ -->
@@ -3569,6 +3616,54 @@ checkAuth();
         </div>
       </div>
     </div>
+
+    <div class="m-card-brain info">
+      <div style="display:flex;align-items:flex-start;gap:.7rem">
+        <span style="font-size:1.1rem;flex-shrink:0">🏆</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem">
+            <span style="font-size:.86rem;font-weight:700">Plato estrella sin destacar</span>
+            <span class="badge-brain b-blue-brain">Optimización</span>
+          </div>
+          <div style="font-size:.78rem;color:#777;line-height:1.5">El Sancocho Trifásico es tu plato más visto (234 clics esta semana) pero no está marcado como destacado. Aparecería primero en el catálogo.</div>
+          <div style="display:flex;gap:.4rem;margin-top:.6rem">
+            <button class="btn-brain primary" onclick="doBrainAction('Sancocho marcado como destacado en el catálogo ✓')">Marcar como destacado</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="m-card-brain info">
+      <div style="display:flex;align-items:flex-start;gap:.7rem">
+        <span style="font-size:1.1rem;flex-shrink:0">💬</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem">
+            <span style="font-size:.86rem;font-weight:700">12 clientes inactivos — reactivar</span>
+            <span class="badge-brain b-blue-brain">Retención</span>
+          </div>
+          <div style="font-size:.78rem;color:#777;line-height:1.5">12 clientes que ordenaron hace 30+ días no han vuelto. Un mensaje de "te extrañamos" puede recuperar el 30% de ellos.</div>
+          <div style="display:flex;gap:.4rem;margin-top:.6rem">
+            <button class="btn-brain ia" onclick="switchBrainTab('chat',document.getElementById('tab-btn-chat-brain'));setBrainChat('Escribe un mensaje WhatsApp para recuperar clientes que no han pedido en 30 días')">Generar mensaje IA ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="m-card-brain">
+      <div style="display:flex;align-items:flex-start;gap:.7rem">
+        <span style="font-size:1.1rem;flex-shrink:0">🌐</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem">
+            <span style="font-size:.86rem;font-weight:700">Minisite sin descripción SEO</span>
+            <span class="badge-brain b-amber-brain">Visibilidad</span>
+          </div>
+          <div style="font-size:.78rem;color:#777;line-height:1.5">Tu minisite no tiene meta descripción. Sin esto Google no te muestra en búsquedas de "restaurante colombiano en Bogotá".</div>
+          <div style="display:flex;gap:.4rem;margin-top:.6rem">
+            <button class="btn-brain primary" onclick="doBrainAction('Descripción SEO generada y aplicada al minisite ✓')">Generar con IA</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ TAB: CHAT IA ═══ -->
@@ -3585,6 +3680,9 @@ checkAuth();
       <button class="btn-brain" onclick="quickBrainChat('¿Qué plato debería promocionar hoy?')">¿Qué promover hoy?</button>
       <button class="btn-brain" onclick="quickBrainChat('¿Cómo puedo reducir costos sin bajar calidad?')">Reducir costos</button>
       <button class="btn-brain" onclick="quickBrainChat('Crea una promo para este fin de semana')">Promo fin de semana</button>
+      <button class="btn-brain" onclick="quickBrainChat('¿Qué día de la semana me va mejor?')">Mis mejores días</button>
+      <button class="btn-brain" onclick="quickBrainChat('Ayúdame a redactar el menú del día')">Menú del día</button>
+      <button class="btn-brain" onclick="quickBrainChat('¿Qué ingredientes debo pedir esta semana?')">Pedir insumos</button>
     </div>
 
     <div class="chat-input-row-brain">
@@ -3606,12 +3704,82 @@ checkAuth();
         <div><div class="conf-label-brain">Inventario crítico</div><div class="conf-sub-brain">Avisa cuando un ingrediente cae menos del 20%</div></div>
         <label class="toggle-brain"><input type="checkbox" checked><div class="tog-brain"></div></label>
       </div>
+      <div class="conf-row-brain">
+        <div><div class="conf-label-brain">Oportunidades de venta</div><div class="conf-sub-brain">Detectar horarios pico y sugerir promos automáticas</div></div>
+        <label class="toggle-brain"><input type="checkbox" checked><div class="tog-brain"></div></label>
+      </div>
+      <div class="conf-row-brain">
+        <div><div class="conf-label-brain">Fotos desactualizadas</div><div class="conf-sub-brain">Avisa cuando las fotos tienen más de 60 días</div></div>
+        <label class="toggle-brain"><input type="checkbox" checked><div class="tog-brain"></div></label>
+      </div>
+      <div class="conf-row-brain">
+        <div><div class="conf-label-brain">Resumen diario por WhatsApp</div><div class="conf-sub-brain">Recibir resumen del día a las 10pm en tu WhatsApp</div></div>
+        <label class="toggle-brain"><input type="checkbox"><div class="tog-brain"></div></label>
+      </div>
+      <div class="conf-row-brain">
+        <div><div class="conf-label-brain">Alerta de festivos</div><div class="conf-sub-brain">Avisar cuando el horario no refleja días especiales</div></div>
+        <label class="toggle-brain"><input type="checkbox" checked><div class="tog-brain"></div></label>
+      </div>
+    </div>
+
+    <div class="sec-lbl-brain">Sincronización con áreas del restaurante</div>
+    <div class="m-card-brain" style="margin-bottom:1rem">
+      <div class="sync-row-brain">
+        <div class="sync-name-brain"><span style="font-size:1rem">🍽️</span>Mi Restaurante</div>
+        <span class="badge-brain b-green-brain">Sincronizado</span>
+      </div>
+      <div class="sync-row-brain">
+        <div class="sync-name-brain"><span style="font-size:1rem">📦</span>Inventario</div>
+        <span class="badge-brain b-green-brain">Sincronizado</span>
+      </div>
+      <div class="sync-row-brain">
+        <div class="sync-name-brain"><span style="font-size:1rem">🎛️</span>Estado Operativo</div>
+        <span class="badge-brain b-green-brain">Sincronizado</span>
+      </div>
+      <div class="sync-row-brain">
+        <div class="sync-name-brain"><span style="font-size:1rem">📊</span>Analíticas</div>
+        <button class="btn-brain primary" onclick="doBrainAction('Conectando analíticas...')">Conectar</button>
+      </div>
+      <div class="sync-row-brain">
+        <div class="sync-name-brain"><span style="font-size:1rem">💳</span>Pagos / Ventas</div>
+        <button class="btn-brain" onclick="doBrainAction('Conectando sistema de pagos...')">Conectar</button>
+      </div>
+      <div class="sync-row-brain">
+        <div class="sync-name-brain"><span style="font-size:1rem">🛵</span>Domicilios</div>
+        <button class="btn-brain" onclick="doBrainAction('Conectando módulo de domicilios...')">Conectar</button>
+      </div>
+      <div class="sync-row-brain">
+        <div class="sync-name-brain"><span style="font-size:1rem">🔴</span>Rappi / iFood</div>
+        <button class="btn-brain" onclick="doBrainAction('Conectando apps de delivery...')">Conectar</button>
+      </div>
+      <div class="sync-row-brain">
+        <div class="sync-name-brain"><span style="font-size:1rem">🌐</span>Google My Business</div>
+        <button class="btn-brain" onclick="doBrainAction('Conectando Google My Business...')">Conectar</button>
+      </div>
+    </div>
+
+    <div class="sec-lbl-brain">Frecuencia de análisis</div>
+    <div class="m-card-brain">
+      <div class="conf-row-brain">
+        <div><div class="conf-label-brain">Analizar cada</div><div class="conf-sub-brain">Más frecuente = más preciso pero consume más IA</div></div>
+        <select class="select-brain">
+          <option>5 minutos</option><option selected>1 hora</option>
+          <option>6 horas</option><option>1 vez al día</option>
+        </select>
+      </div>
+      <div class="conf-row-brain" style="border:none;padding-bottom:0">
+        <div><div class="conf-label-brain">Umbral de margen mínimo</div><div class="conf-sub-brain">Alertar cuando el margen baje de este %</div></div>
+        <select class="select-brain">
+          <option>40%</option><option selected>50%</option>
+          <option>55%</option><option>60%</option>
+        </select>
+      </div>
     </div>
   </div>
 
   <!-- footer -->
   <div class="modal-footer-brain">
-    <div class="footer-info-brain">Último análisis: hace 4 minutos · 5 alertas activas</div>
+    <div class="footer-info-brain">Último análisis: hace 4 minutos · 5 alertas activas · Plan Básico</div>
     <button class="btn-analyze-brain" onclick="doBrainAction('Analizando tu restaurante en tiempo real...')">
       ✨ Analizar ahora
     </button>
@@ -3651,9 +3819,16 @@ function doBrainAction(msg) {
 }
 
 const aiAnswersBrain = {
-  'promover':'Hoy te recomiendo destacar el Sancocho Trifásico (tu plato más visto esta semana con 234 clics) y combinarlo con jugo natural a $28k.',
-  'costos':'Para reducir costos: 1) Negocia precio de pollo. 2) Reduce el aguacate en ensaladas 20g por porción.',
-  'promo':'Promo sugerida: "Bandeja del fin de semana" — Bandeja Paisa + jugo + postre por $38k.',
+  'promover':'Hoy te recomiendo destacar el Sancocho Trifásico (tu plato más visto esta semana con 234 clics) y combinarlo con jugo natural a $28k. Es viernes y ese combo tiene alta rotación en tu historial.',
+  'promocionar':'Hoy te recomiendo destacar el Sancocho Trifásico (tu plato más visto esta semana con 234 clics) y combinarlo con jugo natural a $28k. Es viernes y ese combo tiene alta rotación en tu historial.',
+  'costos':'Para reducir costos sin bajar calidad: 1) Negocia precio de pollo con un segundo proveedor. 2) Reduce el aguacate en ensaladas 20g por porción. 3) Compra papa criolla por bulto los lunes para mejor precio.',
+  'fin de semana':'Promo sugerida para el fin de semana: "Bandeja del fin de semana" — Bandeja Paisa + jugo + postre por $38k (descuento del 10%). Actívala en el catálogo WhatsApp de 12–3pm. ¿La activo?',
+  'días':'Tus mejores días son viernes y sábado (68% de tus ventas semanales). Los martes son tu día más bajo (-42% vs promedio). Considera hacer precio especial el martes para subirlo.',
+  'menú del día':'Menú del día sugerido para hoy:\n• Sopa del día\n• Pollo asado + arroz + ensalada\n• Jugo natural\nPrecio sugerido: $18.000\nRazón: tienes buen stock de pollo y arroz hoy.',
+  'insumos':'Para esta semana necesitas pedir: aguacates (urgente, solo quedan 3), papa criolla (crítico, 12% de stock), pollo (bajo, 30%). Puedo generar el pedido para tu proveedor.',
+  'ingredientes':'Para esta semana necesitas pedir: aguacates (urgente, solo quedan 3), papa criolla (crítico, 12% de stock), pollo (bajo, 30%). Puedo generar el pedido para tu proveedor.',
+  'reseñas':'Mensaje sugerido para WhatsApp:\n"Hola [nombre], fue un placer atenderte en [restaurante]. ¿Nos dejas una reseña en Google? Toma solo 1 minuto y nos ayuda muchísimo 🙏 [link de Google]"',
+  'alternativas':'Sin aguacate hoy puedes ofrecer: Ensalada con zanahoria rallada (tienes stock), Guacamole falso con brócoli, o simplemente retirar la ensalada de aguacate del menú y agregar una salsa criolla. ¿Cuál prefieres?',
 };
 
 function setBrainChat(q) {
@@ -3684,7 +3859,7 @@ function sendBrainChat() {
   box.scrollTop = box.scrollHeight;
 
   setTimeout(() => {
-    let ans = 'Entendido. Basándome en los datos de tu restaurante, te recomiendo revisar los márgenes.';
+    let ans = 'Entendido. Basándome en los datos de tu restaurante, te recomiendo revisar los márgenes de tus platos principales y actualizar el inventario. ¿Quieres que profundice en algún tema?';
     const ql = q.toLowerCase();
     for (const [k, v] of Object.entries(aiAnswersBrain)) {
       if (ql.includes(k)) { ans = v; break; }
