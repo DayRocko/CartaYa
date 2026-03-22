@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CartaYa — Iniciar sesión</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --verde:#2F5D50;--verde-d:#1E3D34;--verde-l:#7FBF9F;
+  --terracota:#C96A3D;--crema:#F4F1EC;--crema-d:#EAE5DC;
+  --carbon:#2B2B2B;--rojo:#D9534F;--ambar:#E8A317;
+  --borde:rgba(47,93,80,.14);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'DM Sans',sans-serif;background:var(--crema);
+  color:var(--carbon);display:grid;grid-template-columns:1fr 1fr;min-height:100vh;overflow:hidden;
+}
+/* ── LEFT ── */
+.left{
+  background:var(--verde-d);display:flex;flex-direction:column;
+  justify-content:space-between;padding:2.5rem;position:relative;overflow:hidden;
+}
+.left::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 80%,rgba(232,163,23,.12) 0%,transparent 50%),
+             radial-gradient(circle at 80% 20%,rgba(127,191,159,.1) 0%,transparent 45%);
+}
+.left-deco{position:absolute;border:1px solid rgba(255,255,255,.06);border-radius:50%;pointer-events:none}
+.left-logo{display:flex;align-items:center;gap:.75rem;position:relative;z-index:1}
+.logo-mark{width:40px;height:40px;background:var(--ambar);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.logo-txt{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:#fff}
+.logo-txt span{color:var(--ambar)}
+.left-hero{position:relative;z-index:1;margin:auto 0}
+.left-hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,2.8vw,2.6rem);font-weight:900;color:#fff;line-height:1.1;margin-bottom:1rem}
+.left-hero h1 em{color:var(--ambar);font-style:normal}
+.left-hero p{color:rgba(244,241,236,.65);font-size:.95rem;line-height:1.7;max-width:360px;margin-bottom:2rem}
+.feat-list{display:flex;flex-direction:column;gap:.6rem}
+.feat{display:flex;align-items:center;gap:.7rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.7rem .9rem;animation:slideIn .5s ease both}
+.feat:nth-child(1){animation-delay:.1s}.feat:nth-child(2){animation-delay:.2s}.feat:nth-child(3){animation-delay:.3s}
+@keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+.feat-ic{font-size:1.1rem}
+.feat-txt{font-size:.82rem;color:rgba(244,241,236,.8);font-weight:500}
+.feat-txt strong{color:#fff}
+.left-stats{display:flex;gap:1.5rem;position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.08);padding-top:1.4rem}
+.lstat h4{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:var(--ambar);line-height:1;margin-bottom:.15rem}
+.lstat p{font-size:.72rem;color:rgba(244,241,236,.45);font-weight:500}
+/* ── RIGHT ── */
+.right{display:flex;align-items:center;justify-content:center;padding:2.5rem;background:var(--crema);position:relative;overflow-y:auto}
+.right::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(47,93,80,.07) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.form-card{width:100%;max-width:420px;animation:fadeUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+/* header */
+.form-header{margin-bottom:1.8rem}
+.form-header .tag{display:inline-block;background:rgba(47,93,80,.1);color:var(--verde);font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:.3rem .8rem;border-radius:100px;margin-bottom:.8rem}
+.form-header h2{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--carbon);line-height:1.1;margin-bottom:.4rem}
+.form-header p{font-size:.87rem;color:#888;line-height:1.5}
+.form-header p a{color:var(--verde);font-weight:600;text-decoration:none}
+.form-header p a:hover{text-decoration:underline}
+/* fields */
+.field{margin-bottom:1.1rem;position:relative}
+.field label{display:block;font-size:.78rem;font-weight:700;color:var(--carbon);margin-bottom:.4rem}
+.field-wrap{position:relative}
+.field-ic{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);font-size:.95rem;pointer-events:none}
+.field input{
+  width:100%;padding:.7rem .85rem .7rem 2.4rem;
+  border:1.5px solid var(--borde);border-radius:9px;
+  font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--carbon);
+  background:white;outline:none;transition:all .2s;
+}
+.field input:focus{border-color:var(--verde);box-shadow:0 0 0 3px rgba(47,93,80,.08)}
+.field input.error{border-color:var(--rojo);box-shadow:0 0 0 3px rgba(217,83,79,.08)}
+.field input::placeholder{color:#ccc}
+.field-err{font-size:.73rem;color:var(--rojo);margin-top:.3rem;display:none;align-items:center;gap:.3rem}
+.field-err.show{display:flex}
+.eye-btn{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.9rem;color:#bbb;padding:0;transition:color .15s}
+.eye-btn:hover{color:var(--verde)}
+/* divider */
+.or-divider{display:flex;align-items:center;gap:.8rem;margin:1.2rem 0}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--borde)}
+.or-divider span{font-size:.75rem;color:#bbb;white-space:nowrap}
+/* social */
+.social-btns{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.3rem}
+.social-btn{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  padding:.65rem 1rem;border-radius:9px;border:1.5px solid var(--borde);
+  background:white;font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:600;
+  color:var(--carbon);cursor:pointer;transition:all .2s;
+}
+.social-btn:hover{border-color:var(--verde);background:rgba(47,93,80,.04)}
+.social-btn:disabled{opacity:.6;cursor:not-allowed}
+/* submit */
+.btn-submit{
+  width:100%;padding:.8rem;border-radius:9px;border:none;
+  background:var(--verde);color:white;font-family:'DM Sans',sans-serif;
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  box-shadow:0 4px 18px rgba(47,93,80,.25);
+}
+.btn-submit:hover:not(:disabled){background:var(--verde-d);transform:translateY(-1px);box-shadow:0 8px 28px rgba(47,93,80,.3)}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-submit .loader{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn-submit.loading .btn-txt{display:none}
+.btn-submit.loading .loader{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* remember */
+.bottom-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.remember-row{display:flex;align-items:center;gap:.5rem}
+.remember-row input{width:16px;height:16px;cursor:pointer;accent-color:var(--verde)}
+.remember-row label{font-size:.8rem;color:#777;cursor:pointer}
+.forgot-link{font-size:.78rem;color:var(--verde);font-weight:600;background:none;border:none;cursor:pointer;padding:0}
+.forgot-link:hover{opacity:.7}
+/* alert */
+.alert{padding:.8rem 1rem;border-radius:9px;font-size:.82rem;display:none;align-items:center;gap:.6rem;margin-bottom:1rem;line-height:1.4}
+.alert.show{display:flex}
+.alert.error{background:rgba(217,83,79,.08);border:1px solid rgba(217,83,79,.2);color:var(--rojo)}
+.alert.success-a{background:rgba(47,93,80,.08);border:1px solid rgba(47,93,80,.2);color:var(--verde)}
+.alert.warning{background:rgba(232,163,23,.1);border:1px solid rgba(232,163,23,.25);color:#7a5400}
+/* config hint */
+.config-hint{margin-top:1rem;padding:.8rem;background:rgba(232,163,23,.08);border-radius:8px;border:1px solid rgba(232,163,23,.2);font-size:.75rem;color:var(--carbon);line-height:1.5}
+.config-hint code{background:rgba(47,93,80,.1);color:var(--verde);padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-size:.72rem}
+/* success state */
+.success-state{text-align:center;display:none;animation:fadeUp .4s ease}
+.success-ic{font-size:3.5rem;margin-bottom:1rem}
+.success-state h3{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;margin-bottom:.5rem}
+.success-state p{font-size:.87rem;color:#888;line-height:1.6;margin-bottom:1.5rem}
+.btn-dashboard{display:inline-flex;align-items:center;gap:.5rem;background:var(--ambar);color:var(--carbon);border:none;padding:.75rem 1.8rem;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(232,163,23,.3);width:100%;justify-content:center}
+.btn-dashboard:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(232,163,23,.4)}
+/* terms */
+.terms{font-size:.72rem;color:#bbb;text-align:center;margin-top:1rem;line-height:1.5}
+.terms a{color:var(--verde);font-weight:600;text-decoration:none}
+/* status badge */
+.conn-badge{
+  position:fixed;top:1rem;right:1rem;
+  display:flex;align-items:center;gap:.4rem;
+  padding:.3rem .7rem;border-radius:100px;font-size:.7rem;font-weight:700;
+  background:white;box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:100;
+  border:1px solid var(--borde);
+}
+.conn-dot{width:7px;height:7px;border-radius:50%}
+.conn-dot.ok{background:var(--verde-l);animation:blink2 2s infinite}
+.conn-dot.err{background:var(--rojo)}
+.conn-dot.chk{background:var(--ambar)}
+@keyframes blink2{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:760px){
+  body{grid-template-columns:1fr;overflow:auto}
+  .left{display:none}
+  .right{min-height:100vh;align-items:flex-start;padding:1.5rem;overflow:visible}
+  .form-card{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- Connection status -->
+<div class="conn-badge" id="connBadge">
+  <div class="conn-dot chk" id="connDot"></div>
+  <span id="connTxt">Conectando...</span>
+</div>
+
+<!-- LEFT -->
+<div class="left">
+  <div class="left-deco" style="width:400px;height:400px;top:-120px;right:-120px"></div>
+  <div class="left-deco" style="width:250px;height:250px;bottom:-60px;left:-60px"></div>
+  <div class="left-logo">
+    <div class="logo-mark">🍽️</div>
+    <div class="logo-txt">Carta<span>Ya</span></div>
+  </div>
+  <div class="left-hero">
+    <h1>Bienvenido de<br>vuelta a tu<br><em>restaurante digital</em></h1>
+    <p>Accede a tu panel de control, actualiza tu menú y comparte tus herramientas digitales con tus clientes.</p>
+    <div class="feat-list">
+      <div class="feat"><span class="feat-ic">🌐</span><div class="feat-txt"><strong>Minisite web</strong> · Actualizado en tiempo real</div></div>
+      <div class="feat"><span class="feat-ic">📱</span><div class="feat-txt"><strong>Catálogo WhatsApp</strong> · Listo para compartir</div></div>
+      <div class="feat"><span class="feat-ic">✨</span><div class="feat-txt"><strong>IA incluida</strong> · Genera textos automáticamente</div></div>
+    </div>
+  </div>
+  <div class="left-stats">
+    <div class="lstat"><h4>200+</h4><p>Restaurantes activos</p></div>
+    <div class="lstat"><h4>10</h4><p>Herramientas digitales</p></div>
+    <div class="lstat"><h4>$0</h4><p>Para empezar</p></div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="form-card">
+
+    <!-- LOGIN STATE -->
+    <div id="loginState">
+      <div class="form-header">
+        <div class="tag">🇨🇴 Plataforma colombiana</div>
+        <h2>Inicia sesión</h2>
+        <p>¿No tienes cuenta? <a href="register.html">Regístrate gratis →</a></p>
+      </div>
+
+      <div class="social-btns">
+        <button class="social-btn" id="btnGoogle" onclick="loginGoogle()"><span>🔵</span> Google</button>
+        <button class="social-btn" id="btnFacebook" onclick="loginFacebook()"><span>🔷</span> Facebook</button>
+      </div>
+      <div class="or-divider"><span>o ingresa con tu correo</span></div>
+
+      <div class="alert error"  id="alertErr"><span>⚠️</span><span id="alertErrMsg"></span></div>
+      <div class="alert warning" id="alertWarn"><span>📧</span><span id="alertWarnMsg"></span></div>
+
+      <div class="field">
+        <label for="email">Correo electrónico</label>
+        <div class="field-wrap">
+          <span class="field-ic">📧</span>
+          <input type="email" id="email" placeholder="correo@turestaurante.co" autocomplete="email" oninput="clrErr()">
+        </div>
+        <div class="field-err" id="emailErr">Ingresa un correo válido</div>
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <div class="field-wrap">
+          <span class="field-ic">🔒</span>
+          <input type="password" id="password" placeholder="Tu contraseña" autocomplete="current-password"
+            oninput="clrErr()" onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="eye-btn" onclick="togglePwd('password','eye1')" id="eye1" type="button">👁</button>
+        </div>
+        <div class="field-err" id="passwordErr">Contraseña incorrecta o muy corta</div>
+      </div>
+
+      <div class="bottom-row">
+        <div class="remember-row">
+          <input type="checkbox" id="remember" checked>
+          <label for="remember">Recordarme</label>
+        </div>
+        <button class="forgot-link" onclick="showForgot()">¿Olvidaste tu contraseña?</button>
+      </div>
+
+      <button class="btn-submit" id="loginBtn" onclick="doLogin()">
+        <span class="btn-txt">Iniciar sesión →</span>
+        <div class="loader"></div>
+      </button>
+
+      <div class="terms">
+        Al ingresar aceptas nuestros <a href="#">Términos de uso</a> y <a href="#">Política de privacidad</a>
+      </div>
+    </div>
+
+    <!-- FORGOT STATE -->
+    <div id="forgotState" style="display:none;animation:fadeUp .4s ease">
+      <div class="form-header">
+        <div class="tag">Recuperar acceso</div>
+        <h2>Recuperar contraseña</h2>
+        <p>Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
+      </div>
+      <div class="alert error"   id="forgotErr"><span>⚠️</span><span id="forgotErrMsg"></span></div>
+      <div class="alert success-a" id="forgotOk"><span>✅</span><span>Enlace enviado. Revisa tu bandeja de entrada (y el spam).</span></div>
+      <div class="field">
+        <label for="forgotEmail">Correo electrónico</label>
+        <div class="field-wrap">
+          <span class="field-ic">📧</span>
+          <input type="email" id="forgotEmail" placeholder="correo@turestaurante.co"
+            onkeydown="if(event.key==='Enter')doForgot()">
+        </div>
+        <div class="field-err" id="forgotEmailErr">Ingresa un correo válido</div>
+      </div>
+      <button class="btn-submit" id="forgotBtn" onclick="doForgot()">
+        <span class="btn-txt">Enviar enlace →</span>
+        <div class="loader"></div>
+      </button>
+      <div style="text-align:center;margin-top:1rem">
+        <button style="background:none;border:none;color:var(--verde);font-size:.83rem;font-weight:600;cursor:pointer" onclick="backLogin()">← Volver al login</button>
+      </div>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="success-state" id="successState">
+      <div class="success-ic">🎉</div>
+      <h3 id="successName">¡Bienvenido de vuelta!</h3>
+      <p>Sesión iniciada correctamente.<br>Redirigiendo a tu panel de control...</p>
+      <button class="btn-dashboard" onclick="goToDashboard()">🏠 Ir al Dashboard →</button>
+    </div>
+
+    <!-- CONFIG HINT — se oculta cuando Supabase está configurado -->
+    <div class="config-hint" id="configHint">
+      ⚙️ <strong>Supabase no configurado.</strong> Abre <code>auth.service.js</code>, reemplaza
+      <code>SUPABASE_URL</code> y <code>SUPABASE_ANON_KEY</code> con los datos de tu proyecto.
+      <a href="https://supabase.com" target="_blank" style="color:var(--verde);font-weight:600">Ver guía →</a>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+/* ════════════════════════════════════════
+   SUPABASE SETUP
+   Reemplaza estas 2 variables con las tuyas
+════════════════════════════════════════ */
+const SUPABASE_URL      = 'https://yvatgoylkcxmrfbfuemc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2YXRnb3lsa2N4bXJmYmZ1ZW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMjQ5MjYsImV4cCI6MjA4OTcwMDkyNn0.E5uMtC4bGv5YwM3C-z6vBVWhPErGHTt6--FvWSvRHXk';
+/* ════════════════════════════════════════ */
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const isConfigured = !SUPABASE_URL.includes('XXXXX');
+let supabase = null;
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', async () => {
+  updateConnBadge('chk', 'Conectando...');
+
+  if (!isConfigured) {
+    updateConnBadge('err', 'Sin configurar');
+    document.getElementById('configHint').style.display = 'block';
+    disableSocialBtns(true);
+    // Modo DEMO cuando no hay Supabase
+    enableDemoMode();
+    return;
+  }
+
+  document.getElementById('configHint').style.display = 'none';
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Verificar sesión activa
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      // Ya hay sesión → redirigir directo
+      goToDashboard();
+      return;
+    }
+    updateConnBadge('ok', 'Conectado');
+    // Pre-llenar email si hay uno guardado
+    const saved = localStorage.getItem('cy_last_email');
+    if (saved) document.getElementById('email').value = saved;
+  } catch (e) {
+    updateConnBadge('err', 'Error de conexión');
+    showAlert('err', 'No se pudo conectar con el servidor. Revisa tu conexión.');
+  }
+});
+
+/* ════════ DEMO MODE (sin Supabase) ════════ */
+function enableDemoMode() {
+  const hint = document.getElementById('configHint');
+  hint.innerHTML = `⚙️ <strong>Modo demo activo.</strong> Usa <code>demo@cartaya.co</code> / <code>demo1234</code> para probar la interfaz.`;
+  window.doLogin = demoLogin;
+  window.doForgot = demoForgot;
+}
+
+function demoLogin() {
+  const email = document.getElementById('email').value.trim();
+  const pwd   = document.getElementById('password').value;
+  let ok = true;
+  if (!email || !validateEmail(email)) { showFieldErr('email', 'Ingresa un correo válido'); ok = false; }
+  if (!pwd || pwd.length < 6)         { showFieldErr('password', 'La contraseña es muy corta'); ok = false; }
+  if (!ok) return;
+
+  const btn = document.getElementById('loginBtn');
+  setLoading(btn, true);
+
+  setTimeout(() => {
+    setLoading(btn, false);
+    if (email === 'demo@cartaya.co' && pwd === 'demo1234') {
+      localStorage.setItem('cy_user', JSON.stringify({ name:'Carlos Demo', email, token:'demo-token', plan:'Básico' }));
+      showSuccess('Carlos Demo');
+    } else {
+      showAlert('err', 'Credenciales incorrectas. Usa demo@cartaya.co / demo1234 en modo demo.');
+    }
+  }, 1000);
+}
+
+function demoForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email || !validateEmail(email)) {
+    showFieldErr('forgotEmail', 'Ingresa un correo válido'); return;
+  }
+  const btn = document.getElementById('forgotBtn');
+  setLoading(btn, true);
+  setTimeout(() => {
+    setLoading(btn, false);
+    document.getElementById('forgotOk').classList.add('show');
+    btn.style.display = 'none';
+  }, 900);
+}
+
+/* ════════ REAL SUPABASE AUTH ════════ */
+window.doLogin = async function () {
+  if (!supabase) { demoLogin(); return; }
+  const email = document.getElementById('email').value.trim();
+  const pwd   = document.getElementById('password').value;
+  let ok = true;
+  if (!email || !validateEmail(email)) { showFieldErr('email', 'Ingresa un correo válido'); ok = false; }
+  if (!pwd || pwd.length < 6)         { showFieldErr('password', 'La contraseña debe tener al menos 6 caracteres'); ok = false; }
+  if (!ok) return;
+
+  const btn = document.getElementById('loginBtn');
+  setLoading(btn, true);
+  clearAlerts();
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pwd });
+    if (error) throw error;
+
+    // Guardar email para próxima vez
+    if (document.getElementById('remember').checked) {
+      localStorage.setItem('cy_last_email', email);
+    }
+    const name = data.user.user_metadata?.full_name || data.user.email.split('@')[0];
+    showSuccess(name);
+  } catch (err) {
+    setLoading(btn, false);
+    showAlert('err', translateError(err));
+    if (err.message?.includes('confirm')) {
+      showAlert('warn', 'Revisa tu correo y haz clic en el enlace de confirmación antes de iniciar sesión.');
+    }
+  }
+};
+
+window.doForgot = async function () {
+  if (!supabase) { demoForgot(); return; }
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email || !validateEmail(email)) {
+    showFieldErr('forgotEmail', 'Ingresa un correo válido'); return;
+  }
+  const btn = document.getElementById('forgotBtn');
+  setLoading(btn, true);
+  document.getElementById('forgotErr').classList.remove('show');
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password.html`,
+    });
+    if (error) throw error;
+    setLoading(btn, false);
+    document.getElementById('forgotOk').classList.add('show');
+    btn.style.display = 'none';
+  } catch (err) {
+    setLoading(btn, false);
+    document.getElementById('forgotErrMsg').textContent = translateError(err);
+    document.getElementById('forgotErr').classList.add('show');
+  }
+};
+
+window.loginGoogle = async function () {
+  if (!supabase) { alert('Configura Supabase primero (ver auth.service.js)'); return; }
+  disableSocialBtns(true);
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${window.location.origin}/dashboard.html` },
+  });
+  if (error) { showAlert('err', 'Error con Google: ' + error.message); disableSocialBtns(false); }
+};
+
+window.loginFacebook = async function () {
+  if (!supabase) { alert('Configura Supabase primero (ver auth.service.js)'); return; }
+  disableSocialBtns(true);
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'facebook',
+    options: { redirectTo: `${window.location.origin}/dashboard.html` },
+  });
+  if (error) { showAlert('err', 'Error con Facebook: ' + error.message); disableSocialBtns(false); }
+};
+
+/* ════════ UI HELPERS ════════ */
+function showSuccess(name) {
+  document.getElementById('loginState').style.opacity = '0';
+  document.getElementById('loginState').style.transition = 'opacity .3s';
+  setTimeout(() => {
+    document.getElementById('loginState').style.display = 'none';
+    document.getElementById('forgotState').style.display = 'none';
+    const ss = document.getElementById('successState');
+    document.getElementById('successName').textContent = `¡Bienvenido, ${name}!`;
+    ss.style.display = 'block';
+    // Redirige tras 1.5s
+    setTimeout(goToDashboard, 1500);
+  }, 300);
+}
+
+window.goToDashboard = function () { window.location.href = 'dashboard.html'; };
+window.showForgot = function () {
+  document.getElementById('loginState').style.display = 'none';
+  document.getElementById('forgotState').style.display = 'block';
+};
+window.backLogin = function () {
+  document.getElementById('loginState').style.display = 'block';
+  document.getElementById('forgotState').style.display = 'none';
+  clearAlerts();
+};
+
+function setLoading(btn, on) {
+  btn.classList.toggle('loading', on);
+  btn.disabled = on;
+}
+
+window.togglePwd = function (inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+};
+
+function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+function showFieldErr(id, msg) {
+  const inp = document.getElementById(id); if (inp) inp.classList.add('error');
+  const err = document.getElementById(id + 'Err'); if (err) { if (msg) err.textContent = msg; err.classList.add('show'); }
+}
+
+window.clrErr = function () {
+  ['email','password'].forEach(id => {
+    const i = document.getElementById(id); if (i) i.classList.remove('error');
+    const e = document.getElementById(id + 'Err'); if (e) e.classList.remove('show');
+  });
+  clearAlerts();
+};
+
+function clearAlerts() {
+  ['alertErr','alertWarn','forgotErr','forgotOk'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.classList.remove('show');
+  });
+}
+
+function showAlert(type, msg) {
+  if (type === 'err') {
+    document.getElementById('alertErrMsg').textContent = msg;
+    document.getElementById('alertErr').classList.add('show');
+  } else {
+    document.getElementById('alertWarnMsg').textContent = msg;
+    document.getElementById('alertWarn').classList.add('show');
+  }
+}
+
+function disableSocialBtns(on) {
+  ['btnGoogle','btnFacebook'].forEach(id => {
+    const btn = document.getElementById(id); if (btn) btn.disabled = on;
+  });
+}
+
+function updateConnBadge(state, txt) {
+  const dot = document.getElementById('connDot');
+  const label = document.getElementById('connTxt');
+  dot.className = 'conn-dot ' + state;
+  label.textContent = txt;
+}
+
+function translateError(error) {
+  const msg = error?.message || '';
+  if (msg.includes('Invalid login credentials')) return 'Correo o contraseña incorrectos. Intenta de nuevo.';
+  if (msg.includes('Email not confirmed'))        return 'Debes confirmar tu correo. Revisa tu bandeja.';
+  if (msg.includes('rate limit'))                 return 'Demasiados intentos. Espera unos minutos.';
+  if (msg.includes('network'))                    return 'Error de red. Verifica tu conexión.';
+  return msg || 'Ocurrió un error. Intenta de nuevo.';
+}
+</script>
+</body>
+</html>

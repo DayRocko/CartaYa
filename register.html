@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CartaYa — Crear cuenta gratis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --verde:#2F5D50;--verde-d:#1E3D34;--verde-l:#7FBF9F;
+  --terracota:#C96A3D;--crema:#F4F1EC;--crema-d:#EAE5DC;
+  --carbon:#2B2B2B;--rojo:#D9534F;--ambar:#E8A317;
+  --borde:rgba(47,93,80,.14);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--crema);color:var(--carbon);min-height:100vh;display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+/* LEFT */
+.left{background:var(--verde-d);display:flex;flex-direction:column;justify-content:space-between;padding:2.5rem;position:relative;overflow:hidden}
+.left::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 15%,rgba(232,163,23,.12) 0%,transparent 50%),radial-gradient(circle at 15% 85%,rgba(127,191,159,.09) 0%,transparent 45%)}
+.left-deco{position:absolute;border:1px solid rgba(255,255,255,.06);border-radius:50%;pointer-events:none}
+.logo-wrap{display:flex;align-items:center;gap:.75rem;position:relative;z-index:1}
+.logo-mark{width:40px;height:40px;background:var(--ambar);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.logo-txt{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:#fff}
+.logo-txt span{color:var(--ambar)}
+.step-showcase{position:relative;z-index:1;margin:auto 0}
+.step-showcase h1{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,2.6vw,2.4rem);font-weight:900;color:#fff;line-height:1.1;margin-bottom:1rem}
+.step-showcase h1 em{color:var(--ambar);font-style:normal}
+.step-showcase>p{color:rgba(244,241,236,.6);font-size:.9rem;line-height:1.65;margin-bottom:1.8rem;max-width:340px}
+.how-steps{display:flex;flex-direction:column;gap:.8rem}
+.how-step{display:flex;align-items:flex-start;gap:.9rem;animation:slideIn .5s ease both}
+.how-step:nth-child(1){animation-delay:.1s}.how-step:nth-child(2){animation-delay:.2s}.how-step:nth-child(3){animation-delay:.3s}.how-step:nth-child(4){animation-delay:.4s}
+@keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+.how-num{width:28px;height:28px;border-radius:8px;background:rgba(232,163,23,.2);border:1px solid rgba(232,163,23,.3);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.75rem;font-weight:700;color:var(--ambar);flex-shrink:0;margin-top:.1rem}
+.how-txt strong{display:block;font-size:.83rem;color:#fff;font-weight:600;margin-bottom:.1rem}
+.how-txt span{font-size:.75rem;color:rgba(244,241,236,.5)}
+.left-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:1.4rem;position:relative;z-index:1}
+.trust-logos{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.tlogo{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:.3rem .7rem;font-family:'Playfair Display',serif;font-size:.72rem;font-weight:700;color:rgba(244,241,236,.5);white-space:nowrap}
+.trust-note{font-size:.72rem;color:rgba(244,241,236,.35);margin-top:.5rem}
+/* RIGHT */
+.right{display:flex;align-items:flex-start;justify-content:center;padding:2rem 2.5rem;background:var(--crema);overflow-y:auto;position:relative}
+.right::before{content:'';position:absolute;bottom:-80px;right:-80px;width:280px;height:280px;background:radial-gradient(circle,rgba(201,106,61,.07) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.form-wrap{width:100%;max-width:440px;padding-top:1rem}
+/* stepper */
+.stepper{display:flex;align-items:center;margin-bottom:2rem}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;transition:all .3s;flex-shrink:0}
+.step-dot.done{background:var(--verde);color:white}
+.step-dot.active{background:var(--ambar);color:var(--carbon);box-shadow:0 0 0 4px rgba(232,163,23,.2)}
+.step-dot.todo{background:var(--crema-d);color:#bbb;border:2px solid var(--borde)}
+.step-line{flex:1;height:2px;background:var(--borde);margin:0 .3rem;transition:background .3s}
+.step-line.done{background:var(--verde-l)}
+/* panels */
+.step-panel{display:none;animation:fadeUp .35s ease}
+.step-panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.step-header{margin-bottom:1.6rem}
+.step-header .tag{display:inline-block;background:rgba(47,93,80,.1);color:var(--verde);font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:.25rem .75rem;border-radius:100px;margin-bottom:.6rem}
+.step-header h2{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:900;color:var(--carbon);line-height:1.1;margin-bottom:.35rem}
+.step-header p{font-size:.85rem;color:#888;line-height:1.5}
+.step-header p a{color:var(--verde);font-weight:600;text-decoration:none}
+/* fields */
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.77rem;font-weight:700;color:var(--carbon);margin-bottom:.4rem}
+.field label .req{color:var(--terracota)}
+.field-wrap{position:relative}
+.field-ic{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);font-size:.9rem;pointer-events:none}
+.field input,.field select,.field textarea{width:100%;padding:.68rem .85rem .68rem 2.35rem;border:1.5px solid var(--borde);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--carbon);background:white;outline:none;transition:all .2s}
+.field input:focus,.field select:focus{border-color:var(--verde);box-shadow:0 0 0 3px rgba(47,93,80,.08)}
+.field input.error,.field select.error{border-color:var(--rojo);box-shadow:0 0 0 3px rgba(217,83,79,.08)}
+.field input::placeholder,.field textarea::placeholder{color:#ccc}
+.field select{appearance:none;cursor:pointer}
+.field-err{font-size:.72rem;color:var(--rojo);margin-top:.3rem;display:none;align-items:center;gap:.3rem}
+.field-err.show{display:flex}
+.field-hint{font-size:.72rem;color:#aaa;margin-top:.3rem}
+.two-field{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+/* password */
+.eye-btn{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.88rem;color:#bbb;padding:0}
+.eye-btn:hover{color:var(--verde)}
+.pwd-strength{margin-top:.5rem}
+.pwd-bars{display:flex;gap:3px;margin-bottom:.3rem}
+.pwd-bar{flex:1;height:3px;border-radius:100px;background:var(--crema-d);transition:background .3s}
+.pwd-bar.w{background:var(--rojo)}.pwd-bar.m{background:var(--ambar)}.pwd-bar.s{background:var(--verde-l)}
+.pwd-label{font-size:.7rem;color:#aaa}
+/* chips */
+.chip-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+.chip{padding:.3rem .8rem;border-radius:100px;font-size:.74rem;font-weight:600;border:1.5px solid var(--borde);cursor:pointer;transition:all .15s;background:none;color:#888}
+.chip.sel{background:var(--verde);color:white;border-color:var(--verde)}
+.chip:hover:not(.sel){border-color:var(--verde);color:var(--verde)}
+/* plan */
+.plan-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem}
+.plan-opt{border:1.5px solid var(--borde);border-radius:11px;padding:.9rem .7rem;text-align:center;cursor:pointer;transition:all .2s;background:white;position:relative}
+.plan-opt:hover{border-color:var(--verde)}
+.plan-opt.sel{border-color:var(--verde);background:rgba(47,93,80,.05)}
+.plan-opt.sel::after{content:'✓';position:absolute;top:6px;right:8px;font-size:.65rem;font-weight:900;color:var(--verde)}
+.plan-name{font-size:.72rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#aaa;margin-bottom:.3rem}
+.plan-price{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--carbon);line-height:1}
+.plan-price span{font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:400;color:#aaa}
+.plan-feat{font-size:.68rem;color:#888;margin-top:.4rem;line-height:1.4}
+.plan-badge-rec{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--ambar);color:var(--carbon);font-size:.58rem;font-weight:700;padding:1px 8px;border-radius:100px;white-space:nowrap}
+/* nav btns */
+.nav-btns{display:flex;gap:.7rem;margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--borde)}
+.btn-back{background:none;border:1.5px solid var(--borde);color:#777;padding:.7rem 1.2rem;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-back:hover{border-color:var(--carbon);color:var(--carbon)}
+.btn-next{flex:1;padding:.7rem;border-radius:9px;border:none;background:var(--verde);color:white;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.4rem;box-shadow:0 4px 18px rgba(47,93,80,.22)}
+.btn-next:hover:not(:disabled){background:var(--verde-d);transform:translateY(-1px)}
+.btn-next:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-next .loader{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn-next.loading .btn-txt{display:none}
+.btn-next.loading .loader{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* terms */
+.terms-check{display:flex;align-items:flex-start;gap:.6rem;margin-bottom:.8rem}
+.terms-check input{width:16px;height:16px;cursor:pointer;accent-color:var(--verde);margin-top:2px;flex-shrink:0}
+.terms-check label{font-size:.78rem;color:#777;cursor:pointer;line-height:1.4}
+.terms-check label a{color:var(--verde);font-weight:600;text-decoration:none}
+/* alert */
+.alert{padding:.75rem 1rem;border-radius:9px;font-size:.82rem;display:none;align-items:center;gap:.6rem;margin-bottom:1rem;line-height:1.4}
+.alert.show{display:flex}
+.alert.error{background:rgba(217,83,79,.08);border:1px solid rgba(217,83,79,.2);color:var(--rojo)}
+.alert.warning{background:rgba(232,163,23,.1);border:1px solid rgba(232,163,23,.25);color:#7a5400}
+/* top progress */
+.top-progress{height:4px;background:var(--borde);border-radius:2px;margin-bottom:1.5rem;overflow:hidden}
+.top-fill{height:100%;background:var(--ambar);border-radius:2px;transition:width .4s ease}
+/* success */
+.success-wrap{text-align:center;padding:1.5rem 0;animation:fadeUp .5s ease}
+.success-check{width:72px;height:72px;background:rgba(47,93,80,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.2rem;animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.success-wrap h2{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--carbon);margin-bottom:.5rem}
+.success-wrap p{font-size:.88rem;color:#888;line-height:1.6;margin-bottom:.5rem}
+.success-plan{display:inline-block;background:rgba(47,93,80,.1);color:var(--verde);font-size:.78rem;font-weight:700;padding:.35rem .9rem;border-radius:100px;margin-bottom:1.2rem}
+.checklist-items{display:flex;flex-direction:column;gap:.5rem;margin:1rem 0;text-align:left;background:rgba(47,93,80,.04);border-radius:12px;padding:1rem;border:1px solid rgba(47,93,80,.1)}
+.cli{display:flex;align-items:center;gap:.6rem;font-size:.82rem;color:var(--carbon);font-weight:500}
+.cli::before{content:'✓';width:18px;height:18px;background:rgba(127,191,159,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--verde);font-weight:900;flex-shrink:0}
+.btn-go{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:var(--ambar);color:var(--carbon);border:none;padding:.8rem 2rem;border-radius:9px;width:100%;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 18px rgba(232,163,23,.3)}
+.btn-go:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(232,163,23,.4)}
+/* confirm email state */
+.confirm-wrap{text-align:center;padding:1.5rem 0;animation:fadeUp .4s ease}
+.confirm-ic{font-size:3rem;margin-bottom:1rem}
+.confirm-wrap h2{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;margin-bottom:.5rem}
+.confirm-wrap p{font-size:.87rem;color:#888;line-height:1.65;margin-bottom:1.2rem}
+.confirm-email{font-family:'DM Mono',monospace;font-size:.88rem;color:var(--verde);background:rgba(47,93,80,.08);padding:.4rem .9rem;border-radius:8px;display:inline-block;margin:.3rem 0 1rem}
+/* connection badge */
+.conn-badge{position:fixed;top:1rem;right:1rem;display:flex;align-items:center;gap:.4rem;padding:.3rem .7rem;border-radius:100px;font-size:.7rem;font-weight:700;background:white;box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:100;border:1px solid var(--borde)}
+.conn-dot{width:7px;height:7px;border-radius:50%}
+.conn-dot.ok{background:var(--verde-l);animation:blink2 2s infinite}
+.conn-dot.err{background:var(--rojo)}.conn-dot.chk{background:var(--ambar)}
+@keyframes blink2{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:760px){
+  body{grid-template-columns:1fr;overflow:auto}
+  .left{display:none}
+  .right{min-height:100vh;align-items:flex-start;padding:1.5rem;overflow:visible}
+  .plan-options{grid-template-columns:1fr}
+  .two-field{grid-template-columns:1fr}
+  .form-wrap{padding-top:.5rem}
+}
+</style>
+</head>
+<body>
+
+<div class="conn-badge" id="connBadge">
+  <div class="conn-dot chk" id="connDot"></div>
+  <span id="connTxt">Conectando...</span>
+</div>
+
+<!-- LEFT -->
+<div class="left">
+  <div class="left-deco" style="width:350px;height:350px;top:-100px;left:-80px"></div>
+  <div class="left-deco" style="width:220px;height:220px;bottom:-40px;right:-40px"></div>
+  <div class="logo-wrap">
+    <div class="logo-mark">🍽️</div>
+    <div class="logo-txt">Carta<span>Ya</span></div>
+  </div>
+  <div class="step-showcase">
+    <h1>En 4 pasos tu<br>restaurante estará<br><em>listo para vender</em></h1>
+    <p>Completa el registro y CartaYa genera automáticamente todo lo que tu restaurante necesita para aparecer y vender en digital.</p>
+    <div class="how-steps">
+      <div class="how-step"><div class="how-num">1</div><div class="how-txt"><strong>Crea tu cuenta</strong><span>Correo y contraseña</span></div></div>
+      <div class="how-step"><div class="how-num">2</div><div class="how-txt"><strong>Tu restaurante</strong><span>Nombre, ciudad, tipo de cocina</span></div></div>
+      <div class="how-step"><div class="how-num">3</div><div class="how-txt"><strong>Fotos y menú</strong><span>Desde tu celular</span></div></div>
+      <div class="how-step"><div class="how-num">4</div><div class="how-txt"><strong>Elige tu plan</strong><span>Empieza gratis</span></div></div>
+    </div>
+  </div>
+  <div class="left-bottom">
+    <div class="trust-logos">
+      <div class="tlogo">Andrés Carne de Res</div>
+      <div class="tlogo">Wok</div>
+      <div class="tlogo">La Hamburguesería</div>
+      <div class="tlogo">+197 más</div>
+    </div>
+    <div class="trust-note">Restaurantes colombianos que confían en CartaYa</div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+<div class="form-wrap">
+
+  <div class="top-progress"><div class="top-fill" id="topFill" style="width:25%"></div></div>
+
+  <div class="stepper" id="stepperEl">
+    <div class="step-dot active" id="sd1">1</div>
+    <div class="step-line" id="sl1"></div>
+    <div class="step-dot todo"   id="sd2">2</div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step-dot todo"   id="sd3">3</div>
+    <div class="step-line" id="sl3"></div>
+    <div class="step-dot todo"   id="sd4">4</div>
+  </div>
+
+  <!-- STEP 1: Cuenta -->
+  <div class="step-panel active" id="step1">
+    <div class="step-header">
+      <div class="tag">Paso 1 de 4</div>
+      <h2>Crea tu cuenta</h2>
+      <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión →</a></p>
+    </div>
+    <div class="alert error"   id="s1Err"><span>⚠️</span><span id="s1ErrMsg"></span></div>
+    <div class="alert warning" id="s1Warn"><span>📧</span><span id="s1WarnMsg"></span></div>
+    <div class="two-field">
+      <div class="field">
+        <label>Nombre <span class="req">*</span></label>
+        <div class="field-wrap"><span class="field-ic">👤</span>
+          <input type="text" id="firstName" placeholder="Carlos" oninput="clrF('firstName')"></div>
+        <div class="field-err" id="firstNameErr">Ingresa tu nombre</div>
+      </div>
+      <div class="field">
+        <label>Apellido <span class="req">*</span></label>
+        <div class="field-wrap"><span class="field-ic">👤</span>
+          <input type="text" id="lastName" placeholder="Ramírez" oninput="clrF('lastName')"></div>
+        <div class="field-err" id="lastNameErr">Ingresa tu apellido</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Correo electrónico <span class="req">*</span></label>
+      <div class="field-wrap"><span class="field-ic">📧</span>
+        <input type="email" id="regEmail" placeholder="correo@turestaurante.co" autocomplete="email" oninput="clrF('regEmail')"></div>
+      <div class="field-err" id="regEmailErr">Ingresa un correo válido</div>
+    </div>
+    <div class="field">
+      <label>WhatsApp <span class="req">*</span></label>
+      <div class="field-wrap"><span class="field-ic">📱</span>
+        <input type="tel" id="regPhone" placeholder="+57 300 000 0000" oninput="clrF('regPhone')"></div>
+      <div class="field-err" id="regPhoneErr">Ingresa tu número de WhatsApp</div>
+    </div>
+    <div class="field">
+      <label>Contraseña <span class="req">*</span></label>
+      <div class="field-wrap"><span class="field-ic">🔒</span>
+        <input type="password" id="regPwd" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
+          oninput="checkStrength();clrF('regPwd')">
+        <button class="eye-btn" onclick="toggleP('regPwd','ep1')" id="ep1" type="button">👁</button></div>
+      <div class="field-err" id="regPwdErr">Mínimo 8 caracteres</div>
+      <div class="pwd-strength" id="pwdStr" style="display:none">
+        <div class="pwd-bars"><div class="pwd-bar" id="pb1"></div><div class="pwd-bar" id="pb2"></div><div class="pwd-bar" id="pb3"></div><div class="pwd-bar" id="pb4"></div></div>
+        <div class="pwd-label" id="pwdLbl">Contraseña débil</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Confirmar contraseña <span class="req">*</span></label>
+      <div class="field-wrap"><span class="field-ic">🔒</span>
+        <input type="password" id="regPwd2" placeholder="Repite tu contraseña" oninput="clrF('regPwd2')"></div>
+      <div class="field-err" id="regPwd2Err">Las contraseñas no coinciden</div>
+    </div>
+    <div class="terms-check">
+      <input type="checkbox" id="termsChk">
+      <label for="termsChk">Acepto los <a href="#">Términos de uso</a> y la <a href="#">Política de privacidad</a> de CartaYa</label>
+    </div>
+    <div class="field-err" id="termsErr" style="margin-bottom:.6rem">Debes aceptar los términos para continuar</div>
+    <div class="nav-btns" style="border:none;padding:0;margin-top:.8rem">
+      <button class="btn-next" id="s1Btn" onclick="step1Next()">
+        <span class="btn-txt">Continuar →</span><div class="loader"></div>
+      </button>
+    </div>
+    <!-- social register -->
+    <div style="text-align:center;margin-top:1rem">
+      <div style="display:flex;align-items:center;gap:.5rem;justify-content:center;margin-bottom:.5rem">
+        <div style="flex:1;height:1px;background:var(--borde)"></div>
+        <span style="font-size:.73rem;color:#bbb">o regístrate con</span>
+        <div style="flex:1;height:1px;background:var(--borde)"></div>
+      </div>
+      <div style="display:flex;gap:.6rem">
+        <button onclick="oauthReg('google')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem;border-radius:9px;border:1.5px solid var(--borde);background:white;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer">🔵 Google</button>
+        <button onclick="oauthReg('facebook')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem;border-radius:9px;border:1.5px solid var(--borde);background:white;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer">🔷 Facebook</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Restaurante -->
+  <div class="step-panel" id="step2">
+    <div class="step-header">
+      <div class="tag">Paso 2 de 4</div>
+      <h2>Tu restaurante</h2>
+      <p>Personaliza tus herramientas digitales con la información de tu negocio.</p>
+    </div>
+    <div class="field">
+      <label>Nombre del restaurante <span class="req">*</span></label>
+      <div class="field-wrap"><span class="field-ic">🍽️</span>
+        <input type="text" id="restName" placeholder="Ej: Restaurante El Patio" oninput="clrF('restName');updateSlug()"></div>
+      <div class="field-err" id="restNameErr">Ingresa el nombre de tu restaurante</div>
+    </div>
+    <div class="two-field">
+      <div class="field">
+        <label>Ciudad <span class="req">*</span></label>
+        <div class="field-wrap"><span class="field-ic">📍</span>
+          <select id="restCity" oninput="clrF('restCity')">
+            <option value="">Seleccionar...</option>
+            <option>Bogotá</option><option>Medellín</option><option>Cali</option>
+            <option>Barranquilla</option><option>Cartagena</option><option>Bucaramanga</option>
+            <option>Pereira</option><option>Manizales</option><option>Santa Marta</option>
+            <option>Ibagué</option><option>Otra ciudad</option>
+          </select></div>
+        <div class="field-err" id="restCityErr">Selecciona tu ciudad</div>
+      </div>
+      <div class="field">
+        <label>Barrio</label>
+        <div class="field-wrap"><span class="field-ic">🗺️</span>
+          <input type="text" id="restNeigh" placeholder="Chapinero"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Tipo de cocina <span class="req">*</span></label>
+      <div class="chip-row" id="cuisineChips">
+        <button class="chip" onclick="toggleChip(this)">🇨🇴 Colombiana</button>
+        <button class="chip" onclick="toggleChip(this)">🍔 Comida rápida</button>
+        <button class="chip" onclick="toggleChip(this)">🍕 Italiana</button>
+        <button class="chip" onclick="toggleChip(this)">🥘 Internacional</button>
+        <button class="chip" onclick="toggleChip(this)">🌱 Vegetariana</button>
+        <button class="chip" onclick="toggleChip(this)">🔥 BBQ / Parrilla</button>
+        <button class="chip" onclick="toggleChip(this)">🍣 Asiática</button>
+        <button class="chip" onclick="toggleChip(this)">☕ Cafetería</button>
+      </div>
+      <div class="field-err" id="cuisineErr" style="margin-top:.4rem">Selecciona al menos uno</div>
+    </div>
+    <div class="field">
+      <label>Tipo de negocio <span class="req">*</span></label>
+      <div class="field-wrap"><span class="field-ic">🏪</span>
+        <select id="restType" oninput="clrF('restType')">
+          <option value="">Seleccionar...</option>
+          <option>Restaurante independiente</option><option>Cadena o franquicia</option>
+          <option>Cafetería o panadería</option><option>Food truck</option>
+          <option>Bar o discoteca</option><option>Comida rápida</option><option>Dark kitchen</option>
+        </select></div>
+      <div class="field-err" id="restTypeErr">Selecciona el tipo de negocio</div>
+    </div>
+    <div style="background:rgba(47,93,80,.06);border-radius:9px;padding:.8rem 1rem;border:1px solid rgba(47,93,80,.12)">
+      <div style="font-size:.72rem;font-weight:700;color:#aaa;margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px">Tu URL en CartaYa</div>
+      <div style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--verde)">cartaya.co/<span id="urlSlug">tunombre</span></div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="goStep(1)">← Atrás</button>
+      <button class="btn-next" id="s2Btn" onclick="step2Next()">
+        <span class="btn-txt">Continuar →</span><div class="loader"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Fotos -->
+  <div class="step-panel" id="step3">
+    <div class="step-header">
+      <div class="tag">Paso 3 de 4</div>
+      <h2>Fotos y menú</h2>
+      <p>Sube fotos de tus platos. Puedes completarlo después en el dashboard.</p>
+    </div>
+    <div class="field">
+      <label>Fotos de tus platos</label>
+      <div id="dropZ" style="border:2px dashed rgba(47,93,80,.22);border-radius:10px;padding:1.2rem;text-align:center;cursor:pointer;background:rgba(47,93,80,.03);transition:all .2s"
+        onclick="document.getElementById('pInput').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--verde)'"
+        ondragleave="this.style.borderColor=''"
+        ondrop="event.preventDefault();handleP(event.dataTransfer)">
+        <input type="file" id="pInput" accept="image/*" multiple style="display:none" onchange="handleP(this)">
+        <div style="font-size:1.8rem;margin-bottom:.4rem">📸</div>
+        <div style="font-size:.82rem;font-weight:700;color:var(--carbon)">Arrastra tus fotos aquí</div>
+        <div style="font-size:.73rem;color:#bbb">o haz clic · JPG, PNG · Máx 5MB</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem" id="photoThumb"></div>
+    </div>
+    <div class="field">
+      <label>Primeros platos del menú <span style="font-weight:400;color:#aaa">(opcional)</span></label>
+      <div id="dishList" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.5rem"></div>
+      <div style="display:flex;gap:.5rem">
+        <input type="text" id="dn" placeholder="Nombre del plato"
+          style="flex:1;padding:.55rem .8rem;border:1.5px solid var(--borde);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.83rem;background:white;outline:none;transition:border-color .2s"
+          onkeydown="if(event.key==='Enter'){addD();event.preventDefault()}"
+          onfocus="this.style.borderColor='var(--verde)'" onblur="this.style.borderColor=''">
+        <input type="text" id="dp" placeholder="$0.000"
+          style="width:90px;padding:.55rem .8rem;border:1.5px solid var(--borde);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.83rem;background:white;outline:none;transition:border-color .2s"
+          onfocus="this.style.borderColor='var(--verde)'" onblur="this.style.borderColor=''">
+        <button onclick="addD()" style="background:var(--verde);color:white;border:none;padding:.55rem .8rem;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s">+ Agregar</button>
+      </div>
+      <div class="field-hint">Completa la carta en el dashboard después del registro</div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="goStep(2)">← Atrás</button>
+      <button class="btn-next" onclick="goStep(4)"><span class="btn-txt">Continuar →</span></button>
+    </div>
+    <div style="text-align:center;margin-top:.5rem">
+      <button style="background:none;border:none;color:#aaa;font-size:.78rem;cursor:pointer" onclick="goStep(4)">Omitir — completar después</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Plan -->
+  <div class="step-panel" id="step4">
+    <div class="step-header">
+      <div class="tag">Paso 4 de 4</div>
+      <h2>Elige tu plan</h2>
+      <p>Empieza gratis · 7 días de prueba · Sin tarjeta de crédito.</p>
+    </div>
+    <div class="alert error" id="s4Err"><span>⚠️</span><span id="s4ErrMsg"></span></div>
+    <div class="plan-options">
+      <div class="plan-opt" id="planFree" onclick="selectPlan('free')">
+        <div class="plan-name">Gratis</div>
+        <div class="plan-price">$0 <span>/mes</span></div>
+        <div class="plan-feat">Catálogo · QR · 10 platos</div>
+      </div>
+      <div class="plan-opt sel" id="planBasic" onclick="selectPlan('basic')">
+        <div class="plan-badge-rec">⭐ Popular</div>
+        <div class="plan-name">Básico</div>
+        <div class="plan-price">$29.900 <span>/mes</span></div>
+        <div class="plan-feat">7 herramientas · IA · WhatsApp</div>
+      </div>
+      <div class="plan-opt" id="planPro" onclick="selectPlan('pro')">
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$79.900 <span>/mes</span></div>
+        <div class="plan-feat">10 herramientas · Chatbot · Soporte</div>
+      </div>
+    </div>
+    <div style="background:rgba(232,163,23,.07);border-radius:9px;padding:.8rem 1rem;border:1px solid rgba(232,163,23,.2);font-size:.78rem;color:var(--carbon);display:flex;align-items:center;gap:.5rem;margin:1rem 0">
+      <span>🎁</span><div><strong>7 días gratis</strong> en el plan que elijas. Sin tarjeta de crédito.</div>
+    </div>
+    <div class="nav-btns" style="border:none;padding:0">
+      <button class="btn-back" onclick="goStep(3)">← Atrás</button>
+      <button class="btn-next" id="s4Btn" onclick="finishRegister()">
+        <span class="btn-txt">✨ Crear mi cuenta</span><div class="loader"></div>
+      </button>
+    </div>
+    <div style="font-size:.72rem;color:#bbb;text-align:center;margin-top:.7rem">Sin tarjeta · Cancela cuando quieras · Soporte en español</div>
+  </div>
+
+  <!-- CONFIRM EMAIL (se muestra cuando Supabase requiere confirmación) -->
+  <div class="step-panel" id="stepConfirm">
+    <div class="confirm-wrap">
+      <div class="confirm-ic">📧</div>
+      <h2>Confirma tu correo</h2>
+      <p>Te enviamos un correo de confirmación a:</p>
+      <div class="confirm-email" id="confirmEmail">tu@correo.co</div>
+      <p>Haz clic en el enlace del correo para activar tu cuenta y acceder al dashboard.<br><br>
+        <span style="color:#aaa;font-size:.82rem">¿No llegó? Revisa tu carpeta de spam.</span>
+      </p>
+      <button onclick="resendConfirm()" style="background:none;border:1.5px solid var(--verde);color:var(--verde);padding:.6rem 1.2rem;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;margin-top:.5rem;transition:all .2s">
+        Reenviar correo
+      </button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="step-panel" id="stepSuccess">
+    <div class="success-wrap">
+      <div class="success-check">🎉</div>
+      <h2>¡Cuenta creada!</h2>
+      <p>Tu restaurante ya tiene una identidad digital.<br>CartaYa está generando tus herramientas.</p>
+      <div class="success-plan" id="successPlanLabel">Plan Básico activado ✓</div>
+      <div class="checklist-items">
+        <div class="cli">Minisite web generado</div>
+        <div class="cli">Catálogo WhatsApp listo</div>
+        <div class="cli">QR dinámico creado</div>
+        <div class="cli">PDF de carta disponible</div>
+        <div class="cli">Perfil en directorio indexado</div>
+      </div>
+      <button class="btn-go" onclick="window.location.href='dashboard.html'">🏠 Ir a mi Dashboard →</button>
+      <a href="login.html" style="display:block;text-align:center;font-size:.8rem;color:var(--verde);font-weight:600;margin-top:.7rem">← Volver al login</a>
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+</div><!-- /right -->
+
+<script type="module">
+/* ════════════════════════════
+   SUPABASE SETUP
+════════════════════════════ */
+const SUPABASE_URL      = 'https://yvatgoylkcxmrfbfuemc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2YXRnb3lsa2N4bXJmYmZ1ZW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMjQ5MjYsImV4cCI6MjA4OTcwMDkyNn0.E5uMtC4bGv5YwM3C-z6vBVWhPErGHTt6--FvWSvRHXk';
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const isConfigured = !SUPABASE_URL.includes('XXXXX');
+let supabase = null;
+
+/* ── state ── */
+let selectedPlan = 'basic';
+let dishes = [];
+let photoCount = 0;
+let registeredEmail = '';
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', async () => {
+  updateConn('chk', 'Conectando...');
+  if (!isConfigured) {
+    updateConn('err', 'Sin configurar — modo demo');
+    return;
+  }
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) { window.location.href = 'dashboard.html'; return; }
+    updateConn('ok', 'Conectado');
+  } catch(e) { updateConn('err', 'Error de conexión'); }
+});
+
+/* ════════ STEP 1 ════════ */
+window.step1Next = async function () {
+  const fn  = document.getElementById('firstName').value.trim();
+  const ln  = document.getElementById('lastName').value.trim();
+  const em  = document.getElementById('regEmail').value.trim();
+  const ph  = document.getElementById('regPhone').value.trim();
+  const pw  = document.getElementById('regPwd').value;
+  const pw2 = document.getElementById('regPwd2').value;
+  const tc  = document.getElementById('termsChk').checked;
+  let ok = true;
+  if (!fn)              { showFE('firstName','Ingresa tu nombre'); ok=false; }
+  if (!ln)              { showFE('lastName','Ingresa tu apellido'); ok=false; }
+  if (!em||!isEmail(em)){ showFE('regEmail','Ingresa un correo válido'); ok=false; }
+  if (!ph||ph.length<8) { showFE('regPhone','Ingresa tu número de WhatsApp'); ok=false; }
+  if (!pw||pw.length<8) { showFE('regPwd','Mínimo 8 caracteres'); ok=false; }
+  if (pw!==pw2)         { showFE('regPwd2','Las contraseñas no coinciden'); ok=false; }
+  if (!tc)              { document.getElementById('termsErr').style.display='flex'; ok=false; }
+  else                  { document.getElementById('termsErr').style.display='none'; }
+  if (!ok) return;
+
+  if (!isConfigured) { goStep(2); return; } // Demo: skip real auth
+
+  const btn = document.getElementById('s1Btn');
+  setL(btn, true);
+  document.getElementById('s1Err').classList.remove('show');
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: em, password: pw,
+      options: {
+        data: { first_name:fn, last_name:ln, phone:ph, full_name:`${fn} ${ln}` },
+        emailRedirectTo: `${window.location.origin}/dashboard.html`,
+      },
+    });
+    if (error) throw error;
+
+    registeredEmail = em;
+    setL(btn, false);
+
+    // Si el email necesita confirmación
+    if (!data.session) {
+      document.getElementById('confirmEmail').textContent = em;
+      document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
+      document.getElementById('stepConfirm').classList.add('active');
+      document.getElementById('stepperEl').style.display = 'none';
+      document.getElementById('topFill').style.width = '80%';
+      return;
+    }
+    // Si no necesita confirmación (email confirm desactivado en Supabase)
+    goStep(2);
+  } catch(err) {
+    setL(btn, false);
+    document.getElementById('s1ErrMsg').textContent = translateErr(err);
+    document.getElementById('s1Err').classList.add('show');
+  }
+};
+
+/* ════════ STEP 2 ════════ */
+window.step2Next = function () {
+  const name    = document.getElementById('restName').value.trim();
+  const city    = document.getElementById('restCity').value;
+  const type    = document.getElementById('restType').value;
+  const cuisine = document.querySelectorAll('#cuisineChips .chip.sel');
+  let ok = true;
+  if (!name)          { showFE('restName','Ingresa el nombre de tu restaurante'); ok=false; }
+  if (!city)          { showFE('restCity','Selecciona tu ciudad'); ok=false; }
+  if (!type)          { showFE('restType','Selecciona el tipo de negocio'); ok=false; }
+  if (cuisine.length===0) { document.getElementById('cuisineErr').classList.add('show'); ok=false; }
+  else                { document.getElementById('cuisineErr').classList.remove('show'); }
+  if (!ok) return;
+  goStep(3);
+};
+
+/* ════════ STEP 4: FINAL ════════ */
+window.finishRegister = async function () {
+  const planNames = {free:'Gratis', basic:'Básico', pro:'Pro'};
+  const btn = document.getElementById('s4Btn');
+  setL(btn, true);
+  document.getElementById('s4Err').classList.remove('show');
+
+  try {
+    if (isConfigured && supabase) {
+      // Guardar restaurante en BD
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const name = document.getElementById('restName').value.trim();
+        const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+          .replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').substring(0,30);
+
+        await supabase.from('restaurants').upsert({
+          user_id: user.id,
+          name,
+          slug,
+          city:          document.getElementById('restCity').value,
+          cuisine_types: Array.from(document.querySelectorAll('#cuisineChips .chip.sel')).map(c=>c.textContent.trim()),
+          business_type: document.getElementById('restType').value,
+          plan:          selectedPlan,
+        }, { onConflict: 'user_id' });
+
+        // Guardar platos si hay
+        if (dishes.length) {
+          const { data: rest } = await supabase.from('restaurants').select('id').eq('user_id', user.id).single();
+          if (rest) {
+            const rows = dishes.map((d,i) => ({ restaurant_id:rest.id, name:d.name, price:d.price, sort_order:i, emoji:'🍽️' }));
+            await supabase.from('dishes').insert(rows);
+          }
+        }
+      }
+    }
+
+    setL(btn, false);
+    document.getElementById('successPlanLabel').textContent = `Plan ${planNames[selectedPlan]} activado ✓`;
+    document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('stepSuccess').classList.add('active');
+    document.getElementById('stepperEl').style.display = 'none';
+    document.getElementById('topFill').style.width = '100%';
+
+  } catch(err) {
+    setL(btn, false);
+    document.getElementById('s4ErrMsg').textContent = 'Error al guardar: ' + translateErr(err);
+    document.getElementById('s4Err').classList.add('show');
+  }
+};
+
+/* ════════ OAUTH ════════ */
+window.oauthReg = async function(provider) {
+  if (!supabase) { alert('Configura Supabase en auth.service.js primero'); return; }
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: `${window.location.origin}/dashboard.html` },
+  });
+  if (error) { document.getElementById('s1ErrMsg').textContent = error.message; document.getElementById('s1Err').classList.add('show'); }
+};
+
+/* ════════ RESEND CONFIRM ════════ */
+window.resendConfirm = async function() {
+  if (!supabase || !registeredEmail) return;
+  const { error } = await supabase.auth.resend({ type:'signup', email:registeredEmail });
+  alert(error ? `Error: ${error.message}` : '✅ Correo reenviado. Revisa tu bandeja.');
+};
+
+/* ════════ HELPERS ════════ */
+window.goStep = function(n) {
+  document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
+  const pcts={1:25,2:50,3:75,4:100};
+  document.getElementById('topFill').style.width = (pcts[n]||100)+'%';
+  updateStepper(n); window.scrollTo(0,0);
+};
+
+function updateStepper(n) {
+  for(let i=1;i<=4;i++){
+    const dot=document.getElementById('sd'+i);const line=document.getElementById('sl'+i);
+    if(i<n){dot.className='step-dot done';dot.textContent='✓';if(line)line.className='step-line done'}
+    else if(i===n){dot.className='step-dot active';dot.textContent=i;if(line)line.className='step-line'}
+    else{dot.className='step-dot todo';dot.textContent=i;if(line)line.className='step-line'}
+  }
+}
+
+window.selectPlan = function(p) {
+  selectedPlan=p;
+  document.querySelectorAll('.plan-opt').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('plan'+p.charAt(0).toUpperCase()+p.slice(1)).classList.add('sel');
+};
+
+window.toggleChip = function(el) { el.classList.toggle('sel'); document.getElementById('cuisineErr').classList.remove('show'); };
+
+window.updateSlug = function() {
+  const v=document.getElementById('restName').value.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').substring(0,25)||'tunombre';
+  document.getElementById('urlSlug').textContent=v;
+};
+
+window.addD = function() {
+  const n=document.getElementById('dn').value.trim();const p=document.getElementById('dp').value.trim()||'';
+  if(!n)return;
+  dishes.push({name:n,price:p});
+  const list=document.getElementById('dishList');
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;align-items:center;gap:.5rem;padding:.5rem .7rem;background:white;border-radius:8px;border:1px solid var(--borde);font-size:.82rem';
+  div.innerHTML=`<span>🍽️</span><span style="flex:1;font-weight:600">${n}</span><span style="font-family:DM Mono,monospace;color:var(--ambar);font-size:.78rem">${p}</span><button style="background:none;border:none;cursor:pointer;color:#ccc;font-size:.8rem;padding:0" onclick="this.parentElement.remove()">✕</button>`;
+  list.appendChild(div);
+  document.getElementById('dn').value='';document.getElementById('dp').value='';
+  document.getElementById('dn').focus();
+};
+
+window.handleP = function(src) {
+  const files=src.files||src;if(!files||!files.length)return;
+  const thumb=document.getElementById('photoThumb');
+  Array.from(files).slice(0,8-photoCount).forEach(f=>{
+    const r=new FileReader();r.onload=e=>{
+      const d=document.createElement('div');
+      d.style.cssText='width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--borde);cursor:pointer;flex-shrink:0;position:relative';
+      d.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+      d.onclick=()=>{d.remove();photoCount--};
+      thumb.appendChild(d);photoCount++;
+    };r.readAsDataURL(f);
+  });
+};
+
+window.toggleP = function(id,bid){
+  const i=document.getElementById(id);const b=document.getElementById(bid);
+  i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';
+};
+
+window.checkStrength = function() {
+  const pw=document.getElementById('regPwd').value;
+  const str=document.getElementById('pwdStr');const lbl=document.getElementById('pwdLbl');
+  if(!pw.length){str.style.display='none';return}
+  str.style.display='block';
+  let s=0;if(pw.length>=8)s++;if(pw.length>=12)s++;
+  if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;
+  ['pb1','pb2','pb3','pb4'].forEach((b,i)=>{
+    const el=document.getElementById(b);const cls=['','w','m','m','s','s'];
+    el.className='pwd-bar '+(i<Math.min(s,4)?cls[s]:'');
+  });
+  const labs=['','Muy débil','Débil','Regular','Fuerte','Muy fuerte'];
+  lbl.textContent=labs[Math.min(s,5)];
+};
+
+window.clrF = function(id){
+  const i=document.getElementById(id);if(i)i.classList.remove('error');
+  const e=document.getElementById(id+'Err');if(e)e.classList.remove('show');
+};
+
+function showFE(id,msg){
+  const i=document.getElementById(id);if(i)i.classList.add('error');
+  const e=document.getElementById(id+'Err');if(e){if(msg)e.textContent=msg;e.classList.add('show');}
+}
+
+function setL(btn,on){btn.classList.toggle('loading',on);btn.disabled=on;}
+
+function isEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
+
+function updateConn(s,t){
+  document.getElementById('connDot').className='conn-dot '+s;
+  document.getElementById('connTxt').textContent=t;
+}
+
+function translateErr(e){
+  const m=e?.message||'';
+  if(m.includes('User already registered'))  return 'Este correo ya tiene una cuenta. Intenta iniciar sesión.';
+  if(m.includes('Invalid email'))            return 'Formato de correo no válido.';
+  if(m.includes('Password should be'))       return 'La contraseña debe tener al menos 6 caracteres.';
+  if(m.includes('rate limit'))               return 'Demasiados intentos. Espera unos minutos.';
+  if(m.includes('network'))                  return 'Error de red. Verifica tu conexión.';
+  return m||'Ocurrió un error. Intenta de nuevo.';
+}
+</script>
+</body>
+</html>
