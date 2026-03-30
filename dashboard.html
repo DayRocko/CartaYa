@@ -7,7 +7,7 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.js"></script>
+    <script src="https://unpkg.com/lucide-react@0.407.0/dist/umd/lucide-react.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#F4F4F2]">
@@ -15,16 +15,53 @@
     <script type="text/babel">
       const { useState, useEffect, useRef } = React;
       
-      // Corregido: lucide-react UMD usa 'lucideReact' en minúscula
-      const rawIcons = window.lucideReact || window.LucideReact || {};
+      // Diagnóstico y carga robusta de Lucide
+      const getLucide = () => {
+        const lib = window.lucideReact || window.LucideReact || (window.lucide ? window.lucide.icons : null);
+        if (!lib) {
+          console.error("CRÍTICO: No se encontró la librería Lucide. Revisa la conexión o el CDN.");
+          return {};
+        }
+        return lib;
+      };
+
+      const rawIcons = getLucide();
       
-      // PROXY para evitar el error #130 si un icono no existe en esta versión
+      // PROXY para evitar el error #130 y mapear nombres comunes
       const lucideIcons = new Proxy(rawIcons, {
         get: (target, name) => {
-          if (name in target) return target[name];
-          // Si el nombre no existe, devolvemos un icono de ayuda o un placeholder
-          console.warn(`Icono no encontrado: ${name}`);
-          return target.HelpCircle || target.Help || (() => <span className="text-red-500 text-[10px]">?</span>);
+          if (target[name]) return target[name];
+          
+          // Mapeo exhaustivo para cubrir cualquier versión o typo del dashboard
+          const map = {
+            LayoutDashboard: target.LayoutGrid || target.Home || target.Layout,
+            CircleDollarSign: target.DollarSign || target.CircleDollar,
+            BarChart4: target.BarChart || target.BarChart3,
+            BrainCircuit: target.Brain || target.Cpu,
+            ImageIcon: target.Image,
+            ClipboardList: target.Clipboard || target.List,
+            Bike: target.Truck,
+            GlassWater: target.Beer || target.Glass,
+            PlugZap: target.Zap || target.Activity,
+            LineChart: target.TrendingUp || target.Activity,
+            PieChart: target.BarChart,
+            Users: target.Users || target.User,
+            Megaphone: target.Volume2 || target.Speaker,
+            ShoppingCart: target.ShoppingBag || target.Cart,
+            Receipt: target.Receipt || target.FileText,
+            HelpCircle: target.HelpCircle || target.CircleHelp || target.Help,
+            LogOut: target.LogOut || target.ExternalLink,
+            Settings: target.Settings || target.Cog,
+            MapPin: target.MapPin || target.Navigation,
+            ArrowRight: target.ArrowRight || target.ChevronRight,
+            ArrowLeft: target.ArrowLeft || target.ChevronLeft,
+            Wand2: target.Wand || target.Sparkles,
+          };
+          
+          if (map[name]) return map[name];
+          
+          // Fallback final: Icono de ayuda estilizado en lugar de '?' rojo
+          return target.HelpCircle || target.CircleHelp || (() => <span className="text-gray-400 opacity-50">●</span>);
         }
       });
 
@@ -216,6 +253,42 @@ const DesignSystemStyles = () => (
 // --- COMPONENTE PRINCIPAL ---
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // Inicia en Dashboard
+
+  // --- ESCUCHA DE EVENTOS EN TIEMPO REAL (PASO 6) ---
+  useEffect(() => {
+    // Determinar URL de WS (soporte local y producción)
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}`;
+    
+    console.log('Conectando a WebSocket:', wsUrl);
+    const socket = new WebSocket(wsUrl);
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Evento recibido via WS:', data);
+        
+        // Lógica de actualización en cascada
+        if (data.type === 'import.progress') {
+           // Podríamos mostrar un toast global aquí
+        }
+        
+        if (data.type === 'dashboard.refresh') {
+           // Forzar refresco de datos si fuera necesario
+           // window.dispatchEvent(new CustomEvent('refresh-data', { detail: data.payload }));
+        }
+      } catch (err) {
+        console.error('Error procesando mensaje WS:', err);
+      }
+    };
+
+    socket.onopen = () => console.log('WebSocket conectado ✅');
+    socket.onerror = (err) => console.error('Error WebSocket ❌:', err);
+    socket.onclose = () => console.log('WebSocket cerrado 🔌');
+
+    return () => socket.close();
+  }, []);
+
 
   return (
     <>
@@ -1678,26 +1751,36 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
 
 // --- WIDGET: MODIFICADORES Y VARIANTES (PASO 3) ---
 function MenuModificadoresBlock({ restauranteId, platos }) {
-  // 1. Estado de la Base de Datos (Simulada)
-  const [grupos, setGrupos] = useState([
-    { id: 'g-1', nombre: 'Término de la carne', tipo_seleccion: 'UNICA', min_selecciones: 1, max_selecciones: 1, estado: 'ACTIVO' },
-    { id: 'g-2', nombre: 'Adiciones Especiales', tipo_seleccion: 'OPCIONAL_MULTIPLE', min_selecciones: 0, max_selecciones: 3, estado: 'ACTIVO' },
-    { id: 'g-3', nombre: 'Sin estos ingredientes', tipo_seleccion: 'OPCIONAL_MULTIPLE', min_selecciones: 0, max_selecciones: null, estado: 'ACTIVO' }
-  ]);
+  // 1. Estado de la Base de Datos (DINÁMICO)
+  const [grupos, setGrupos] = useState([]);
+  const [opciones, setOpciones] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [opciones, setOpciones] = useState([
-    { id: 'o-1', grupo_id: 'g-1', nombre: 'Término 3/4', precio_adicional: 0, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-2', grupo_id: 'g-1', nombre: 'Término Medio', precio_adicional: 0, estado: 'DISPONIBLE', orden: 2 },
-    { id: 'o-3', grupo_id: 'g-1', nombre: 'Bien asado', precio_adicional: 0, estado: 'DISPONIBLE', orden: 3 },
-    { id: 'o-4', grupo_id: 'g-2', nombre: 'Queso Extra', precio_adicional: 2500, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-5', grupo_id: 'g-2', nombre: 'Tocineta Ahumada', precio_adicional: 3500, estado: 'AGOTADO', orden: 2 },
-    { id: 'o-6', grupo_id: 'g-3', nombre: 'Sin cebolla', precio_adicional: 0, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-7', grupo_id: 'g-3', nombre: 'Sin salsas', precio_adicional: 0, estado: 'DISPONIBLE', orden: 2 },
-  ]);
+  // Carga inicial de datos
+  useEffect(() => {
+    fetchModificadores();
+  }, []);
+
+  const fetchModificadores = async () => {
+    try {
+      const resp = await fetch('/api/modificadores');
+      const data = await resp.json();
+      const lista = Array.isArray(data) ? data : [];
+      
+      setGrupos(lista); // El backend ya devuelve grupos con opciones anidadas
+      
+      // Aplanar opciones para mantener compatibilidad con la lógica existente
+      const allOps = lista.flatMap(g => g.opciones || []);
+      setOpciones(allOps);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error cargando modificadores:', err);
+      setLoading(false);
+    }
+  };
 
   const [vinculos, setVinculos] = useState([
-    { plato_id: 'p-3', grupo_id: 'g-2', orden_en_plato: 1 }, // Bandeja paisa -> Adiciones
-    { plato_id: 'p-3', grupo_id: 'g-3', orden_en_plato: 2 }, // Bandeja paisa -> Sin ingredientes
+    { plato_id: 'p-3', grupo_id: 'g-2', orden_en_plato: 1 },
   ]);
 
   // 2. Estado UI
@@ -1877,6 +1960,11 @@ function MenuModificadoresBlock({ restauranteId, platos }) {
       </div>
 
       <div className="bg-gray-50/50 flex-1 relative min-h-[400px]">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-20">
+            <RefreshCw className="animate-spin text-orange-500" size={32}/>
+          </div>
+        )}
         
         {/* VISTA 1: BIBLIOTECA DE GRUPOS */}
         {viewMode === 'biblioteca' && (
@@ -2150,24 +2238,121 @@ function ViewMenu() {
   const [menuTab, setMenuTab] = useState('configuracion'); // 'configuracion' | 'laboratorio'
   const restauranteActivoId = "restaurante-demo-123"; // Multi-tenant (Simulado)
 
-  // ESTADO ELEVADO: Base de datos unificada en la vista padre para conectar Categorías y Platos
-  const [categorias, setCategorias] = useState([
-    { id: 'uuid-1', nombre: 'Platos Fuertes', canal: 'AMBOS', orden: 1, estado: 'ACTIVA', horario: null },
-    { id: 'uuid-2', nombre: 'Menú Ejecutivo', canal: 'SALON', orden: 2, estado: 'ACTIVA', horario: { inicio: '12:00', fin: '15:00', dias: ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'] } },
-    { id: 'uuid-3', nombre: 'Combos Familiares', canal: 'DELIVERY', orden: 3, estado: 'INACTIVA', horario: null }
-  ]);
+  // --- NUEVOS ESTADOS PARA IMPORTACIÓN MASIVA ---
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState(null);
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
 
-  // NUEVO ESTADO ELEVADO: Platos (Para que el Bloque 3 pueda vincularlos)
-  const [platos, setPlatos] = useState([
-    { id: 'p-1', categoria_id: 'uuid-1', nombre: 'Hamburguesa Sencilla', descripcion: 'Carne 150g', precio_venta: 22000, costo_produccion: 8000, canal: 'AMBOS', estado: 'DISPONIBLE', iva_pct: 8, margen_bruto: 63.63, foto_url: null },
-    { id: 'p-2', categoria_id: 'uuid-1', nombre: 'Pizza Margarita', descripcion: '', precio_venta: 30000, costo_produccion: 12000, canal: 'AMBOS', estado: 'DISPONIBLE', iva_pct: 8, margen_bruto: 60.00, foto_url: null },
-    { id: 'p-3', categoria_id: 'uuid-2', nombre: 'Bandeja Paisa Tradicional', descripcion: 'Frijoles, chicharrón...', precio_venta: 32000, costo_produccion: 14000, canal: 'SALON', estado: 'AGOTADO', iva_pct: 8, margen_bruto: 56.25, foto_url: null },
-    { id: 'p-4', categoria_id: 'uuid-2', nombre: 'Menú Ejecutivo Pollo', descripcion: 'Sopa, principio...', precio_venta: 18000, costo_produccion: 7500, canal: 'AMBOS', estado: 'OCULTO', iva_pct: 8, margen_bruto: 58.33, foto_url: null },
-  ]);
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.name) return;
+
+    setImporting(true);
+    setImportError(null);
+    setImportResult(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/import', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Error en la importación');
+      }
+
+      setImportResult(result);
+      console.log('Importación exitosa:', result);
+    } catch (err) {
+      setImportError(err.message);
+      console.error('Error al subir archivo:', err);
+    } finally {
+      setImporting(false);
+      e.target.value = ''; // Reset
+    }
+  };
+
+
+  // --- ESTADOS DINÁMICOS DESDE SQLITE ---
+  const [categorias, setCategorias] = useState([]);
+  const [platos, setPlatos] = useState([]);
+  const [recetas, setRecetas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carga inicial al montar la pestaña de Menú
+  useEffect(() => {
+    fetchMenuData();
+  }, []);
+
+  const fetchMenuData = async () => {
+    setLoading(true);
+    try {
+      const [catRes, platoRes, recRes] = await Promise.all([
+        fetch('/api/categorias'),
+        fetch('/api/platos'),
+        fetch('/api/recetas')
+      ]);
+      
+      const [catJson, platoJson, recJson] = await Promise.all([
+        catRes.json(),
+        platoRes.json(),
+        recRes.json()
+      ]);
+      
+      const catData = Array.isArray(catJson) ? catJson : [];
+      const platoData = Array.isArray(platoJson) ? platoJson : [];
+      const recData = Array.isArray(recJson) ? recJson : [];
+      
+      setCategorias(catData);
+      setPlatos(platoData);
+      setRecetas(recData);
+    } catch (err) {
+      console.error('Error cargando datos del menú:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Escuchar eventos de WebSocket para refresco automático
+  useEffect(() => {
+    const handleWSMessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'import.completa' || msg.type === 'dashboard.refresh') {
+          console.log('[WS] Refrescando datos de menú tras importación...');
+          fetchMenuData();
+        }
+      } catch (err) {}
+    };
+
+    window.addEventListener('message', handleWSMessage); // Si el WS vive en App y lo envía vía postMessage
+    // Si el WS llega directamente al socket global, App debería disparar un evento custom
+    document.addEventListener('cartaya:refresh', fetchMenuData);
+
+    return () => {
+      window.removeEventListener('message', handleWSMessage);
+      document.removeEventListener('cartaya:refresh', fetchMenuData);
+    };
+  }, []);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       
+      {/* Input de archivo oculto */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileUpload} 
+        accept=".csv, .xlsx" 
+        className="hidden" 
+      />
+
       {/* TABS HEADER COMPARTIDO */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-2 border-b border-gray-200 pb-6">
         <div>
@@ -2227,21 +2412,35 @@ function ViewMenu() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center"><ClipboardList size={20}/></div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800">4. Receta Técnica</h3>
-                      <p className="text-[10px] text-purple-700 bg-purple-100 px-2 py-0.5 rounded inline-block mt-0.5 font-bold uppercase tracking-wider">Activa Inventarios</p>
+                      <h3 className="text-lg font-bold text-slate-800">4. Recetas e Ingredientes</h3>
+                      <p className="text-[10px] text-purple-700 bg-purple-100 px-2 py-0.5 rounded inline-block mt-0.5 font-bold uppercase tracking-wider">Stock Sincronizado</p>
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mb-4 leading-relaxed">Vincula ingredientes y porciones exactas. Requerido para que el módulo de Inventario descuente stock en cada venta.</p>
                 
-                <div className="bg-white border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center flex-1 text-center">
-                   <Package size={24} className="text-gray-300 mb-2"/>
-                   <p className="text-sm font-bold text-slate-700 mb-1">Ejemplo: Hamburguesa Sencilla</p>
-                   <div className="flex flex-wrap justify-center gap-2 mt-2">
-                      <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded">150g Carne Molida</span>
-                      <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded">1 und Pan Brioche</span>
-                      <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded">15g Queso Cheddar</span>
-                   </div>
+                <div className="flex-1">
+                  {recetas.length === 0 ? (
+                    <div className="bg-white border-2 border-dashed border-gray-100 rounded-xl p-8 flex flex-col items-center justify-center text-center">
+                       <Package size={24} className="text-gray-200 mb-2"/>
+                       <p className="text-xs text-gray-400">No hay recetas cargadas en la base de datos.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                       {recetas.map((rec, idx) => (
+                         <div key={idx} className="p-3 bg-gray-50 border border-gray-100 rounded-xl hover:border-purple-200 transition-colors">
+                           <div className="flex justify-between items-start mb-1">
+                             <span className="text-[10px] font-black text-purple-600 uppercase">Fórmula</span>
+                             <span className="text-[10px] text-gray-400">#{idx + 1}</span>
+                           </div>
+                           <h4 className="text-xs font-bold text-slate-800 mb-2 truncate" title={rec.nombre_plato}>{rec.nombre_plato}</h4>
+                           <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                             <span className="text-[11px] font-medium text-slate-700 truncate">{rec.ingrediente_nombre}</span>
+                             <span className="text-[11px] font-black text-slate-900 ml-2">{rec.cantidad || 0} {rec.unidad_medida || 'und'}</span>
+                           </div>
+                         </div>
+                       ))}
+                    </div>
+                  )}
                 </div>
               </div>
            </div>
@@ -2259,9 +2458,36 @@ function ViewMenu() {
                </div>
                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                   <button className="flex-1 sm:flex-none btn bg-slate-800 text-white border border-slate-600 hover:bg-slate-700 text-sm py-3 px-5 rounded-xl flex items-center gap-2 justify-center shadow-md transition-colors"><Download size={16}/> 1. Bajar Plantilla</button>
-                  <button className="flex-1 sm:flex-none btn bg-emerald-500 text-white hover:bg-emerald-600 text-sm py-3 px-5 rounded-xl flex items-center gap-2 justify-center shadow-md shadow-emerald-900/50 transition-colors"><UploadCloud size={16}/> 2. Subir Archivo CSV</button>
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={importing}
+                    className={`flex-1 sm:flex-none btn bg-emerald-500 text-white hover:bg-emerald-600 text-sm py-3 px-5 rounded-xl flex items-center gap-2 justify-center shadow-md shadow-emerald-900/50 transition-colors ${importing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {importing ? <RefreshCw className="animate-spin" size={16}/> : <UploadCloud size={16}/>}
+                    {importing ? 'Procesando...' : '2. Subir Archivo CSV'}
+                   </button>
                </div>
              </div>
+
+             {/* Reporte de resultados/errores */}
+             {(importError || importResult) && (
+               <div className={`mt-6 p-4 rounded-xl border relative z-10 animate-in fade-in slide-in-from-top-4 ${importError ? 'bg-red-500/10 border-red-500/50 text-red-200' : 'bg-emerald-500/10 border-emerald-500/50 text-emerald-200'}`}>
+                 <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-bold text-sm flex items-center gap-2">
+                       {importError ? <AlertTriangle size={16}/> : <CheckCircle2 size={16}/>}
+                       {importError ? 'Error en la Importación' : 'Importación Exitosa'}
+                    </h4>
+                    <button onClick={() => {setImportError(null); setImportResult(null)}} className="text-slate-400 hover:text-white"><X size={14}/></button>
+                 </div>
+                 <p className="text-xs mb-2">{importError || 'El archivo se ha procesado correctamente. Los módulos se actualizarán en tiempo real.'}</p>
+                 {importResult && (
+                   <div className="flex gap-4 text-[10px] font-mono">
+                      <span>Nuevos: {importResult.count || 0}</span>
+                      <span>Existentes: {importResult.existing || 0}</span>
+                   </div>
+                 )}
+               </div>
+             )}
            </div>
         </div>
       )}
