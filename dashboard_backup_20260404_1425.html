@@ -9,76 +9,10 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-[#F4F4F2]">
     <div id="root"></div>
     <script type="text/babel">
-      // --- SISTEM DE MOCK / FALLBACK ---
-      const MOCK_DATA = {
-        restaurante: { nombre: "CartaYa Premium", ciudad: "Bogotá", eslogan: "Gastronomía Inteligente" },
-        categorias: [
-          { id: 1, nombre: "Pastas Artesanales", descripcion: "Hechas en casa diariamente", platos_count: 3, estado: 'activo' },
-          { id: 2, nombre: "Pizzas al Horno", descripcion: "Masa madurada 48h", platos_count: 5, estado: 'activo' },
-          { id: 3, nombre: "Antipasti", descripcion: "Entradas clásicas italianas", platos_count: 2, estado: 'activo' },
-          { id: 4, nombre: "Postres Italianos", descripcion: "Dulce final tradicional", platos_count: 1, estado: 'activo' },
-          { id: 5, nombre: "Bebidas y Vinos", descripcion: "Selección de la casa", platos_count: 1, estado: 'activo' }
-        ],
-        platos: [
-          { id: 1, categoria_id: 1, nombre: "Fettuccine al Funghi", descripcion: "Pasta con champiñones y trufa", precio: 32000, estado: 'activo' },
-          { id: 2, categoria_id: 1, nombre: "Lasagna della Nonna", descripcion: "Receta tradicional de 12 capas", precio: 28000, estado: 'activo' },
-          { id: 3, categoria_id: 1, nombre: "Spaghetti Carbonara", descripcion: "Pecorino romano y guanciale", precio: 26000, estado: 'activo' },
-          { id: 4, categoria_id: 2, nombre: "Pizza Diavola", descripcion: "Salami picante y pepperoncino", precio: 34000, estado: 'activo' },
-          { id: 5, categoria_id: 2, nombre: "Pizza Margherita", descripcion: "Mozzarella di bufala y albahaca", precio: 28000, estado: 'activo' },
-          { id: 6, categoria_id: 2, nombre: "Calzone di Napoli", descripcion: "Relleno de ricotta y jamón", precio: 30000, estado: 'activo' },
-          { id: 7, categoria_id: 2, nombre: "Pizza Quattro Formaggi", descripcion: "Gorgonzola, Fontina, Parmigiano, Mozzarella", precio: 36000, estado: 'activo' },
-          { id: 8, categoria_id: 2, nombre: "Pizza Funghi e Tartufo", descripcion: "Champiñones y aceite de trufa", precio: 38000, estado: 'activo' },
-          { id: 9, categoria_id: 3, nombre: "Bruschettas al Pomodoro", descripcion: "Pan artesanal y tomate fresco", precio: 18000, estado: 'activo' },
-          { id: 10, categoria_id: 3, nombre: "Burrata di Puglia", descripcion: "Sobre cama de rúcula y pesto", precio: 32000, estado: 'activo' },
-          { id: 11, categoria_id: 4, nombre: "Tiramisú della Casa", descripcion: "Con mascarpone y café expreso", precio: 16000, estado: 'activo' },
-          { id: 12, categoria_id: 5, nombre: "Copa de Chianti Classico", descripcion: "Vino tinto reserva italiana", precio: 22000, estado: 'activo' }
-        ],
-        modificadores: [
-          { id: 1, nombre: "Tipo de pasta", seleccion_tipo: "UNICA", obligatorio: true, opciones: [
-              { id: 1, nombre: "Fettuccine", precio: 0 },
-              { id: 2, nombre: "Penne", precio: 0 },
-              { id: 3, nombre: "Rigatoni", precio: 0 },
-              { id: 4, nombre: "Spaghetti", precio: 0 }
-            ] 
-          },
-          { id: 2, nombre: "Nivel de cocción pasta", seleccion_tipo: "UNICA", obligatorio: true, opciones: [
-              { id: 5, nombre: "Al dente", precio: 0 },
-              { id: 6, nombre: "Bien cocida", precio: 0 }
-            ] 
-          },
-          { id: 3, nombre: "Adiciones a la pizza", seleccion_tipo: "MULTIPLE", obligatorio: false, opciones: [
-              { id: 7, nombre: "Champiñones", precio: 3500 },
-              { id: 8, nombre: "Prosciutto Di Parma", precio: 9500 },
-              { id: 9, nombre: "Extra Queso", precio: 4500 },
-              { id: 10, nombre: "Aceite de Trufa", precio: 6000 }
-            ] 
-          },
-          { id: 4, nombre: "Sin estos ingredientes", seleccion_tipo: "MULTIPLE", obligatorio: false, opciones: [
-              { id: 11, nombre: "Sin ajo", precio: 0 },
-              { id: 12, nombre: "Sin cebolla", precio: 0 },
-              { id: 13, nombre: "Sin albahaca", precio: 0 },
-              { id: 14, nombre: "Sin gluten", precio: 0 }
-            ] 
-          },
-          { id: 5, nombre: "Tamaño de pizza", seleccion_tipo: "UNICA", obligatorio: true, opciones: [
-              { id: 15, nombre: "Personal 25cm", precio: 0 },
-              { id: 16, nombre: "Familiar 35cm", precio: 12000 }
-            ] 
-          },
-          { id: 6, nombre: "Maridaje recomendado", seleccion_tipo: "UNICA", obligatorio: false, opciones: [
-              { id: 17, nombre: "Maridaje Chianti", precio: 18000 },
-              { id: 18, nombre: "Maridaje Montepulciano", precio: 20000 },
-              { id: 19, nombre: "Maridaje Pinot Grigio", precio: 16000 }
-            ] 
-          }
-        ]
-      };
-
       const { useState, useEffect, useRef } = React;
       
       // --- INYECCIÓN DEL SISTEMA DE DISEÑO ---
@@ -271,26 +205,10 @@ function ViewMiRestaurante() {
   });
 
   React.useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        setLoading(true);
-        const resp = await fetch('/api/restaurante');
-        if (!resp) {
-          throw new Error('fetch() para restaurante retornó undefined');
-        }
-        if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const d = await resp.json();
-        if(d && Object.keys(d).length > 0) setFormData(d);
-      } catch (err) {
-        console.warn('Fallback Perfil:', err.message);
-        setFormData(prev => ({ ...prev, ...MOCK_DATA.restaurante }));
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProfile();
+    fetch('/api/restaurante').then(r => r.json()).then(d => {
+      if(d && Object.keys(d).length > 0) setFormData(d);
+      setLoading(false);
+    }).catch(e => setLoading(false));
   }, []);
 
   const handleChange = (e) => {
@@ -336,7 +254,11 @@ function ViewMiRestaurante() {
 
     setSaving(true);
     try {
-      const res = {ok: true}; // fetch removido
+      const res = await fetch('/api/restaurante', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(formData) 
+      });
       if(res.ok) {
         setMessage({ type: 'success', text: 'Configuración guardada correctamente.' });
         setTimeout(() => setMessage(null), 3000);
@@ -486,44 +408,46 @@ function ViewMiRestaurante() {
   );
 }
 
+ 
+
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard'); 
-  const [restaurante, setRestaurante] = useState(MOCK_DATA.restaurante);
+  const [activeTab, setActiveTab] = useState('dashboard'); // Inicia en Dashboard
 
-  // ESTADO ELEVADO (Prioridad 5)
-  const [categorias, setCategorias] = useState(MOCK_DATA.categorias || []);
-  const [platos, setPlatos] = useState(MOCK_DATA.platos || []);
-  const [recetas, setRecetas] = useState(MOCK_DATA.recetas || []);
-  const [inventario, setInventario] = useState(MOCK_DATA.inventario || []);
-  
-  // MODIFICADORES ELEVADOS (Nuevos)
-  const [gruposMod, setGruposMod] = useState(MOCK_DATA.grupos_modificadores || []);
-  const [opcionesMod, setOpcionesMod] = useState(MOCK_DATA.opciones_modificadores || []);
-  const [vinculosMod, setVinculosMod] = useState(MOCK_DATA.vinculos_modificadores || []);
+  // --- ESCUCHA DE EVENTOS EN TIEMPO REAL (PASO 6) ---
+  useEffect(() => {
+    // Determinar URL de WS (soporte local y producción)
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}`;
+    
+    console.log('Conectando a WebSocket:', wsUrl);
+    const socket = new WebSocket(wsUrl);
 
-  const getTabTitle = (tab) => {
-    const titles = {
-      dashboard: 'Dashboard Principal',
-      brain: 'Cerebro IA',
-      pos: 'POS / Pedidos',
-      ventas: 'Ventas y Facturación',
-      finanzas: 'Finanzas y Costos',
-      operaciones: 'Gestión Operativa',
-      inventario: 'Inventario y Compras',
-      delivery: 'Delivery y Domicilios',
-      reservas: 'Reservas y CRM',
-      marketing: 'Marketing y Promociones',
-      fidelizacion: 'Fidelización',
-      eventos: 'Eventos y Catering',
-      rrhh: 'Gestión de Talento',
-      data: 'Data & Insights',
-      restaurante: 'Configuración Restaurante',
-      menu: 'Gestión de Carta & Menú',
-      conectores: 'Integraciones',
-      billing: 'Plan & Facturación'
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Evento recibido via WS:', data);
+        
+        // Lógica de actualización en cascada
+        if (data.type === 'import.progress') {
+           // Podríamos mostrar un toast global aquí
+        }
+        
+        if (data.type === 'dashboard.refresh') {
+           // Forzar refresco de datos si fuera necesario
+           // window.dispatchEvent(new CustomEvent('refresh-data', { detail: data.payload }));
+        }
+      } catch (err) {
+        console.error('Error procesando mensaje WS:', err);
+      }
     };
-    return titles[tab] || 'Módulo CartaYa';
-  };
+
+    socket.onopen = () => console.log('WebSocket conectado ✅');
+    socket.onerror = (err) => console.error('Error WebSocket ❌:', err);
+    socket.onclose = () => console.log('WebSocket cerrado 🔌');
+
+    return () => socket.close();
+  }, []);
+
 
   return (
     <>
@@ -531,8 +455,8 @@ function App() {
       <div className="flex h-screen w-full">
         
         {/* SIDEBAR */}
-        <aside className="sidebar-dark shrink-0 flex flex-col w-64">
-          <div className="sidebar-brand-dark p-6 flex items-center justify-between">
+        <aside className="sidebar-dark shrink-0 flex flex-col">
+          <div className="sidebar-brand-dark">
             <h1 className="text-2xl font-black text-white tracking-tight">CartaYa</h1>
             <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
               <span style={{fontSize:'15px', lineHeight:1}}>🧠</span>
@@ -540,77 +464,72 @@ function App() {
           </div>
 
           <div className="flex-1 overflow-y-auto pb-6" style={{ scrollbarWidth: 'none' }}>
-            <div className="px-4 py-4 space-y-1">
-              <NavItemDark icon={<span>🏠</span>} label="Dashboard" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-              <NavItemDark icon={<span>🧠</span>} label="Brain IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} />
+            <div className="nav-highlight-box mb-4">
+              <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>🏠</span>} label="Dashboard" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+              <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>🧠</span>} label="Brain IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} />
             </div>
 
-            <div className="px-6 py-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Gestión Operativa</div>
-              <NavItemDark icon={<span>▧</span>} label="POS / Pedidos" isActive={activeTab === 'pos'} onClick={() => setActiveTab('pos')} />
-              <NavItemDark icon={<span>📈</span>} label="Ventas" isActive={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} />
-              <NavItemDark icon={<span>🥧</span>} label="Finanzas" isActive={activeTab === 'finanzas'} onClick={() => setActiveTab('finanzas')} />
-              <NavItemDark icon={<span>▦</span>} label="Operaciones" isActive={activeTab === "operaciones"} onClick={() => setActiveTab("operaciones")} />
-              <NavItemDark icon={<span>▤</span>} label="Inventario & Compras" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} />
-              <NavItemDark icon={<span>🛵</span>} label="Delivery & Domicilios" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
-            </div>
+            <div className="nav-group-label-dark">Gestión Operativa</div>
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>▧</span>} label="POS / Pedidos" isActive={activeTab === 'pos'} onClick={() => setActiveTab('pos')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>📈</span>} label="Ventas" isActive={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>🥧</span>} label="Finanzas" isActive={activeTab === 'finanzas'} onClick={() => setActiveTab('finanzas')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>▦</span>} label="Operaciones" isActive={activeTab === "operaciones"} onClick={() => setActiveTab("operaciones")} />
+            <NavItemDark icon={<span>▤</span>} label="Inventario & Compras" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>🛵</span>} label="Delivery & Domicilios" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
 
-            <div className="px-6 py-2 mt-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Crecimiento & Clientes</div>
-              <NavItemDark icon={<span>👥</span>} label="Reservas & CRM" isActive={activeTab === 'reservas'} onClick={() => setActiveTab('reservas')} />
-              <NavItemDark icon={<span>📢</span>} label="Marketing" isActive={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} />
-              <NavItemDark icon={<span>🎁</span>} label="Fidelización" isActive={activeTab === 'fidelizacion'} onClick={() => setActiveTab('fidelizacion')} />
-              <NavItemDark icon={<span>🍷</span>} label="Eventos & Catering" isActive={activeTab === 'eventos'} onClick={() => setActiveTab('eventos')} />
-              <NavItemDark icon={<span>👥</span>} label="Talento (RRHH)" isActive={activeTab === 'rrhh'} onClick={() => setActiveTab('rrhh')} />
-              <NavItemDark icon={<span>📊</span>} label="Data & Insights" isActive={activeTab === 'data'} onClick={() => setActiveTab('data')} />
-            </div>
+            <div className="nav-group-label-dark mt-4">Crecimiento & Clientes</div>
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>👥</span>} label="Reservas & CRM" isActive={activeTab === 'reservas'} onClick={() => setActiveTab('reservas')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>📢</span>} label="Marketing" isActive={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>🎁</span>} label="Fidelización" isActive={activeTab === 'fidelizacion'} onClick={() => setActiveTab('fidelizacion')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>🍷</span>} label="Eventos & Catering" isActive={activeTab === 'eventos'} onClick={() => setActiveTab('eventos')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>👥</span>} label="Talento (RRHH)" isActive={activeTab === 'rrhh'} onClick={() => setActiveTab('rrhh')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>📊</span>} label="Data & Insights" isActive={activeTab === 'data'} onClick={() => setActiveTab('data')} />
 
-            <div className="px-6 py-2 mt-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Ajustes del Negocio</div>
-              <NavItemDark icon={<span>🏪</span>} label="Mi Restaurante" isActive={activeTab === 'restaurante'} onClick={() => setActiveTab('restaurante')} />
-              <NavItemDark icon={<span>📖</span>} label="Carta & Menú" isActive={activeTab === 'menu'} onClick={() => setActiveTab('menu')} highlight={activeTab === 'menu'} />
-              <NavItemDark icon={<span>🔌</span>} label="Integraciones" isActive={activeTab === 'conectores'} onClick={() => setActiveTab('conectores')} />
-              <NavItemDark icon={<span>💳</span>} label="Plan & Facturación" isActive={activeTab === 'billing'} onClick={() => setActiveTab('billing')} />
-            </div>
+            <div className="nav-group-label-dark mt-4">Ajustes del Negocio</div>
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>🏪</span>} label="Mi Restaurante" isActive={activeTab === 'restaurante'} onClick={() => setActiveTab('restaurante')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>📖</span>} label="Carta & Menú" isActive={activeTab === 'menu'} onClick={() => setActiveTab('menu')} highlight={activeTab === 'menu'} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>🔌</span>} label="Integraciones" isActive={activeTab === 'conectores'} onClick={() => setActiveTab('conectores')} />
+            <NavItemDark icon={<span style={{fontSize:'15px', lineHeight:1}}>💳</span>} label="Plan & Facturación" isActive={activeTab === 'billing'} onClick={() => setActiveTab('billing')} />
           </div>
           
           <div className="p-4 border-t border-slate-800/50 bg-[#121A2B] shrink-0">
-            <div className="flex items-center gap-3 mb-2 px-2">
+            <div className="flex items-center gap-3 mb-4 px-2">
                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-bold border border-slate-600">DA</div>
                <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white truncate">Daniel Arias</p>
-                  <p className="text-[10px] text-slate-400 truncate tracking-tight">{restaurante.nombre}</p>
+                  <p className="text-xs text-slate-400">El Patio Chapinero</p>
                </div>
             </div>
           </div>
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 flex flex-col overflow-hidden relative bg-[#F8FAFC]">
-          {activeTab !== 'menu' && (
-            <header className="h-24 bg-white border-b flex items-center justify-between px-10 z-10 shrink-0" style={{ borderColor: '#E2E8F0' }}>
-              <div>
-                <p className="text-[11px] font-bold text-gray-400 tracking-widest uppercase mb-1">Módulo Operativo</p>
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                  {getTabTitle(activeTab)}
-                  {activeTab === 'brain' && <span>✨</span>}
-                </h1>
-              </div>
-              <div className="flex items-center gap-4">
-                 <button className="bg-slate-50 border border-slate-200 py-2 px-4 rounded-xl text-xs font-bold text-slate-600 flex items-center gap-2">
-                   <span style={{fontSize:'16px', lineHeight:1}}>🕐</span> 28 Marzo, 2026
-                 </button>
-              </div>
-            </header>
-          )}
+        <main className="flex-1 flex flex-col overflow-hidden relative bg-[var(--bg-app-2)]">
+          <header className="h-24 bg-white border-b flex items-center justify-between px-10 z-10 shrink-0" style={{ borderColor: 'var(--border)' }}>
+            <div>
+              <p className="text-[11px] font-bold text-gray-400 tracking-widest uppercase mb-1">
+                {activeTab === 'menu' ? 'Laboratorio de Oferta' : `Módulo Operativo`}
+              </p>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                {getTabTitle(activeTab)}
+                {activeTab === 'brain' && <span>✨</span>}
+              </h1>
+            </div>
+            <div className="flex items-center gap-4">
+               <button className="btn btn--outline-soft py-2 px-4 text-xs font-bold flex items-center gap-2">
+                 <Clock size={14}/> 28 Marzo, 2026
+               </button>
+            </div>
+          </header>
 
           <div className="flex-1 overflow-y-auto p-10">
+            {/* Vistas Renderizadas Completas */}
             {activeTab === 'dashboard' && <ViewDashboard />}
             {activeTab === 'pos' && <ViewPOS />}
             {activeTab === 'ventas' && <ViewVentas />}
-            {activeTab === 'finanzas' && <ViewFinanzas platos={platos} recetas={recetas} inventario={inventario} gruposMod={gruposMod} opcionesMod={opcionesMod} />}
+            {activeTab === 'finanzas' && <ViewFinanzas />}
             {activeTab === 'operaciones' && <ViewOperaciones />}
-            {activeTab === 'inventario' && <ViewInventario inventario={inventario} setInventario={setInventario} />}
+            {activeTab === 'inventario' && <ViewInventario />}
             {activeTab === 'delivery' && <ViewDelivery />}
             
             {activeTab === 'reservas' && <ViewReservas />}
@@ -621,20 +540,10 @@ function App() {
             {activeTab === 'data' && <ViewData />}
             
             {activeTab === 'restaurante' && <ViewMiRestaurante />}
-            {activeTab === 'menu' && (
-              <ViewMenu 
-                categorias={categorias} setCategorias={setCategorias} 
-                platos={platos} setPlatos={setPlatos} 
-                recetas={recetas} setRecetas={setRecetas} 
-                inventario={inventario} setInventario={setInventario} 
-                gruposMod={gruposMod} setGruposMod={setGruposMod}
-                opcionesMod={opcionesMod} setOpcionesMod={setOpcionesMod}
-                vinculosMod={vinculosMod} setVinculosMod={setVinculosMod}
-              />
-            )}
+            {activeTab === 'menu' && <ViewMenu />}
             {activeTab === 'conectores' && <ViewConectores />}
             {activeTab === 'billing' && <ViewBilling />}
-            {activeTab === 'brain' && <ViewBrain platos={platos} recetas={recetas} inventario={inventario} gruposMod={gruposMod} opcionesMod={opcionesMod} />}
+            {activeTab === 'brain' && <ViewBrain />}
           </div>
         </main>
       </div>
@@ -642,292 +551,15 @@ function App() {
   );
 }
 
+// =========================================================================
 // VISTAS PLACEHOLDER (Para evitar errores de renderizado)
 // =========================================================================
 function ViewPOS() {
-  const [currentCat, setCurrentCat] = React.useState('Todos');
-  const [orderItems, setOrderItems] = React.useState([]);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [orderType, setOrderType] = React.useState('mesa');
-  const [discountVal, setDiscountVal] = React.useState('');
-  const [discountType, setDiscountType] = React.useState('pct');
-  const [orderNote, setOrderNote] = React.useState('');
-  const [showModal, setShowModal] = React.useState(false);
-  const [pendingProduct, setPendingProduct] = React.useState(null);
-  const [selectedMods, setSelectedMods] = React.useState([]);
-
-  const posProducts = [
-    {id:1,name:'Bandeja Paisa',price:28000,cat:'Platos fuertes',emoji:'🍛',tag:'popular'},
-    {id:2,name:'Churrasco 300g',price:42000,cat:'Parrilla',emoji:'🥩',tag:'popular'},
-    {id:3,name:'Pollo a la plancha',price:24000,cat:'Platos fuertes',emoji:'🍗',tag:''},
-    {id:4,name:'Lomo al vino',price:38000,cat:'Parrilla',emoji:'🥩',tag:'new'},
-    {id:5,name:'Ensalada César',price:18000,cat:'Entradas',emoji:'🥗',tag:'veg'},
-    {id:6,name:'Ceviche de camarón',price:22000,cat:'Entradas',emoji:'🦐',tag:''},
-    {id:7,name:'Sopa del día',price:12000,cat:'Entradas',emoji:'🍲',tag:'popular'},
-    {id:8,name:'Coca-Cola',price:5000,cat:'Bebidas',emoji:'🥤',tag:''},
-    {id:9,name:'Jugo natural',price:8000,cat:'Bebidas',emoji:'🍊',tag:'veg'},
-    {id:10,name:'Cerveza artesanal',price:12000,cat:'Bebidas',emoji:'🍺',tag:'popular'},
-    {id:11,name:'Agua mineral',price:4000,cat:'Bebidas',emoji:'💧',tag:''},
-    {id:12,name:'Brownie con helado',price:16000,cat:'Postres',emoji:'🍫',tag:'new'},
-    {id:13,name:'Cheesecake',price:14000,cat:'Postres',emoji:'🍰',tag:'popular'},
-    {id:14,name:'Papas fritas',price:9000,cat:'Adiciones',emoji:'🍟',tag:''},
-    {id:15,name:'Patacones',price:8000,cat:'Adiciones',emoji:'🫓',tag:'veg'},
-    {id:16,name:'Arroz',price:5000,cat:'Adiciones',emoji:'🍚',tag:'86'},
-  ];
-  
-  const categories = ['Todos','Platos fuertes','Parrilla','Entradas','Bebidas','Postres','Adiciones'];
-
-  const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const dv = parseFloat(discountVal) || 0;
-  let disc = discountType === 'pct' ? subtotal * (dv / 100) : dv;
-  disc = Math.min(disc, subtotal);
-  const iva = (subtotal - disc) * 0.08;
-  const total = subtotal - disc + iva;
-
-  const handleAddProduct = (p) => {
-    if(p.tag === '86') return;
-    const existing = orderItems.find(x => x.id === p.id && !x.mods);
-    if(existing) {
-      setOrderItems(orderItems.map(x => x.id === p.id && !x.mods ? {...x, qty: x.qty + 1} : x));
-    } else {
-      setOrderItems([...orderItems, {id: p.id, name: p.name, price: p.price, qty: 1, emoji: p.emoji, mods: ''}]);
-    }
-  };
-
-  const handleChangeQty = (index, delta) => {
-    const newItems = [...orderItems];
-    newItems[index].qty += delta;
-    if(newItems[index].qty <= 0) {
-      newItems.splice(index, 1);
-    }
-    setOrderItems(newItems);
-  };
-
-  const handeRemoveItem = (index) => {
-    const newItems = [...orderItems];
-    newItems.splice(index, 1);
-    setOrderItems(newItems);
-  };
-
-  const handleClearOrder = () => {
-    if(window.confirm('¿Cancelar esta orden?')) {
-      setOrderItems([]);
-    }
-  };
-
-  const handleSendKDS = () => {
-    if(orderItems.length === 0) {
-      alert('Agrega productos a la orden primero.');
-      return;
-    }
-    alert('✅ Orden enviada a cocina. El KDS ha recibido el ticket #ORD-2041.');
-  };
-  
-  const handleOpenModal = (p) => {
-    setPendingProduct(p);
-    setSelectedMods(['3/4']);
-    setShowModal(true);
-  };
-  
-  const handleToggleMod = (mod) => {
-    if (selectedMods.includes(mod)) {
-      setSelectedMods(selectedMods.filter(m => m !== mod));
-    } else {
-      setSelectedMods([...selectedMods, mod]);
-    }
-  };
-
-  const handleAddFromModal = () => {
-    if(!pendingProduct) return;
-    const modsStr = selectedMods.join(', ');
-    setOrderItems([...orderItems, {
-      id: pendingProduct.id,
-      name: pendingProduct.name,
-      price: pendingProduct.price,
-      qty: 1,
-      emoji: pendingProduct.emoji,
-      mods: modsStr
-    }]);
-    setShowModal(false);
-    setPendingProduct(null);
-  };
-
-  const filteredProducts = posProducts.filter(p => {
-    const matchCat = currentCat === 'Todos' || p.cat === currentCat;
-    const matchQ = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchQ;
-  });
-
   return (
-    <div className="h-full max-h-screen flex animate-in fade-in -m-10" style={{height: 'calc(100vh - 96px)'}}>
-      {/* LEFT: order panel */}
-      <div className="w-[380px] bg-white border-r border-gray-200 flex flex-col shrink-0 relative z-10 shadow-sm">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-2 bg-gray-50/50">
-          <div className="flex bg-gray-100 p-1 rounded-xl">
-             <button onClick={() => setOrderType('mesa')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${orderType === 'mesa' ? 'bg-white shadow-sm text-slate-800' : 'text-gray-500 hover:text-slate-700'}`}>Mesa</button>
-             <button onClick={() => setOrderType('llevar')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${orderType === 'llevar' ? 'bg-white shadow-sm text-slate-800' : 'text-gray-500 hover:text-slate-700'}`}>Para llevar</button>
-             <button onClick={() => setOrderType('domicilio')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${orderType === 'domicilio' ? 'bg-white shadow-sm text-slate-800' : 'text-gray-500 hover:text-slate-700'}`}>Domicilio</button>
-          </div>
-          <span className="text-xs font-black text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">#ORD-2041</span>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50/20">
-          {orderItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
-              <span className="text-4xl opacity-50 mb-2">🛒</span>
-              <p className="font-bold text-sm text-slate-500">Orden vacía</p>
-              <p className="text-xs">Toca un producto para agregar</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {orderItems.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:border-gray-300 transition-colors">
-                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-0.5 border border-gray-200">
-                    <button onClick={() => handleChangeQty(i, -1)} className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white hover:shadow-sm rounded-md transition-all font-black">−</button>
-                    <span className="text-sm font-black text-slate-800 w-4 text-center">{item.qty}</span>
-                    <button onClick={() => handleChangeQty(i, 1)} className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white hover:shadow-sm rounded-md transition-all font-black">+</button>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800 truncate">{item.emoji} {item.name}</p>
-                    {item.mods && <p className="text-[10px] text-gray-500 mt-0.5 font-medium leading-tight">{item.mods}</p>}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-slate-800 mb-0.5">${(item.price * item.qty).toLocaleString('es-CO')}</p>
-                    <button onClick={() => handeRemoveItem(i)} className="text-[10px] text-red-500 hover:bg-red-100 font-bold px-2 py-0.5 bg-red-50 rounded-md transition-colors">✕ Quitar</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 border-t border-gray-200 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
-          <div className="flex gap-2 mb-3">
-            <input type="number" placeholder="Descuento" value={discountVal} onChange={e => setDiscountVal(e.target.value)} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all font-medium bg-gray-50 focus:bg-white" />
-            <select value={discountType} onChange={e => setDiscountType(e.target.value)} className="border border-gray-200 rounded-xl px-2 py-2 text-sm outline-none focus:border-emerald-500 font-bold bg-gray-50 cursor-pointer">
-              <option value="pct">%</option>
-              <option value="fix">$</option>
-            </select>
-          </div>
-          <textarea rows="1" placeholder="Nota para la orden (opcional)..." value={orderNote} onChange={e => setOrderNote(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all resize-none mb-3 font-medium bg-gray-50 focus:bg-white"></textarea>
-          
-          <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 mb-4">
-             <div className="flex justify-between items-center mb-1.5"><span className="text-xs font-bold text-gray-500">Subtotal</span><span className="text-sm font-black text-slate-700">${Math.round(subtotal).toLocaleString('es-CO')}</span></div>
-             <div className="flex justify-between items-center mb-1.5"><span className="text-xs font-bold text-gray-500">Descuento</span><span className="text-sm font-black text-red-500">-${Math.round(disc).toLocaleString('es-CO')}</span></div>
-             <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-gray-500">IVA (8%)</span><span className="text-sm font-black text-slate-700">${Math.round(iva).toLocaleString('es-CO')}</span></div>
-             <div className="flex justify-between items-center pt-2 border-t border-gray-200"><span className="text-sm font-black text-slate-800">TOTAL</span><span className="text-xl font-black text-emerald-600">${Math.round(total).toLocaleString('es-CO')}</span></div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <button onClick={handleClearOrder} className="py-2.5 rounded-xl border border-red-200 text-red-600 font-bold text-xs hover:bg-red-50 transition-colors">🗑 Cancelar</button>
-            <button onClick={handleSendKDS} className="py-2.5 rounded-xl border border-gray-200 text-slate-700 font-bold text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"><span className="text-lg leading-none">📤</span> Cocina</button>
-          </div>
-          <button onClick={() => alert('Abriendo módulo de pagos...')} className="w-full py-3.5 rounded-xl bg-emerald-500 text-white font-black text-sm hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30 active:scale-[0.98] flex items-center justify-center gap-2"><span className="text-lg leading-none">💳</span> COBRAR</button>
-        </div>
-      </div>
-
-      {/* RIGHT: products */}
-      <div className="flex-1 flex flex-col bg-[#F8FAFC]">
-        <div className="p-4 border-b border-gray-200 bg-white shrink-0 shadow-sm z-10">
-          <div className="flex items-center gap-3 border border-gray-200 bg-gray-50 rounded-xl px-4 py-2.5 mb-3 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-            <span className="text-gray-400 text-lg leading-none">🔍</span>
-            <input type="text" placeholder="Buscar producto, código o categoría..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-800 placeholder-gray-400" />
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 items-center" style={{scrollbarWidth:'none'}}>
-            {categories.map(c => (
-              <button key={c} onClick={() => setCurrentCat(c)} className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${currentCat === c ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white text-slate-600 border-gray-200 hover:bg-gray-50'}`}>{c}</button>
-            ))}
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-            {filteredProducts.map(p => (
-              <div key={p.id} onClick={() => handleAddProduct(p)} onContextMenu={(e) => {e.preventDefault(); handleOpenModal(p);}} className={`bg-white rounded-2xl p-5 border border-gray-200 cursor-pointer transition-all hover:shadow-lg hover:border-emerald-200 active:scale-95 group relative ${p.tag === '86' ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
-                {p.tag && (
-                  <span className={`absolute top-2.5 right-2.5 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md ${
-                    p.tag === 'popular' ? 'bg-amber-100 text-amber-700' : 
-                    p.tag === 'new' ? 'bg-blue-100 text-blue-700' : 
-                    p.tag === 'veg' ? 'bg-emerald-100 text-emerald-700' : 
-                    p.tag === '86' ? 'bg-red-100 text-red-700' : ''
-                  }`}>
-                    {p.tag === 'popular' ? '★ Top' : p.tag === 'new' ? 'Nuevo' : p.tag === 'veg' ? 'Veg' : p.tag === '86' ? 'Agotado' : ''}
-                  </span>
-                )}
-                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform origin-bottom inline-block">{p.emoji}</div>
-                <h3 className="text-sm font-bold text-slate-800 leading-snug mb-1">{p.name}</h3>
-                <p className="text-sm font-black text-emerald-600">${p.price.toLocaleString('es-CO')}</p>
-                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg pointer-events-none scale-90 group-hover:scale-100 tracking-wide text-center w-max shadow-xl">Clic derecho para modif.</div>
-              </div>
-            ))}
-            {filteredProducts.length === 0 && (
-              <div className="col-span-full py-20 text-center">
-                <p className="text-gray-400 font-bold mb-2 text-4xl">🔍</p>
-                <p className="text-gray-500 font-bold">No se encontraron productos.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white border-t border-gray-200 p-3 flex gap-2 shrink-0 shadow-sm z-10">
-          <button className="flex-1 py-2.5 rounded-xl border border-gray-200 text-slate-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"><span className="text-lg leading-none shrink-0">🗺</span> Mesas</button>
-          <button className="flex-1 py-2.5 rounded-xl border border-gray-200 text-slate-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"><span className="text-lg leading-none shrink-0">🍳</span> Cocina</button>
-          <button className="flex-1 py-2.5 rounded-xl border border-gray-200 text-slate-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors" onClick={() => alert('Selecciona el producto a marcar como agotado (86) desde el catálogo.')}><span className="text-lg leading-none shrink-0">🚫</span> 86 Producto</button>
-          <button className="flex-1 py-2.5 rounded-xl border border-gray-200 text-slate-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors" onClick={() => alert('Admin notificado')}><span className="text-lg leading-none shrink-0">📞</span> Llamar Admin</button>
-        </div>
-      </div>
-      
-      {/* MODAL MODIFICADORES */}
-      {showModal && pendingProduct && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
-             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">{pendingProduct.emoji} {pendingProduct.name}</h3>
-                <button onClick={() => {setShowModal(false); setPendingProduct(null);}} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200 transition-colors">✕</button>
-             </div>
-             
-             <div className="p-6 space-y-6">
-                <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Punto de cocción</h4>
-                   <div className="flex flex-wrap gap-2.5">
-                     {['Término rojo', '3/4', 'Bien cocido'].map(mod => (
-                       <button key={mod} onClick={() => handleToggleMod(mod)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedMods.includes(mod) ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm' : 'bg-white border-gray-200 text-slate-600 hover:border-emerald-300'}`}>
-                         {mod}
-                       </button>
-                     ))}
-                   </div>
-                </div>
-                <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Adicionales (+$3.000)</h4>
-                   <div className="flex flex-wrap gap-2.5">
-                     {['+ Tocineta', '+ Aguacate', '+ Queso extra', '+ Huevo'].map(mod => (
-                       <button key={mod} onClick={() => handleToggleMod(mod)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedMods.includes(mod) ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm' : 'bg-white border-gray-200 text-slate-600 hover:border-emerald-300'}`}>
-                         {mod}
-                       </button>
-                     ))}
-                   </div>
-                </div>
-                <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Excluir</h4>
-                   <div className="flex flex-wrap gap-2.5">
-                     {['Sin cebolla', 'Sin tomate', 'Sin lechuga'].map(mod => (
-                       <button key={mod} onClick={() => handleToggleMod(mod)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedMods.includes(mod) ? 'bg-red-50 border-red-500 text-red-700 shadow-sm' : 'bg-white border-gray-200 text-slate-600 hover:border-red-300'}`}>
-                         {mod}
-                       </button>
-                     ))}
-                   </div>
-                </div>
-                <div>
-                  <textarea rows="2" placeholder="Nota especial para cocina..." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 bg-gray-50 focus:bg-white resize-none transition-all font-medium placeholder-gray-400"></textarea>
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button onClick={() => {setShowModal(false); setPendingProduct(null);}} className="flex-1 py-3.5 bg-white border border-gray-200 text-slate-600 font-bold rounded-xl text-sm hover:bg-gray-50 transition-colors shadow-sm cursor-pointer">Cancelar</button>
-                  <button onClick={handleAddFromModal} className="flex-[2] py-3.5 bg-slate-900 text-white font-black rounded-xl text-sm shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all cursor-pointer transform active:scale-[0.98]">Agregar a orden</button>
-                </div>
-             </div>
-          </div>
-        </div>
-      )}
+    <div className="flex flex-col items-center justify-center h-full text-gray-400 p-10 animate-in fade-in">
+      <span style={{fontSize:'15px', lineHeight:1}}>▧</span>
+      <h2 className="text-2xl font-black text-slate-800 tracking-tight">Módulo POS / Pedidos</h2>
+      <p className="mt-2 text-center max-w-md">Este módulo está en construcción. Aquí podrás gestionar todas las órdenes en tiempo real.</p>
     </div>
   );
 }
@@ -941,10 +573,10 @@ function ViewDashboard() {
       
       {/* Bloque 1 — Ventas (resumen financiero del día) */}
       <div>
-         <h3 className="dash-row-title mb-4"><span style={{fontSize:'16px', lineHeight:1}}>💰</span> Bloque 1: Ventas (El Pulso del Día)</h3>
+         <h3 className="dash-row-title mb-4"><CircleDollarSign size={14}/> Bloque 1: Ventas (El Pulso del Día)</h3>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Ingresos Totales (Hoy)" value="$3,250,000" delta="+12.5%" isUp vsText="vs. el martes pasado" icon={<span style={{fontSize:'16px', lineHeight:1}}>💰</span>} />
-            <StatCard label="Ticket Promedio" value="$45,200" delta="+2.1%" isUp vsText="vs. promedio mensual" icon={<span style={{fontSize:'16px', lineHeight:1}}>🧾</span>} />
+            <StatCard label="Ingresos Totales (Hoy)" value="$3,250,000" delta="+12.5%" isUp vsText="vs. el martes pasado" icon={<CircleDollarSign size={24}/>} />
+            <StatCard label="Ticket Promedio" value="$45,200" delta="+2.1%" isUp vsText="vs. promedio mensual" icon={<Receipt size={24}/>} />
             <StatCard label="Clientes Atendidos" value="72 pax" delta="+5 pax" isUp vsText="Flujo constante" icon={<span style={{fontSize:'15px', lineHeight:1}}>👥</span>} />
             <StatCard label="Avance Meta Diaria" value="85%" delta="Faltan $500k" isDanger={false} vsText="Meta: $3,750,000" highlightBadge="En Camino" icon={<span style={{fontSize:'15px', lineHeight:1}}>🎯</span>} />
          </div>
@@ -954,10 +586,10 @@ function ViewDashboard() {
       <div>
          <h3 className="dash-row-title mb-4"><span style={{fontSize:'15px', lineHeight:1}}>🥧</span> Bloque 2: Finanzas (Rentabilidad y Costos)</h3>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Prime Cost" value="58.2%" delta="En Riesgo" isDanger vsText="Límite ideal: 60%" icon={<span style={{fontSize:'16px', lineHeight:1}}>📈</span>} highlightBadge="Monitorear" />
+            <StatCard label="Prime Cost" value="58.2%" delta="En Riesgo" isDanger vsText="Límite ideal: 60%" icon={<Activity size={24} className="text-red-500"/>} highlightBadge="Monitorear" />
             <StatCard label="COGS (Costo Ingred.)" value="32.5%" delta="+2.5%" isDanger vsText="Costo ideal: 30-32%" icon={<span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>} />
-            <StatCard label="Labor Cost (Nómina)" value="25.7%" delta="-0.5%" isUp vsText="Presupuesto estable" icon={<span style={{fontSize:'16px', lineHeight:1}}>💼</span>} />
-            <StatCard label="Margen Neto Est." value="18.5%" delta="+1.2%" isUp vsText="Proyección de cierre" icon={<span style={{fontSize:'16px', lineHeight:1}}>%</span>} />
+            <StatCard label="Labor Cost (Nómina)" value="25.7%" delta="-0.5%" isUp vsText="Presupuesto estable" icon={<Briefcase size={24}/>} />
+            <StatCard label="Margen Neto Est." value="18.5%" delta="+1.2%" isUp vsText="Proyección de cierre" icon={<Percent size={24}/>} />
          </div>
       </div>
 
@@ -966,9 +598,9 @@ function ViewDashboard() {
          <h3 className="dash-row-title mb-4">⊞ Bloques 3 & 4: Operaciones y Ecosistema Cruzado</h3>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="RevPASH" value="$12,500" delta="+15%" isUp vsText="Ingreso/silla/hora" icon={<span style={{fontSize:'15px', lineHeight:1}}>📈</span>} />
-            <StatCard label="Tiempo de Servicio" value="24 min" delta="-3 min" isUp vsText="Orden a entrega" icon={<span style={{fontSize:'16px', lineHeight:1}}>🕐</span>} />
-            <StatCard label="Órdenes Delivery" value="45 ord" delta="60% Apps / 40% Directo" isUp vsText="Mix de canales" icon={<span style={{fontSize:'16px', lineHeight:1}}>🚚</span>} />
-            <StatCard label="Retención Clientes" value="35%" delta="+2%" isUp vsText="Recurrentes en < 30 días" icon={<span style={{fontSize:'16px', lineHeight:1}}>🤝</span>} />
+            <StatCard label="Tiempo de Servicio" value="24 min" delta="-3 min" isUp vsText="Orden a entrega" icon={<Clock size={24}/>} />
+            <StatCard label="Órdenes Delivery" value="45 ord" delta="60% Apps / 40% Directo" isUp vsText="Mix de canales" icon={<Truck size={24}/>} />
+            <StatCard label="Retención Clientes" value="35%" delta="+2%" isUp vsText="Recurrentes en < 30 días" icon={<HeartHandshake size={24}/>} />
          </div>
       </div>
 
@@ -978,7 +610,7 @@ function ViewDashboard() {
          {/* Bloque 5 — Alertas en tiempo real */}
          <div className="lg:col-span-1 bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col">
             <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-               <span style={{fontSize:'16px', lineHeight:1}}>🔔</span> Alertas en Tiempo Real
+               <BellRing size={20} className="text-amber-500"/> Alertas en Tiempo Real
             </h3>
             <div className="space-y-4 flex-1">
                <div className="flex gap-3 items-start pb-4 border-b border-gray-100">
@@ -989,14 +621,14 @@ function ViewDashboard() {
                   </div>
                </div>
                <div className="flex gap-3 items-start pb-4 border-b border-gray-100">
-                  <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0"><span style={{fontSize:'16px', lineHeight:1}}>📉</span></div>
+                  <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0"><TrendingDown size={14}/></div>
                   <div>
                      <p className="text-xs font-bold text-slate-800">Alerta de Prime Cost</p>
                      <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5">El costo de la carne subió ayer. Prime cost superando umbral de rentabilidad (60%).</p>
                   </div>
                </div>
                <div className="flex gap-3 items-start pb-4 border-b border-gray-100">
-                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0"><span style={{fontSize:'16px', lineHeight:1}}>🕐</span></div>
+                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0"><Clock size={14}/></div>
                   <div>
                      <p className="text-xs font-bold text-slate-800">Delivery Retrasado</p>
                      <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5">3 órdenes en Rappi superan los 45 min de tiempo de servicio. Posibles reembolsos.</p>
@@ -1076,9 +708,9 @@ function ViewVentas() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Ingresos Brutos" value="$12,450,000" delta="+8%" isUp vsText="Este mes" icon={<span style={{fontSize:'16px', lineHeight:1}}>💰</span>} />
-        <StatCard label="Transacciones" value="842" delta="+12%" isUp vsText="Este mes" icon={<span style={{fontSize:'16px', lineHeight:1}}>📈</span>} />
-        <StatCard label="Ticket Promedio" value="$14,786" delta="-2%" isDanger vsText="Este mes" icon={<span style={{fontSize:'16px', lineHeight:1}}>🧾</span>} />
+        <StatCard label="Ingresos Brutos" value="$12,450,000" delta="+8%" isUp vsText="Este mes" icon={<CircleDollarSign size={24}/>} />
+        <StatCard label="Transacciones" value="842" delta="+12%" isUp vsText="Este mes" icon={<Activity size={24}/>} />
+        <StatCard label="Ticket Promedio" value="$14,786" delta="-2%" isDanger vsText="Este mes" icon={<Receipt size={24}/>} />
       </div>
 
       <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
@@ -1124,7 +756,7 @@ function ViewFinanzas() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       <div className="flex items-center gap-4 bg-emerald-50 border border-emerald-200 p-4 rounded-2xl">
-         <span style={{fontSize:'16px', lineHeight:1}}>🛡️</span>
+         <ShieldCheck size={24} className="text-emerald-600"/>
          <div>
             <h4 className="text-sm font-bold text-emerald-900">Conexión DIAN Activa</h4>
             <p className="text-xs text-emerald-700">Tus facturas electrónicas se están emitiendo correctamente.</p>
@@ -1133,8 +765,8 @@ function ViewFinanzas() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard label="Utilidad Bruta" value="$4,200,000" delta="33.7% Margen" isUp vsText="Este mes" icon={<span style={{fontSize:'15px', lineHeight:1}}>🥧</span>} />
-        <StatCard label="Gastos Operativos" value="$2,800,000" delta="+5%" isDanger vsText="Este mes" icon={<span style={{fontSize:'16px', lineHeight:1}}>📉</span>} />
-        <StatCard label="Caja Real" value="$1,400,000" delta="Disponible" isUp vsText="Efectivo + Bancos" icon={<span style={{fontSize:'16px', lineHeight:1}}>🏛️</span>} />
+        <StatCard label="Gastos Operativos" value="$2,800,000" delta="+5%" isDanger vsText="Este mes" icon={<TrendingDown size={24} className="text-red-500"/>} />
+        <StatCard label="Caja Real" value="$1,400,000" delta="Disponible" isUp vsText="Efectivo + Bancos" icon={<Landmark size={24}/>} />
       </div>
 
       <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
@@ -1212,7 +844,7 @@ function ViewInventario() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Valor del Inventario" value="$8,540,000" delta="En bodega" isUp vsText="Actualizado hoy" icon={<span style={{fontSize:'15px', lineHeight:1}}>📦</span>} />
+        <StatCard label="Valor del Inventario" value="$8,540,000" delta="En bodega" isUp vsText="Actualizado hoy" icon={📦} />
         <StatCard label="Ítems Críticos" value="3" delta="Requieren compra" isDanger vsText="Stock bajo el mínimo" icon={<span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>} />
         <StatCard label="Órdenes de Compra" value="2" delta="En tránsito" isUp vsText="Esperando recepción" icon={<span style={{fontSize:'15px', lineHeight:1}}>▧</span>} />
       </div>
@@ -1368,7 +1000,7 @@ function ViewMarketing() {
             </div>
             <div className="p-4 border border-gray-200 rounded-xl flex items-center justify-between hover:shadow-sm transition-shadow">
                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><span style={{fontSize:'16px', lineHeight:1}}>💬</span></div>
+                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><MessageSquare size={20}/></div>
                   <div>
                      <p className="font-bold text-slate-800">Recuperación Carrito (WhatsApp)</p>
                      <p className="text-xs text-gray-500">A los que no completaron su pedido en tu web.</p>
@@ -1397,7 +1029,7 @@ function ViewFidelizacion() {
             <p className="text-amber-100 text-sm max-w-md">Tus clientes están ganando puntos. Tienes 450 usuarios inscritos en el programa de recompensas.</p>
          </div>
          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
-            <span style={{fontSize:'16px', lineHeight:1}}>🏆</span>
+            <Award size={32} className="text-white"/>
          </div>
       </div>
 
@@ -1469,8 +1101,8 @@ function ViewRRHH() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard label="Personal en Turno" value="12" delta="De 15 programados" isDanger vsText="Faltan 3" icon={<span style={{fontSize:'15px', lineHeight:1}}>👥</span>} />
-        <StatCard label="Costo Laboral (Mes)" value="$14,500,000" delta="25% de ventas" isUp vsText="Dentro del rango ideal" icon={<span style={{fontSize:'16px', lineHeight:1}}>💰</span>} />
-        <StatCard label="Rotación Mensual" value="2%" delta="-1%" isUp vsText="Saludable" icon={<span style={{fontSize:'16px', lineHeight:1}}>🤝</span>} />
+        <StatCard label="Costo Laboral (Mes)" value="$14,500,000" delta="25% de ventas" isUp vsText="Dentro del rango ideal" icon={<CircleDollarSign size={24}/>} />
+        <StatCard label="Rotación Mensual" value="2%" delta="-1%" isUp vsText="Saludable" icon={<HeartHandshake size={24}/>} />
       </div>
 
       <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
@@ -1564,19 +1196,32 @@ function ViewRestaurante() {
   );
 }
 
+
 // =========================================================================
-// 14. CATEGORÍAS DE LA CARTA
+// BLOQUES COMPLEJOS EXISTENTES (CARTA Y MENU, INTEGRACIONES, ETC)
+// MANTENIDOS EXACTAMENTE IGUALES PARA NO PERDER FUNCIONALIDAD
 // =========================================================================
-function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias = null, activeCatNames = [], toggleCatVisibility = () => {} }) {
-  const [showModal, setShowModal] = React.useState(false);
-  const [editingCategory, setEditingCategory] = React.useState(null);
-  const [formError, setFormError] = React.useState('');
+
+// --- WIDGET: CATEGORÍAS DEL MENÚ (PASO 1) ---
+ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias = null, platos = [], activeCatNames = [], setActiveCatNames = () => {}, setFocusCatName = () => {}, platosRef = null }) {
+  const [localCats, setLocalCats] = useState([
+    { id: 'uuid-1', nombre: 'Entradas', canal: 'AMBOS', orden: 1, estado: 'ACTIVA', horario: null },
+    { id: 'uuid-2', nombre: 'Almuerzos Ejecutivos', canal: 'SALON', orden: 2, estado: 'ACTIVA', horario: { inicio: '12:00', fin: '15:00', dias: ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'] } },
+    { id: 'uuid-3', nombre: 'Pizzas Premium', canal: 'DELIVERY', orden: 3, estado: 'INACTIVA', horario: null }
+  ]);
+
+  const activeCategorias = categorias || localCats;
+  const activeSetCategorias = setCategorias || setLocalCats;
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [formError, setFormError] = useState('');
   const defaultForm = { nombre: '', canal: 'AMBOS', estado: 'ACTIVA', hasHorario: false, hora_inicio: '07:00', hora_fin: '22:00', dias: ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'] };
-  const [formData, setFormData] = React.useState({ ...defaultForm });
+  const [formData, setFormData] = useState({ ...defaultForm });
   const dragItem = useRef();
   const dragOverItem = useRef();
-  const [expandedSchedule, setExpandedSchedule] = React.useState(null);
-  const [inlineHorario, setInlineHorario] = React.useState({});
+  const [expandedSchedule, setExpandedSchedule] = useState(null);
+  const [inlineHorario, setInlineHorario] = useState({});
 
   const DIAS_SEMANA = [{ id: 'LUNES', lbl: 'L' }, { id: 'MARTES', lbl: 'M' }, { id: 'MIERCOLES', lbl: 'X' }, { id: 'JUEVES', lbl: 'J' }, { id: 'VIERNES', lbl: 'V' }, { id: 'SABADO', lbl: 'S' }, { id: 'DOMINGO', lbl: 'D' }];
 
@@ -1607,9 +1252,9 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
       horario: formData.hasHorario ? { inicio: formData.hora_inicio, fin: formData.hora_fin, dias: formData.dias } : null
     };
     if (editingCategory) {
-      setCategorias(categorias.map(c => c.id === editingCategory.id ? nuevaCategoria : c));
+      activeSetCategorias(activeCategorias.map(c => c.id === editingCategory.id ? nuevaCategoria : c));
     } else {
-      setCategorias([...categorias, nuevaCategoria]);
+      activeSetCategorias([...activeCategorias, nuevaCategoria]);
     }
     setShowModal(false);
   };
@@ -1620,20 +1265,19 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
       const ok = window.confirm(`⚠️ Al desactivar "${cat.nombre}" sus platos dejarán de aparecer en la carta.\n\n¿Continuar?`);
       if (!ok) return;
     }
-    setCategorias(categorias.map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
+    activeSetCategorias(activeCategorias.map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
     if (nuevoEstado === 'ACTIVA') {
       setActiveCatNames(prev => prev.includes(cat.nombre) ? prev : [...prev, cat.nombre]);
-      setCategoriasExpandidas(prev => prev.includes(cat.nombre) ? prev : [...prev, cat.nombre]);
     } else {
       setActiveCatNames(prev => prev.filter(n => n !== cat.nombre));
     }
-    // fetch toggle removido
+    fetch('/api/categorias/toggle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: cat.id, estado: nuevoEstado }) }).catch(() => {});
   };
 
   const handleDelete = (cat) => {
     const ok = window.confirm(`🗑️ ¿Eliminar la categoría "${cat.nombre}"?\n\nEsta acción es irreversible.`);
     if (!ok) return;
-    setCategorias(categorias.filter(c => c.id !== cat.id));
+    activeSetCategorias(activeCategorias.filter(c => c.id !== cat.id));
   };
 
   const handleDragStart = (e, position) => { dragItem.current = position; };
@@ -1643,7 +1287,7 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
     const dragged = copy[dragItem.current];
     copy.splice(dragItem.current, 1);
     copy.splice(dragOverItem.current, 0, dragged);
-    setCategorias(copy.map((c, i) => ({ ...c, orden: i + 1 })));
+    activeSetCategorias(copy.map((c, i) => ({ ...c, orden: i + 1 })));
     dragItem.current = null; dragOverItem.current = null;
   };
 
@@ -1673,7 +1317,7 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
   const handleSaveInlineSchedule = (cat) => {
     const h = inlineHorario[cat.id];
     if (!h || h.dias.length === 0) return;
-    setCategorias(categorias.map(c => c.id === cat.id ? { ...c, horario: { inicio: h.inicio, fin: h.fin, dias: h.dias } } : c));
+    activeSetCategorias(activeCategorias.map(c => c.id === cat.id ? { ...c, horario: { inicio: h.inicio, fin: h.fin, dias: h.dias } } : c));
     setExpandedSchedule(null);
   };
 
@@ -1774,138 +1418,157 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
                         <div>
                           <label className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block mb-1">Días Activos</label>
                           <div className="flex gap-1">
-                                                               {DIAS_SEMANA.map(dia => {
-                                     const isSelected = formData.dias.includes(dia.id);
-                                     return (
-                                       <button 
-                                         type="button" 
-                                         key={dia.id} 
-                                         onClick={() => toggleDay(dia.id)}
-                                         className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-400 border border-gray-200 hover:border-indigo-300'}`}
-                                       >
-                                         {dia.lbl}
-                                       </button>
-                                     )
-                                   })}
-                                </div>
-                                {formData.dias.length === 0 && <p className="text-[10px] text-red-500 mt-1 font-bold">Debes seleccionar al menos un día.</p>}
-                             </div>
+                            {DIAS_SEMANA.map(d => {
+                              const sel = (inlineHorario[cat.id]?.dias || []).includes(d.id);
+                              return <button key={d.id} onClick={() => handleInlineDayToggle(cat.id, d.id)} className={`w-7 h-7 rounded-lg text-[11px] font-black transition-all ${sel ? 'bg-indigo-600 text-white' : 'bg-white text-gray-400 border border-gray-200 hover:border-indigo-300'}`}>{d.lbl}</button>;
+                            })}
                           </div>
-                        </td>
-                      </tr>
-                   )}
+                        </div>
+                        <button onClick={() => handleSaveInlineSchedule(cat)} className="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">Guardar</button>
+                        <button onClick={() => setExpandedSchedule(null)} className="bg-white text-gray-500 text-xs font-bold px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">Cancelar</button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </React.Fragment>
             ))}
+            {activeCategorias.length === 0 && (
+              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">No hay categorías. Crea la primera con "+ Nueva Categoría".</td></tr>
+            )}
           </tbody>
         </table>
       </div>
-        {showModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">{editingCategory ? '✏ Editar Categoría' : '✨ Nueva Categoría'}</h3>
-                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200 transition-colors">✕</button>
-              </div>
-              <form onSubmit={handleSave} className="p-6">
-                {formError && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-bold mb-5 flex items-center gap-2"><span>⚠️</span> {formError}</div>}
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 mb-1.5 block">Nombre de la Categoría <span className="text-red-500">*</span></label>
-                    <input type="text" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})} maxLength={40} placeholder="Ej: Entradas, Pizzas, Bebidas..." className="w-full text-sm p-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all" required autoFocus />
+      {/* MODAL FORMULARIO DE CATEGORÍA */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
+             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 className="font-black text-slate-800">{editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}</h3>
+                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200">✕</button>
+             </div>
+             
+             <form onSubmit={handleSave} className="p-6">
+                {formError && (
+                  <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-start gap-3 text-sm">
+                    <span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>
+                    <p className="font-semibold">{formError}</p>
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">Canal Disponible</label>
-                      <select value={formData.canal} onChange={(e) => setFormData({...formData, canal: e.target.value})} className="w-full text-sm p-3 rounded-xl border border-gray-300 focus:border-indigo-500 outline-none appearance-none bg-gray-50">
-                        <option value="AMBOS">Todos (Ambos)</option>
-                        <option value="SALON">Solo en Salón</option>
-                        <option value="DELIVERY">Solo Delivery</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">Estado Inicial</label>
-                      <select value={formData.estado} onChange={(e) => setFormData({...formData, estado: e.target.value})} className="w-full text-sm p-3 rounded-xl border border-gray-300 focus:border-indigo-500 outline-none appearance-none bg-gray-50">
-                        <option value="ACTIVA">🟢 Activa</option>
-                        <option value="INACTIVA">🔴 Inactiva Oculta</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-gray-100">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <div className={`relative w-11 h-6 flex items-center rounded-full px-0.5 transition-colors ${formData.hasHorario ? 'bg-indigo-500' : 'bg-gray-300'}`} onClick={() => setFormData({...formData, hasHorario: !formData.hasHorario})}>
-                        <div className="w-5 h-5 bg-white rounded-full shadow-md transition-transform" style={{ transform: formData.hasHorario ? 'translateX(20px)' : 'translateX(0)' }}></div>
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold text-slate-800 block">Limitar días u horario</span>
-                        <span className="text-[10px] text-gray-500">Ej: Almuerzos Ejecutivos solo de 12pm a 3pm.</span>
-                      </div>
-                    </label>
-                  </div>
+                )}
 
-                  {formData.hasHorario && (
-                    <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-4 animate-in fade-in slide-in-from-top-2">
-                       <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-5">
+                   {/* Nombre */}
+                   <div>
+                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">Nombre de la Categoría <span className="text-red-500">*</span></label>
+                      <input type="text" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})} maxLength={50} placeholder="Ej: Entradas, Platos Fuertes..." className="w-full text-sm p-3 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all" required autoFocus />
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-4">
+                     {/* Canal */}
+                     <div>
+                        <label className="text-xs font-bold text-slate-700 mb-1.5 block">Canal Disponible <span className="text-red-500">*</span></label>
+                        <select value={formData.canal} onChange={(e) => setFormData({...formData, canal: e.target.value})} className="w-full text-sm p-3 rounded-xl border border-gray-300 focus:border-indigo-500 outline-none bg-white cursor-pointer">
+                           <option value="AMBOS">Ambos (Salón y Delivery)</option>
+                           <option value="SALON">Solo Salón (POS)</option>
+                           <option value="DELIVERY">Solo Delivery / Apps</option>
+                        </select>
+                     </div>
+                     {/* Estado Inicial */}
+                     <div>
+                        <label className="text-xs font-bold text-slate-700 mb-1.5 block">Estado Inicial <span className="text-red-500">*</span></label>
+                        <select value={formData.estado} onChange={(e) => setFormData({...formData, estado: e.target.value})} className="w-full text-sm p-3 rounded-xl border border-gray-300 focus:border-indigo-500 outline-none bg-white cursor-pointer">
+                           <option value="ACTIVA">🟢 Activa (Visible)</option>
+                           <option value="INACTIVA">⚪ Inactiva (Oculta)</option>
+                        </select>
+                     </div>
+                   </div>
+
+                   {/* Horario de Disponibilidad */}
+                   <div className="pt-4 border-t border-gray-100">
+                      <div className="flex items-center justify-between mb-4">
                          <div>
-                           <label className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block mb-1">Hora Inicio</label>
-                           <input type="time" value={formData.hora_inicio} onChange={(e) => setFormData({...formData, hora_inicio: e.target.value})} className="w-full text-sm p-2 rounded-lg border border-indigo-200 outline-none" required={formData.hasHorario}/>
+                            <p className="text-sm font-bold text-slate-800">Restricción de Horario</p>
+                            <p className="text-[10px] text-gray-500">Limita cuándo se puede pedir esta categoría.</p>
                          </div>
-                         <div>
-                           <label className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block mb-1">Hora Fin</label>
-                           <input type="time" value={formData.hora_fin} onChange={(e) => setFormData({...formData, hora_fin: e.target.value})} className="w-full text-sm p-2 rounded-lg border border-indigo-200 outline-none" required={formData.hasHorario}/>
+                         <div 
+                           onClick={() => setFormData({...formData, hasHorario: !formData.hasHorario})}
+                           className={`relative w-10 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors ${formData.hasHorario ? 'bg-indigo-500' : 'bg-gray-300'}`}
+                         >
+                           <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-md transform transition-transform ${formData.hasHorario ? 'translate-x-4.5' : 'translate-x-0'}`} style={{ transform: formData.hasHorario ? 'translateX(18px)' : 'translateX(0)' }}></div>
                          </div>
-                       </div>
-                       
-                       <div>
-                         <label className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block mb-2">Días Activos (Verde = Activo)</label>
-                         <div className="flex gap-2">
-                           {DIAS_SEMANA.map(dia => {
-                             const isSelected = formData.dias.includes(dia.id);
-                             return (
-                               <button 
-                                 type="button" 
-                                 key={dia.id} 
-                                 onClick={() => toggleDay(dia.id)}
-                                 className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-white text-gray-400 border border-gray-200 hover:border-indigo-300'}`}
-                               >
-                                 {dia.lbl}
-                               </button>
-                             )
-                           })}
+                      </div>
+
+                      {formData.hasHorario && (
+                         <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl space-y-4 animate-in slide-in-from-top-2">
+                            <div className="flex items-center gap-4">
+                               <div className="flex-1">
+                                  <label className="text-[10px] font-bold text-indigo-900 uppercase tracking-widest block mb-1">Hora Inicio (UTC-5)</label>
+                                  <input type="time" value={formData.hora_inicio} onChange={(e) => setFormData({...formData, hora_inicio: e.target.value})} className="w-full p-2 rounded-lg border border-indigo-200 outline-none text-sm font-medium" />
+                               </div>
+                               <div className="flex-1">
+                                  <label className="text-[10px] font-bold text-indigo-900 uppercase tracking-widest block mb-1">Hora Fin (UTC-5)</label>
+                                  <input type="time" value={formData.hora_fin} onChange={(e) => setFormData({...formData, hora_fin: e.target.value})} className="w-full p-2 rounded-lg border border-indigo-200 outline-none text-sm font-medium" />
+                               </div>
+                            </div>
+                            <div>
+                               <label className="text-[10px] font-bold text-indigo-900 uppercase tracking-widest block mb-2">Días Activos</label>
+                               <div className="flex flex-wrap gap-1.5">
+                                  {DIAS_SEMANA.map(dia => {
+                                    const isSelected = formData.dias.includes(dia.id);
+                                    return (
+                                      <button 
+                                        type="button" 
+                                        key={dia.id} 
+                                        onClick={() => toggleDay(dia.id)}
+                                        className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-400 border border-gray-200 hover:border-indigo-300'}`}
+                                      >
+                                        {dia.lbl}
+                                      </button>
+                                    )
+                                  })}
+                               </div>
+                               {formData.dias.length === 0 && <p className="text-[10px] text-red-500 mt-1 font-bold">Debes seleccionar al menos un día.</p>}
+                            </div>
                          </div>
-                         {formData.dias.length === 0 && <p className="text-[10px] text-red-500 mt-2 font-bold">Debes seleccionar al menos un día.</p>}
-                       </div>
-                    </div>
-                  )}
+                      )}
+                   </div>
                 </div>
-                
+
                 <div className="mt-8 flex gap-3">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-slate-700 text-sm font-bold rounded-xl transition-colors">Cancelar</button>
-                  <button type="submit" className="flex-[2] py-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl transition-colors shadow-lg">Guardar Categoría</button>
+                   <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-slate-700 text-sm font-bold rounded-xl transition-colors">Cancelar</button>
+                   <button type="submit" disabled={formData.hasHorario && formData.dias.length === 0} className="flex-[2] py-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-slate-900/20">Guardar Categoría</button>
                 </div>
-              </form>
-            </div>
+             </form>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }
 
 // --- WIDGET: PLATOS E ÍTEMS DEL MENÚ (PASO 2) ---
-function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos = null, activeCatNames = [], focusCatName = null, setFocusCatName = () => {}, platosRef = null, categoriasExpandidas = [], setCategoriasExpandidas = () => {} }) {
-  // 1. Estado de UI
-  const [viewMode, setViewMode] = React.useState('accordion'); 
-  const [expandedCats, setExpandedCats] = React.useState(['uuid-1', 'uuid-2']); 
-  const [showFormModal, setShowFormModal] = React.useState(false);
-  const [showImportModal, setShowImportModal] = React.useState(false);
-  const [editingPlato, setEditingPlato] = React.useState(null);
-  const [formError, setFormError] = React.useState('');
+function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos = null, activeCatNames = [], focusCatName = null, setFocusCatName = () => {}, platosRef = null }) {
+  // 1. Estado de la Base de Datos (Soporte dual para props o estado local)
+  const [localPlatos, setLocalPlatos] = useState([
+    { id: 'p-1', categoria_id: 'uuid-1', nombre: 'Empanadas (x3)', descripcion: 'Crujientes de carne desmechada', precio_venta: 12000, costo_produccion: 4000, canal: 'AMBOS', estado: 'DISPONIBLE', iva_pct: 8, margen_bruto: 66.67, foto_url: null },
+    { id: 'p-2', categoria_id: 'uuid-1', nombre: 'Ceviche de Chicharrón', descripcion: '', precio_venta: 22000, costo_produccion: 8000, canal: 'SALON', estado: 'DISPONIBLE', iva_pct: 8, margen_bruto: 63.64, foto_url: null },
+    { id: 'p-3', categoria_id: 'uuid-2', nombre: 'Bandeja Paisa Tradicional', descripcion: 'Frijoles, chicharrón, chorizo, aguacate', precio_venta: 32000, costo_produccion: 14000, canal: 'SALON', estado: 'AGOTADO', iva_pct: 8, margen_bruto: 56.25, foto_url: null },
+    { id: 'p-4', categoria_id: 'uuid-2', nombre: 'Menú Ejecutivo Pollo', descripcion: 'Sopa, principio, arroz, jugo', precio_venta: 18000, costo_produccion: 7500, canal: 'AMBOS', estado: 'OCULTO', iva_pct: 8, margen_bruto: 58.33, foto_url: null },
+  ]);
+
+  const activePlatos = platos || localPlatos;
+  const activeSetPlatos = setPlatos || setLocalPlatos;
+
+  // 2. Estado de UI
+  const [viewMode, setViewMode] = useState('accordion'); 
+  const [expandedCats, setExpandedCats] = useState(['uuid-1', 'uuid-2']); 
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [editingPlato, setEditingPlato] = useState(null);
+  const [formError, setFormError] = useState('');
   
-  // 2. Formulario
+  // 3. Formulario
   const defaultForm = { nombre: '', descripcion: '', precio_venta: '', costo_produccion: '', categoria_id: '', canal: 'AMBOS', estado: 'DISPONIBLE', iva_pct: '8' };
-  const [formData, setFormData] = React.useState({ ...defaultForm });
+  const [formData, setFormData] = useState({ ...defaultForm });
 
   const formatCOP = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
 
@@ -1917,7 +1580,7 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
       setFormData({ ...plato });
     } else {
       setEditingPlato(null);
-      const primeraActiva = categorias.find(c => c.status === 'ACTIVA' || c.estado === 'ACTIVA');
+      const primeraActiva = categorias.find(c => c.estado === 'ACTIVA');
       setFormData({ ...defaultForm, categoria_id: primeraActiva ? primeraActiva.id : '' });
     }
     setShowFormModal(true);
@@ -1937,7 +1600,7 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
     const precio = Number(formData.precio_venta);
     if (!Number.isInteger(precio) || precio <= 0) return setFormError('El precio de venta debe ser un número entero positivo sin centavos.');
 
-    const isDuplicate = platos.some(p => p.categoria_id === formData.categoria_id && p.nombre.toLowerCase() === nombreLimpio.toLowerCase() && p.id !== editingPlato?.id);
+    const isDuplicate = activePlatos.some(p => p.categoria_id === formData.categoria_id && p.nombre.toLowerCase() === nombreLimpio.toLowerCase() && p.id !== editingPlato?.id);
     if (isDuplicate) return setFormError(`Error 409: Ya existe un plato llamado "${nombreLimpio}" en esta categoría.`);
 
     if (catPadre.canal === 'SALON' && formData.canal !== 'SALON') return setFormError('Error: Este plato no puede ser Delivery/Ambos porque su categoría es Solo Salón.');
@@ -1953,7 +1616,6 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
       ...formData,
       id: editingPlato ? editingPlato.id : `plato-${Date.now()}`,
       nombre: nombreLimpio,
-      categoria_nombre: catPadre.nombre,
       precio_venta: precio,
       costo_produccion: costo >= 0 && formData.costo_produccion !== '' ? costo : null,
       margen_bruto: margen,
@@ -1961,10 +1623,12 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
     };
 
     if (editingPlato) {
-      setPlatos(platos.map(p => p.id === editingPlato.id ? nuevoPlato : p));
+      activeSetPlatos(activePlatos.map(p => p.id === editingPlato.id ? nuevoPlato : p));
       console.log(`[Evento Backend Simulado] PUT /api/carta/platos/${nuevoPlato.id}`);
+      if (editingPlato.precio_venta !== nuevoPlato.precio_venta) {
+         console.log('⚠️ [Regla 4 Aplicada] Precio modificado. Las órdenes ABIERTAS en el módulo de Operaciones conservan el precio anterior.');
+      }
     } else {
-
       activeSetPlatos([...activePlatos, nuevoPlato]);
       console.log(`[Evento] plato.creado: ${nuevoPlato.id}. Operaciones y Delivery sincronizados.`);
     }
@@ -1973,7 +1637,7 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
   };
 
   const handleToggleEstado = (plato, nuevoEstado) => {
-    setPlatos(platos.map(p => p.id === plato.id ? { ...p, estado: nuevoEstado } : p));
+    activeSetPlatos(activePlatos.map(p => p.id === plato.id ? { ...p, estado: nuevoEstado } : p));
     if (nuevoEstado === 'AGOTADO') console.log(`[Evento WebSocket] plato.agotado: ${plato.id} bloqueado en Operaciones y Delivery.`);
     if (nuevoEstado === 'DISPONIBLE') console.log(`[Evento WebSocket] plato.disponible: ${plato.id} reactivado.`);
   };
@@ -1984,13 +1648,6 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
   };
 
   const categoriasConPlatos = categorias.filter(c => activeCatNames.includes(c.nombre));
-  
-  // Filtra platos usando categoria_nombre (campo real de la API) con fallback a otros alias
-  const platosVisibles = (platos || []).filter(p => {
-    if (!activeCatNames || activeCatNames.length === 0) return false;
-    const campoCategoria = (p.categoria_nombre || p.categoria || p.category || '').toString().trim().toLowerCase();
-    return activeCatNames.some(activa => activa.toString().trim().toLowerCase() === campoCategoria);
-  });
 
   return (
     <div ref={platosRef} className="bg-white rounded-3xl border border-gray-200 p-0 shadow-sm overflow-hidden border-l-4 border-l-emerald-500 flex flex-col">
@@ -2004,37 +1661,9 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 mr-2">
-              <button 
-                onClick={() => setViewMode('accordion')}
-                style={{
-                  padding: '6px 12px',
-                  background: viewMode === 'accordion' ? 'var(--color-background-secondary)' : 'transparent',
-                  border: '0.5px solid var(--color-border-tertiary)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  color: viewMode === 'accordion' ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-                  fontWeight: viewMode === 'accordion' ? 'bold' : 'normal',
-                  transition: 'all 0.2s'
-                }}
-                title="Vista de Lista"
-              >≡</button>
-              <button 
-                onClick={() => setViewMode('table')}
-                style={{
-                  padding: '6px 12px',
-                  background: viewMode === 'table' ? 'var(--color-background-secondary)' : 'transparent',
-                  border: '0.5px solid var(--color-border-tertiary)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  color: viewMode === 'table' ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-                  fontWeight: viewMode === 'table' ? 'bold' : 'normal',
-                  transition: 'all 0.2s'
-                }}
-                title="Vista de Tabla"
-              >⊞</button>
+            <div className="bg-gray-100 p-1 rounded-lg flex items-center mr-2">
+              <button onClick={() => setViewMode('accordion')} className={`p-1.5 rounded transition-colors ${viewMode === 'accordion' ? 'bg-white shadow-sm text-slate-800' : 'text-gray-400 hover:text-slate-600'}`} title="Vista de Lista">≡</button>
+              <button onClick={() => setViewMode('table')} className={`p-1.5 rounded transition-colors ${viewMode === 'table' ? 'bg-white shadow-sm text-slate-800' : 'text-gray-400 hover:text-slate-600'}`} title="Vista de Tabla">⊞</button>
             </div>
             <button onClick={() => setShowImportModal(true)} className="btn bg-gray-100 text-gray-600 hover:bg-gray-200 py-2 px-3 text-xs shadow-sm">☁ Importar CSV</button>
             <button onClick={() => handleOpenForm()} className="btn bg-emerald-500 text-white hover:bg-emerald-600 py-2 px-4 text-xs shadow-md shadow-emerald-500/20">+ Agregar Plato</button>
@@ -2054,23 +1683,13 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
         {viewMode === 'accordion' && (
           <div className="p-6 space-y-4">
             {categoriasConPlatos.sort((a,b)=>a.orden-b.orden).map(cat => {
-              const platosCat = platos.filter(p => {
-                const cp = p.categoria_nombre || p.categoria || p.category || p.categoria_id || '';
-                const cn = cat.nombre || '';
-                return cp.toString().trim().toLowerCase() === cn.toString().trim().toLowerCase();
-              });
-              const isExpanded = (categoriasExpandidas || []).includes(cat.nombre);
+              const platosCat = filteredPlatos.filter(p => p.categoria_id === cat.id);
+              const isExpanded = expandedCats.includes(cat.id);
               return (
                 <div key={cat.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all">
                   <div 
                     className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => {
-                      setCategoriasExpandidas(prev => 
-                        prev.includes(cat.nombre) 
-                          ? prev.filter(n => n !== cat.nombre)
-                          : [...prev, cat.nombre]
-                      );
-                    }}
+                    onClick={() => toggleAccordion(cat.id)}
                   >
                     <div className="flex items-center gap-3">
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
@@ -2092,7 +1711,7 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
                             <div key={plato.id} className={`bg-white border rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-emerald-200 ${plato.estado === 'OCULTO' ? 'opacity-50 border-gray-200' : 'border-gray-100'} ${focusCatName && (plato.categoria_nombre === focusCatName || plato.categoria === focusCatName) ? 'border-emerald-400 ring-1 ring-emerald-200 bg-emerald-50/30' : ''}`}>
                               <div className="flex items-center gap-4 flex-1 min-w-0">
                                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-300 shrink-0 border border-gray-200 overflow-hidden">
-                                  {plato.foto_url ? <img src={plato.foto_url} alt="Plato" className="w-full h-full object-cover"/> : <span style={{fontSize:'20px'}}>🖼</span>}
+                                  {plato.foto_url ? <img src={plato.foto_url} alt="Plato" className="w-full h-full object-cover"/> : 🖼}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
@@ -2137,96 +1756,57 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
 
         {/* VISTA 2: TABLA GENERAL */}
         {viewMode === 'table' && (
-          <div className="overflow-x-auto p-0 bg-white">
-            {platosVisibles.length === 0 ? (
-              <div style={{textAlign:'center', padding:'40px', color:'#9ca3af', fontSize:'13px'}}>
-                Activa una categoría arriba para ver sus platos aquí
-              </div>
-            ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-6 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest">Plato</th>
-                  <th className="px-4 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest">Categoría</th>
-                  <th className="px-4 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest">Precio Venta</th>
-                  <th className="px-4 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest">Costo Prod.</th>
-                  <th className="px-4 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest">Margen</th>
-                  <th className="px-4 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest">Canal</th>
-                  <th className="px-4 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Estado</th>
-                  <th className="px-6 py-3 text-[11px] font-black text-gray-400 uppercase tracking-widest text-right">Acciones</th>
+          <div className="overflow-x-auto p-0">
+            <table className="token-table w-full bg-white">
+              <thead className="bg-gray-50 sticky top-0 z-10">
+                <tr>
+                  <th>Plato</th>
+                  <th>Categoría</th>
+                  <th>Precio Venta</th>
+                  <th>Costo Prod.</th>
+                  <th>Margen</th>
+                  <th>Canal</th>
+                  <th>Estado</th>
+                  <th className="text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {platosVisibles.map((plato, index) => {
-                  const marginValue = parseFloat(plato.margen_bruto) || 0;
-                  const isAvailable = plato.estado === 'DISPONIBLE';
-                  
+                {filteredPlatos.map(plato => {
                   return (
-                    <tr 
-                      key={plato.id} 
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                      style={{ height: '52px', background: index % 2 === 1 ? 'var(--color-background-secondary)' : 'white' }}
-                    >
-                      <td className="px-6 py-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0 border border-gray-200 overflow-hidden">
-                            {plato.foto_url ? <img src={plato.foto_url} alt="Plato" className="w-full h-full object-cover"/> : <span style={{fontSize:'20px'}}>🖼</span>}
-                          </div>
-                          <span className="font-bold text-sm text-slate-800 truncate max-w-[200px]">{plato.nombre}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">
-                        <span className="text-[11px] font-bold bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full uppercase tracking-tight">
-                          {plato.categoria_nombre || plato.categoria || 'Sin Cat.'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 font-black text-sm text-slate-900">{formatCOP(plato.precio_venta)}</td>
-                      <td className="px-4 py-2 text-xs text-gray-500">{plato.costo_produccion ? formatCOP(plato.costo_produccion) : '—'}</td>
-                      <td className="px-4 py-2">
+                    <tr key={plato.id} className={`hover:bg-gray-50 transition-colors ${plato.estado === 'OCULTO' ? 'opacity-60 bg-gray-50' : ''}`}>
+                      <td className="font-bold text-slate-800">{plato.nombre}</td>
+                      <td><span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-medium">{plato.categoria || 'Desconocida'}</span></td>
+                      <td className="font-black text-slate-900">{formatCOP(plato.precio_venta)}</td>
+                      <td className="text-gray-500">{plato.costo_produccion ? formatCOP(plato.costo_produccion) : '-'}</td>
+                      <td>
                         {plato.margen_bruto ? (
-                          <span 
-                            className="text-[11px] font-black px-2 py-1 rounded"
-                            style={{
-                              color: marginValue > 50 ? '#27500A' : marginValue > 30 ? '#633806' : '#791F1F',
-                              background: marginValue > 50 ? '#EAF3DE' : marginValue > 30 ? '#FAEEDA' : '#FCEBEB'
-                            }}
-                          >
+                          <span className={`text-xs font-bold px-2 py-1 rounded ${parseFloat(plato.margen_bruto) > 60 ? 'bg-emerald-50 text-emerald-700' : parseFloat(plato.margen_bruto) < 30 ? 'bg-red-50 text-red-700' : 'bg-orange-50 text-orange-700'}`}>
                             {plato.margen_bruto}
                           </span>
-                        ) : <span className="text-gray-300">—</span>}
+                        ) : <span className="text-gray-400">-</span>}
                       </td>
-                      <td className="px-4 py-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{plato.canal}</span>
+                      <td><span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{plato.canal}</span></td>
+                      <td>
+                        <span className={`text-[10px] font-black uppercase px-2 py-1 rounded tracking-widest ${
+                          plato.estado === 'DISPONIBLE' ? 'text-emerald-700 bg-emerald-100' : 
+                          plato.estado === 'AGOTADO' ? 'text-red-600 bg-red-100' : 'text-gray-500 bg-gray-200'
+                        }`}>
+                          {plato.estado}
+                        </span>
                       </td>
-                      <td className="px-4 py-2">
-                        <div className="flex justify-center">
-                          <div 
-                            onClick={() => handleToggleEstado(plato, isAvailable ? 'AGOTADO' : 'DISPONIBLE')}
-                            className={`w-8 h-4 rounded-full p-0.5 cursor-pointer transition-colors ${isAvailable ? 'bg-emerald-500' : 'bg-gray-300'}`}
-                          >
-                            <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isAvailable ? 'translate-x-4' : 'translate-x-0'}`}></div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-2 text-right">
-                        <button 
-                          onClick={() => handleOpenForm(plato)} 
-                          className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
-                        >
-                          Editar
-                        </button>
+                      <td className="text-right">
+                        <button onClick={() => handleOpenForm(plato)} className="text-xs font-bold text-indigo-600 hover:underline">Editar</button>
                       </td>
                     </tr>
-                  );
+                  )
                 })}
               </tbody>
             </table>
-            )}
           </div>
         )}
-      </React.Fragment>
-    )}
-  </div>
+        )}
+          </React.Fragment>
+        )}
 
       {/* MODAL FORMULARIO DE PLATO */}
       {showFormModal && (
@@ -2345,7 +1925,7 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
                 <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-100 text-slate-700 text-sm font-bold rounded-xl transition-colors">Cancelar</button>
                 <button type="submit" form="platoForm" className="flex-[2] py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-emerald-600/20 flex justify-center items-center gap-2">
-                  <span style={{fontSize:'18px'}}>✅</span> Guardar Plato en Carta
+                  <Check size={18}/> Guardar Plato en Carta
                 </button>
              </div>
           </div>
@@ -2399,94 +1979,52 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
 // --- WIDGET: MODIFICADORES Y VARIANTES (PASO 3) ---
 function MenuModificadoresBlock({ restauranteId, platos }) {
   // 1. Estado de la Base de Datos (DINÁMICO)
-  const [grupos, setGrupos] = React.useState([
-    { id: 'g-1', nombre: 'Tipo de pasta', tipo_seleccion: 'UNICA', min_selecciones: 1, max_selecciones: 1, estado: 'ACTIVO' },
-    { id: 'g-2', nombre: 'Nivel de cocción pasta', tipo_seleccion: 'UNICA', min_selecciones: 1, max_selecciones: 1, estado: 'ACTIVO' },
-    { id: 'g-3', nombre: 'Adiciones a la pizza', tipo_seleccion: 'OPCIONAL_MULTIPLE', min_selecciones: 0, max_selecciones: 5, estado: 'ACTIVO' },
-    { id: 'g-4', nombre: 'Sin estos ingredientes', tipo_seleccion: 'OPCIONAL_MULTIPLE', min_selecciones: 0, max_selecciones: 3, estado: 'ACTIVO' },
-    { id: 'g-5', nombre: 'Tamaño de pizza', tipo_seleccion: 'UNICA', min_selecciones: 1, max_selecciones: 1, estado: 'ACTIVO' },
-    { id: 'g-6', nombre: 'Maridaje recomendado', tipo_seleccion: 'OPCIONAL_UNICA', min_selecciones: 0, max_selecciones: 1, estado: 'ACTIVO' }
-  ]);
-  const [opciones, setOpciones] = React.useState([
-    { id: 'o-1', grupo_id: 'g-1', nombre: 'Fettuccine', precio_adicional: 0, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-2', grupo_id: 'g-1', nombre: 'Penne', precio_adicional: 0, estado: 'DISPONIBLE', orden: 2 },
-    { id: 'o-3', grupo_id: 'g-1', nombre: 'Rigatoni', precio_adicional: 0, estado: 'DISPONIBLE', orden: 3 },
-    { id: 'o-4', grupo_id: 'g-1', nombre: 'Spaghetti', precio_adicional: 0, estado: 'DISPONIBLE', orden: 4 },
-    { id: 'o-5', grupo_id: 'g-2', nombre: 'Al dente', precio_adicional: 0, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-6', grupo_id: 'g-2', nombre: 'Bien cocida', precio_adicional: 0, estado: 'DISPONIBLE', orden: 2 },
-    { id: 'o-7', grupo_id: 'g-3', nombre: 'Champiñones extra', precio_adicional: 3000, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-8', grupo_id: 'g-3', nombre: 'Huevo al centro', precio_adicional: 2500, estado: 'DISPONIBLE', orden: 2 },
-    { id: 'o-9', grupo_id: 'g-3', nombre: 'Prosciutto crudo', precio_adicional: 5000, estado: 'DISPONIBLE', orden: 3 },
-    { id: 'o-10', grupo_id: 'g-3', nombre: 'Rúgula fresca', precio_adicional: 2000, estado: 'DISPONIBLE', orden: 4 },
-    { id: 'o-11', grupo_id: 'g-3', nombre: 'Trufa negra rallada', precio_adicional: 8000, estado: 'DISPONIBLE', orden: 5 },
-    { id: 'o-12', grupo_id: 'g-4', nombre: 'Sin ajo', precio_adicional: 0, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-13', grupo_id: 'g-4', nombre: 'Sin cebolla', precio_adicional: 0, estado: 'DISPONIBLE', orden: 2 },
-    { id: 'o-14', grupo_id: 'g-4', nombre: 'Sin gluten', precio_adicional: 0, estado: 'DISPONIBLE', orden: 3 },
-    { id: 'o-15', grupo_id: 'g-5', nombre: 'Personal 25cm', precio_adicional: 0, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-16', grupo_id: 'g-5', nombre: 'Familiar 35cm', precio_adicional: 12000, estado: 'DISPONIBLE', orden: 2 },
-    { id: 'o-17', grupo_id: 'g-6', nombre: 'Chianti Classico', precio_adicional: 18000, estado: 'DISPONIBLE', orden: 1 },
-    { id: 'o-18', grupo_id: 'g-6', nombre: 'Montepulciano', precio_adicional: 14000, estado: 'DISPONIBLE', orden: 2 },
-    { id: 'o-19', grupo_id: 'g-6', nombre: 'Pinot Grigio', precio_adicional: 16000, estado: 'DISPONIBLE', orden: 3 }
-  ]);
-  const [loading, setLoading] = React.useState(false);
+  const [grupos, setGrupos] = useState([]);
+  const [opciones, setOpciones] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Carga inicial de datos
-  React.useEffect(() => {
-    // Carga inicial deshabilitada (offline/static)
+  useEffect(() => {
+    fetchModificadores();
   }, []);
 
-  
   const fetchModificadores = async () => {
-    // Sin servidor — los grupos ya están en el estado inicial de este componente
-    setLoading(false);
+    try {
+      const resp = await fetch('/api/modificadores');
+      const data = await resp.json();
+      const lista = Array.isArray(data) ? data : [];
+      
+      setGrupos(lista);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error cargando modificadores:', err);
+      setLoading(false);
+    }
   };
 
-  const [vinculos, setVinculos] = React.useState([
-    { plato_id: 'p-1', grupo_id: 'g-1', orden_en_plato: 1 },
-    { plato_id: 'p-1', grupo_id: 'g-2', orden_en_plato: 2 },
-    { plato_id: 'p-1', grupo_id: 'g-4', orden_en_plato: 3 },
-    { plato_id: 'p-2', grupo_id: 'g-1', orden_en_plato: 1 },
-    { plato_id: 'p-2', grupo_id: 'g-2', orden_en_plato: 2 },
-    { plato_id: 'p-2', grupo_id: 'g-4', orden_en_plato: 3 },
-    { plato_id: 'p-2', grupo_id: 'g-6', orden_en_plato: 4 },
-    { plato_id: 'p-3', grupo_id: 'g-1', orden_en_plato: 1 },
-    { plato_id: 'p-3', grupo_id: 'g-2', orden_en_plato: 2 },
-    { plato_id: 'p-3', grupo_id: 'g-4', orden_en_plato: 3 },
-    { plato_id: 'p-4', grupo_id: 'g-1', orden_en_plato: 1 },
-    { plato_id: 'p-4', grupo_id: 'g-2', orden_en_plato: 2 },
-    { plato_id: 'p-4', grupo_id: 'g-4', orden_en_plato: 3 },
-    { plato_id: 'p-4', grupo_id: 'g-6', orden_en_plato: 4 },
-    { plato_id: 'p-5', grupo_id: 'g-3', orden_en_plato: 1 },
-    { plato_id: 'p-5', grupo_id: 'g-5', orden_en_plato: 2 },
-    { plato_id: 'p-5', grupo_id: 'g-4', orden_en_plato: 3 },
-    { plato_id: 'p-6', grupo_id: 'g-3', orden_en_plato: 1 },
-    { plato_id: 'p-6', grupo_id: 'g-5', orden_en_plato: 2 },
-    { plato_id: 'p-6', grupo_id: 'g-4', orden_en_plato: 3 },
-    { plato_id: 'p-7', grupo_id: 'g-3', orden_en_plato: 1 },
-    { plato_id: 'p-7', grupo_id: 'g-5', orden_en_plato: 2 },
-    { plato_id: 'p-7', grupo_id: 'g-4', orden_en_plato: 3 },
-    { plato_id: 'p-7', grupo_id: 'g-6', orden_en_plato: 4 }
+  const [vinculos, setVinculos] = useState([
+    { plato_id: 'p-3', grupo_id: 'g-2', orden_en_plato: 1 },
   ]);
 
   // 2. Estado UI
-  const [viewMode, setViewMode] = React.useState('biblioteca'); // 'biblioteca' | 'por_plato'
-  const [selectedPlatoId, setSelectedPlatoId] = React.useState(platos.length > 0 ? platos[0].id : null);
+  const [viewMode, setViewMode] = useState('biblioteca'); // 'biblioteca' | 'por_plato'
+  const [selectedPlatoId, setSelectedPlatoId] = useState(platos.length > 0 ? platos[0].id : null);
   
-  const [showGroupModal, setShowGroupModal] = React.useState(false);
-  const [editingGroup, setEditingGroup] = React.useState(null);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [editingGroup, setEditingGroup] = useState(null);
   
-  const [showOptionModal, setShowOptionModal] = React.useState(false);
-  const [activeGroupIdForOption, setActiveGroupIdForOption] = React.useState(null);
-  const [editingOption, setEditingOption] = React.useState(null);
+  const [showOptionModal, setShowOptionModal] = useState(false);
+  const [activeGroupIdForOption, setActiveGroupIdForOption] = useState(null);
+  const [editingOption, setEditingOption] = useState(null);
   
-  const [formError, setFormError] = React.useState('');
+  const [formError, setFormError] = useState('');
 
   // 3. Formularios
   const defaultGroupForm = { nombre: '', tipo_seleccion: 'UNICA', min_selecciones: 1, max_selecciones: 1, estado: 'ACTIVO' };
-  const [groupForm, setGroupForm] = React.useState({ ...defaultGroupForm });
+  const [groupForm, setGroupForm] = useState({ ...defaultGroupForm });
 
   const defaultOptionForm = { nombre: '', precio_adicional: '', estado: 'DISPONIBLE' };
-  const [optionForm, setOptionForm] = React.useState({ ...defaultOptionForm });
+  const [optionForm, setOptionForm] = useState({ ...defaultOptionForm });
 
   const formatCOP = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
 
@@ -2661,7 +2199,7 @@ function MenuModificadoresBlock({ restauranteId, platos }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {grupos.map(grupo => {
-                 const opsGrupo = opciones.filter(o => o.grupo_id === grupo.id).sort((a,b)=>a.orden-b.orden);
+                 const opsGrupo = (grupo.opciones || []).sort((a,b)=>a.orden-b.orden);
                  const vincsCount = vinculos.filter(v => v.grupo_id === grupo.id).length;
                  const isUnica = grupo.tipo_seleccion.includes('UNICA');
                  const isRequired = grupo.tipo_seleccion === 'UNICA' || grupo.tipo_seleccion === 'MULTIPLE';
@@ -2785,7 +2323,7 @@ function MenuModificadoresBlock({ restauranteId, platos }) {
                                className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-all ${isLinked ? 'bg-white border-orange-500 shadow-md ring-1 ring-orange-500' : 'bg-white border-gray-200 hover:border-gray-300 opacity-70'}`}
                              >
                                 <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border ${isLinked ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white border-gray-300 text-transparent'}`}>
-                                  {isLinked ? <span style={{fontSize:'18px'}}>✅</span> : <span style={{fontSize:'18px'}}>✅</span>}
+                                  {isLinked ? <Check size={14} strokeWidth={4}/> : <Check size={14}/>}
                                 </div>
                                 <div className="flex-1">
                                    <div className="flex items-center gap-2 mb-1">
@@ -2896,419 +2434,138 @@ function MenuModificadoresBlock({ restauranteId, platos }) {
                 </div>
                 <div>
                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex justify-between items-center">
-                                     <span>Precio Adicional (COP) <span className="text-red-500">*</span></span>
-                                     <span className="text-[9px] bg-slate-100 px-1 rounded text-slate-500 font-black">≥ $0</span>
-                                   </label>
-                                   <div className="relative">
-                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                                      <input type="number" min="0" step="1" pattern="\d+" value={optionForm.precio_adicional} onChange={(e) => setOptionForm({...optionForm, precio_adicional: e.target.value})} placeholder="0" className="w-full text-sm p-3 pl-8 rounded-xl border border-gray-300 focus:border-orange-500 outline-none font-black text-emerald-700" required />
-                                   </div>
-                                   <p className="text-[10px] text-gray-500 mt-1">Si no tiene costo extra, coloca 0.</p>
-                                </div>
+                     <span>Precio Adicional (COP) <span className="text-red-500">*</span></span>
+                     <span className="text-[9px] bg-slate-100 px-1 rounded text-slate-500 font-black">≥ $0</span>
+                   </label>
+                   <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                      <input type="number" min="0" step="1" pattern="\d+" value={optionForm.precio_adicional} onChange={(e) => setOptionForm({...optionForm, precio_adicional: e.target.value})} placeholder="0" className="w-full text-sm p-3 pl-8 rounded-xl border border-gray-300 focus:border-orange-500 outline-none font-black text-emerald-700" required />
+                   </div>
+                   <p className="text-[10px] text-gray-500 mt-1">Si no tiene costo extra, coloca 0.</p>
+                </div>
 
-                                <div className="mt-8 flex gap-3">
-                                   <button type="submit" className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl shadow-md">Guardar Opción</button>
-                                </div>
-                             </form>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
-// --- COMPONENTE MÓDULO 4: RECETAS E INVENTARIO ---
-function MenuRecetasBlock({ platos, recetas, inventario }) {
-  const [activeTab, setActiveTab] = React.useState('platos'); // 'platos' o 'inventario'
-
-  const getFactorConversion = (unidadCompra, unidadReceta) => {
-    if (unidadCompra === unidadReceta) return 1;
-    if (unidadCompra === 'kg' && unidadReceta === 'g') return 0.001;
-    if (unidadCompra === 'g' && unidadReceta === 'kg') return 1000;
-    if (unidadCompra === 'litro' && (unidadReceta === 'ml' || unidadReceta === 'cc')) return 0.001;
-    if (unidadCompra === 'ml' && unidadReceta === 'litro') return 1000;
-    return 1;
-  };
-
-  const platosConCostos = platos.filter(p => p.estado_inicial !== 'INACTIVO').map(plato => {
-    const lineas = recetas.filter(r => r.nombre_plato === plato.nombre);
-    let costoCalculado = 0;
-    const lineasConCosto = lineas.map(linea => {
-      const insumo = inventario.find(i => i.nombre === linea.ingrediente_nombre);
-      let subtotal = 0;
-      let tienePrecio = false;
-      if (insumo && insumo.precio_por_unidad > 0) {
-        tienePrecio = true;
-        const factor = getFactorConversion(insumo.unidad_compra, linea.unidad_medida);
-        subtotal = linea.cantidad * (insumo.precio_por_unidad * factor);
-        costoCalculado += subtotal;
-      }
-      return { ...linea, insumo, subtotal, tienePrecio };
-    });
-
-    let margenReal = '100.00%';
-    let isNegativo = false;
-    let faltaPrecio = lineasConCosto.some(l => !l.tienePrecio);
-    if (costoCalculado > 0 && plato.precio_venta > 0) {
-      const p = ((plato.precio_venta - costoCalculado) / plato.precio_venta) * 100;
-      margenReal = p.toFixed(1) + '%';
-      if (p < 0) isNegativo = true;
-    } else if (plato.precio_venta === 0) {
-      margenReal = '0.0%';
-    }
-
-    return {
-      ...plato,
-      lineas: lineasConCosto,
-      costoCalculado,
-      margenReal,
-      isNegativo,
-      faltaPrecio,
-      tieneReceta: lineas.length > 0
-    };
-  });
-
-  return (
-    <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between mb-5 gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">📋</div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">4. Recetas e Inventario</h3>
-            <p className="text-xs text-gray-500">Stock valorizado y márgenes en tiempo real (Algoritmo IA).</p>
+                <div className="mt-8 flex gap-3">
+                   <button type="submit" className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl shadow-md">Guardar Opción</button>
+                </div>
+             </form>
           </div>
-        </div>
-        <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200/50">
-          <button onClick={() => setActiveTab('platos')} className={`px-4 py-2 text-xs font-bold rounded-lg flex-1 transition-all ${activeTab==='platos' ? 'bg-white shadow text-slate-900 border border-gray-200/50' : 'text-gray-500 hover:text-slate-800 hover:bg-gray-200/50'}`}>🍲 Recetas (Cálculo Costos)</button>
-          <button onClick={() => setActiveTab('inventario')} className={`px-4 py-2 text-xs font-bold rounded-lg flex-1 transition-all ml-1 ${activeTab==='inventario' ? 'bg-white shadow text-slate-900 border border-gray-200/50' : 'text-gray-500 hover:text-slate-800 hover:bg-gray-200/50'}`}>📦 Insumos (Catálogo Central)</button>
-        </div>
-      </div>
-
-      {activeTab === 'platos' && (
-        <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
-          <table className="w-full text-left text-sm border-collapse bg-white">
-            <thead className="bg-slate-50">
-              <tr className="border-b border-gray-200 uppercase text-[10px] text-slate-500 font-bold tracking-wider">
-                <th className="p-4 rounded-tl-2xl">Plato Base</th>
-                <th className="p-4">Composición Técnica</th>
-                <th className="p-4 text-right">M2: Precio Venta</th>
-                <th className="p-4 text-right">M4: Costo Real</th>
-                <th className="p-4 text-right rounded-tr-2xl">Margen Final</th>
-              </tr>
-            </thead>
-            <tbody>
-              {platosConCostos.map((p, idx) => (
-                <tr key={idx} className="border-b border-gray-100 hover:bg-purple-50/30 transition-colors group">
-                  <td className="p-4 align-top">
-                    <div className="font-bold text-slate-800">{p.nombre}</div>
-                    {p.isNegativo && <span className="mt-1 inline-block text-[9px] bg-red-100 text-red-700 font-black border border-red-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Pérdida Crítica</span>}
-                  </td>
-                  <td className="p-4">
-                    {!p.tieneReceta ? (
-                      <span className="text-amber-500 italic text-xs bg-amber-50 px-3 py-1 rounded-lg border border-amber-100">⚠️ Requiere receta en M4</span>
-                    ) : (
-                      <div className="flex flex-col gap-1.5 bg-gray-50/50 p-3 rounded-xl border border-gray-100 group-hover:border-purple-100 group-hover:bg-white transition-all">
-                        {p.lineas.map((l, i) => (
-                          <div key={i} className="text-[11px] grid grid-cols-2 gap-4 w-full min-w-[240px]">
-                            <span className="text-slate-700 font-medium truncate" title={l.ingrediente_nombre}>• {l.ingrediente_nombre}</span>
-                            <span className="text-gray-400 text-right font-mono text-[10px]">
-                              {l.cantidad}{l.unidad_medida} 
-                              {l.tienePrecio ? <span className="text-slate-400 font-medium ml-1 bg-gray-100 px-1.5 py-0.5 rounded">(${l.subtotal.toFixed(0)})</span> : <span className="text-red-500 ml-1 bg-red-50 px-1.5 py-0.5 rounded font-bold">Falta $</span>}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-4 text-right align-top">
-                    <span className="bg-slate-100 text-slate-700 font-mono font-bold px-3 py-1.5 rounded-lg border border-slate-200/60 shadow-sm">${(p.precio_venta || 0).toLocaleString()}</span>
-                  </td>
-                  <td className="p-4 text-right align-top">
-                    {p.tieneReceta ? (
-                      <span className={`font-mono font-black ${p.faltaPrecio ? 'text-amber-600 bg-amber-50' : 'text-slate-800 bg-slate-100 px-3'} py-1.5 rounded-lg`}>${p.costoCalculado.toLocaleString()}</span>
-                    ) : <span className="text-gray-300">-</span>}
-                  </td>
-                  <td className="p-4 text-right align-top">
-                    {p.tieneReceta ? (
-                      <span className={`font-black font-mono tracking-tight px-3 py-1.5 rounded-lg border shadow-sm ${p.isNegativo ? 'text-red-700 bg-red-100 border-red-200' : 'text-emerald-700 bg-emerald-100 border-emerald-200'}`}>{p.margenReal}</span>
-                    ) : <span className="text-gray-300">-</span>}
-                  </td>
-                </tr>
-              ))}
-              {platosConCostos.length === 0 && (
-                <tr><td colSpan="5" className="p-12 text-center text-slate-400 text-sm">No hay platos activos configurados en M2.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {activeTab === 'inventario' && (
-        <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
-          <table className="w-full text-left text-sm border-collapse bg-white">
-            <thead className="bg-slate-50">
-              <tr className="border-b border-gray-200 text-[10px] uppercase text-slate-500 font-bold tracking-wider">
-                <th className="p-4 rounded-tl-2xl">Catálogo de Insumos</th>
-                <th className="p-4">U. Medida Maestro</th>
-                <th className="p-4 text-right">Impacto Financiero (Precio Base)</th>
-                <th className="p-4 text-right rounded-tr-2xl">Stock a Hoy</th>
-              </tr>
-            </thead>
-            <tbody>
-              {inventario.map((i, idx) => (
-                <tr key={idx} className="border-b border-gray-50 hover:bg-purple-50/30 transition-colors group">
-                  <td className="p-4">
-                    <span className="font-bold text-slate-700 block">{i.nombre}</span>
-                    {i.stock_minimo_alerta > 0 && i.stock_actual <= i.stock_minimo_alerta && <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">⚠️ CRÍTICO</span>}
-                  </td>
-                  <td className="p-4 text-slate-500 uppercase text-[11px] font-black tracking-wider bg-slate-50 w-32 border-x border-gray-50 text-center">{i.unidad_compra}</td>
-                  <td className="p-4 text-right">
-                     <span className="font-mono bg-white text-purple-700 font-bold px-3 py-1 inline-flex items-center justify-end rounded-lg border border-purple-100 shadow-sm group-hover:border-purple-300">
-                        ${(i.precio_por_unidad || 0).toLocaleString()}
-                     </span>
-                  </td>
-                  <td className="p-4 text-right text-slate-600 font-mono font-medium">
-                    {i.stock_actual || 0}
-                  </td>
-                </tr>
-              ))}
-              {inventario.length === 0 && (
-                <tr><td colSpan="4" className="p-12 text-center text-slate-400 text-sm italic">Sin insumos registrados. Sube tu plantilla "Inventario".</td></tr>
-              )}
-            </tbody>
-          </table>
         </div>
       )}
     </div>
   );
 }
 
-function ViewMenu({ 
-  categorias, setCategorias, 
-  platos, setPlatos, 
-  recetas, setRecetas, 
-  inventario, setInventario,
-  gruposMod, setGruposMod,
-  opcionesMod, setOpcionesMod,
-  vinculosMod, setVinculosMod
-}) {
-  const [menuTab, setMenuTab] = React.useState('configuracion');
-  const [activeCatNames, setActiveCatNames] = React.useState(['Pastas Artesanales', 'Pizzas al Horno', 'Antipasti', 'Postres Italianos', 'Bebidas y Vinos']);
-  const [focusCatName, setFocusCatName] = React.useState(null);
-  const [categoriasExpandidas, setCategoriasExpandidas] = React.useState(['Pastas Artesanales', 'Pizzas al Horno', 'Antipasti', 'Postres Italianos', 'Bebidas y Vinos']);
-  const [importing, setImporting] = React.useState(false);
-  const [importError, setImportError] = React.useState(null);
-  const [importResult, setImportResult] = React.useState(null);
-  const [loading, setLoading] = React.useState(false);
-  const fileInputRef = React.useRef(null);
-  const platosRef = React.useRef(null);
-  const [vistaPlatos, setVistaPlatos] = React.useState('tabla');
-  const restauranteActivoId = 'default';
 
-  // --- EFECTO DE CALCULO DE COSTOS (Prioridad 3) ---
-  React.useEffect(() => {
-    // Evitar bucles: Solo ejecutar si hay cambios reales que procesar
-    let cambios = false;
-    const nuevosPlatos = (platos || []).map(plato => {
-      // Filtrar ingredientes de la receta de este plato
-      const ingredientes = (recetas || []).filter(r => 
-        r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim()
-      );
-      
-      if (ingredientes.length === 0) return plato;
+// --- 8. VIEW: CARTA & MENÚ ---
+function ViewMenu() {
+  const [menuTab, setMenuTab] = useState('configuracion'); // 'configuracion' | 'laboratorio'
+  const restauranteActivoId = "restaurante-demo-123"; // Multi-tenant (Simulado)
 
-      // Calcular costo sumando (cantidad * precio_del_inventario)
-      const nuevoCosto = ingredientes.reduce((acc, ing) => {
-        const itemInv = (inventario || []).find(i => i.nombre.toLowerCase().trim() === ing.ingrediente_nombre.toLowerCase().trim());
-        const costoUnitario = itemInv ? (itemInv.precio_por_unidad || 0) : (ing.costo_unitario || 0);
-        return acc + (ing.cantidad * costoUnitario);
-      }, 0);
+  // --- NUEVOS ESTADOS PARA IMPORTACIÓN MASIVA ---
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState(null);
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
 
-      const roundedCosto = Math.round(nuevoCosto);
-      
-      if (plato.costo_produccion !== roundedCosto) {
-        cambios = true;
-        const nuevoMargen = plato.precio_venta > 0 
-          ? Number((((plato.precio_venta - roundedCosto) / plato.precio_venta) * 100).toFixed(2))
-          : 0;
-        return { ...plato, costo_produccion: roundedCosto, margen_bruto: nuevoMargen };
-      }
-      return plato;
-    });
-
-    if (cambios) {
-      setPlatos(nuevosPlatos);
-    }
-  }, [recetas, inventario]); // Solo depende de cambios en recetas o inventario
-
-  const handleDescargarPlantilla = () => alert('Descargando plantilla de menú...');
-  const handleSubirArchivo = () => fileInputRef.current?.click();
-
-  const handleLimpiarCarta = async () => {
-    const confirmado = window.confirm(
-      '¿Estás seguro? Esto eliminará todas las categorías, platos, modificadores y recetas. Esta acción no se puede deshacer.'
-    );
-    if (!confirmado) return;
-    setCategorias([]);
-    setPlatos([]);
-    setRecetas([]);
-    setInventario([]);
-    setActiveCatNames([]);
-    alert('Contenido limpiado correctamente. Ahora puedes subir una nueva plantilla.');
-  };
-
-  
-  // FUNCIÓN ROBUSTA DE CARGA DE DATOS DEL MENÚ
-  async function loadMenuData() {
-    // Sin servidor — retorna null para que fetchMenuData use los datos ya en estado
-    return null;
-  }
-
-  const fetchMenuData = async () => {
-    // Sin servidor — los datos iniciales ya están en el estado de React.
-    // Esta función solo existe para el refresco post-importación.
-    setLoading(false);
-  };
-
-  React.useEffect(() => {
-    // No fetch al montar — los datos del estado inicial ya están listos.
-    setLoading(false);
-  }, []);
-
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || !file.name) return;
+
     setImporting(true);
     setImportError(null);
     setImportResult(null);
 
-    const reader = new FileReader();
+    const formData = new FormData();
+    formData.append('file', file);
 
-    reader.onload = (evt) => {
-      try {
-        const data = new Uint8Array(evt.target.result);
-        const wb = XLSX.read(data, { type: 'array' });
+    try {
+      const response = await fetch('/api/import', {
+        method: 'POST',
+        body: formData
+      });
 
-        console.log('Hojas encontradas:', wb.SheetNames);
+      const result = await response.json();
 
-        const readSheet = (keyword) => {
-          const match = wb.SheetNames.find(n =>
-            n.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(
-              keyword.toUpperCase().replace(/[^A-Z0-9]/g, '')
-            )
-          );
-          if (!match) {
-            console.warn('Hoja no encontrada para keyword:', keyword);
-            return [];
-          }
-          console.log('Leyendo hoja:', match);
-          const rows = XLSX.utils.sheet_to_json(wb.Sheets[match], { defval: '' });
-          console.log('Filas leídas en', match, ':', rows.length, rows[0]);
-          return rows;
-        };
-
-        const catRows = readSheet('CATEGORIAS');
-        const cats = catRows
-          .filter(r => r['nombre'] && String(r['nombre']).trim() !== '')
-          .map((r, i) => ({
-            id: 'cat-' + i,
-            nombre: String(r['nombre']).trim(),
-            canal: String(r['canal'] || 'AMBOS').toUpperCase(),
-            orden: Number(r['orden']) || (i + 1),
-            estado: String(r['activa'] || 'SI').toUpperCase() === 'NO' ? 'INACTIVA' : 'ACTIVA',
-            horario: null
-          }));
-
-        const platoRows = readSheet('PLATOS');
-        const pls = platoRows
-          .filter(r => r['nombre'] && String(r['nombre']).trim() !== '')
-          .map((r, i) => {
-            const catNombre = String(r['categoria_nombre'] || '').trim();
-            const catObj = cats.find(c => c.nombre.toLowerCase() === catNombre.toLowerCase());
-            const precio = Number(r['precio_venta']) || 0;
-            const costo = r['costo_produccion'] ? Number(r['costo_produccion']) : null;
-            return {
-              id: 'plato-' + i,
-              nombre: String(r['nombre']).trim(),
-              descripcion: String(r['descripcion_carta'] || ''),
-              precio_venta: precio,
-              costo_produccion: costo,
-              margen_bruto: precio > 0 && costo ? Number((((precio - costo) / precio) * 100).toFixed(1)) : null,
-              categoria_id: catObj ? catObj.id : (cats[0] ? cats[0].id : ''),
-              categoria_nombre: catNombre,
-              canal: String(r['canal'] || 'AMBOS').toUpperCase(),
-              estado: String(r['estado_inicial'] || 'DISPONIBLE').toUpperCase(),
-              iva_pct: 8,
-              foto_url: null
-            };
-          });
-
-        const recRows = readSheet('RECETAS');
-        const recs = recRows
-          .filter(r => r['nombre_plato'] && r['ingrediente_nombre'])
-          .map((r, i) => ({
-            id: 'rec-' + i,
-            nombre_plato: String(r['nombre_plato']).trim(),
-            ingrediente_nombre: String(r['ingrediente_nombre']).trim(),
-            cantidad: Number(r['cantidad']) || 0,
-            unidad_medida: String(r['unidad_medida'] || 'und'),
-            costo_unitario: Number(r['costo_unitario']) || 0
-          }));
-
-        // Leer hoja de Inventario/Insumos
-        const invRows = readSheet('INVENTARIO') || readSheet('INSUMOS') || readSheet('INGREDIENTES') || [];
-        const inv = invRows
-          .filter(r => r['nombre'] && String(r['nombre']).trim() !== '')
-          .map((r, i) => ({
-            id: 'inv-' + i,
-            nombre: String(r['nombre'] || r['ingrediente'] || r['insumo'] || '').trim(),
-            unidad_compra: String(r['unidad_compra'] || r['unidad'] || r['unidad_medida'] || 'und').toLowerCase(),
-            precio_por_unidad: Number(r['precio_por_unidad'] || r['precio'] || r['costo'] || r['precio_unitario'] || 0),
-            stock_actual: Number(r['stock_actual'] || r['stock'] || 0),
-            stock_minimo_alerta: Number(r['stock_minimo'] || r['stock_minimo_alerta'] || 0),
-            proveedor: String(r['proveedor'] || '')
-          }));
-
-        // Si no hay hoja de inventario, construir desde recetas con precio 0
-        const invFinal = inv.length > 0 ? inv : recs.map((r, i) => ({
-          id: 'inv-auto-' + i,
-          nombre: r.ingrediente_nombre,
-          unidad_compra: r.unidad_medida,
-          precio_por_unidad: 0,
-          stock_actual: 0,
-          stock_minimo_alerta: 0,
-          proveedor: ''
-        })).filter((v, i, a) => a.findIndex(t => t.nombre === v.nombre) === i);
-
-        console.log('Resultado:', cats.length, 'cats,', pls.length, 'platos,', recs.length, 'recetas,', invFinal.length, 'insumos');
-
-        setCategorias(cats);
-        setPlatos(pls);
-        setRecetas(recs);
-        setInventario(invFinal);
-
-        const activos = cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre);
-        setActiveCatNames(activos);
-        setCategoriasExpandidas(activos);
-
-        setImportResult({ categorias: cats.length, platos: pls.length, recetas: recs.length, insumos: invFinal.length });
-
-      } catch (err) {
-        console.error('Error al parsear Excel:', err);
-        setImportError('Error al leer el Excel: ' + err.message);
-      } finally {
-        setImporting(false);
-        if (e.target) e.target.value = '';
+      if (!response.ok) {
+        throw new Error(result.message || 'Error en la importación');
       }
-    };
 
-    reader.onerror = () => {
-      setImportError('No se pudo leer el archivo. Intenta de nuevo.');
+      setImportResult(result);
+      console.log('Importación exitosa:', result);
+    } catch (err) {
+      setImportError(err.message);
+      console.error('Error al subir archivo:', err);
+    } finally {
       setImporting(false);
+      e.target.value = ''; // Reset
+    }
+  };
+
+
+  // --- ESTADOS DINÁMICOS DESDE SQLITE ---
+  const [categorias, setCategorias] = useState([]);
+  const [platos, setPlatos] = useState([]);
+  const [recetas, setRecetas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCatNames, setActiveCatNames] = useState([]);
+  const [focusCatName, setFocusCatName] = useState(null);
+  const platosRef = useRef(null);
+
+  // Carga inicial al montar la pestaña de Menú
+  useEffect(() => {
+    fetchMenuData();
+  }, []);
+
+  const fetchMenuData = async () => {
+    setLoading(true);
+    try {
+      const [catRes, platoRes, recRes] = await Promise.all([
+        fetch('/api/categorias'),
+        fetch('/api/platos'),
+        fetch('/api/recetas')
+      ]);
+      
+      const [catJson, platoJson, recJson] = await Promise.all([
+        catRes.json(),
+        platoRes.json(),
+        recRes.json()
+      ]);
+      
+      const catData = Array.isArray(catJson) ? catJson : [];
+      const platoData = Array.isArray(platoJson) ? platoJson : [];
+      const recData = Array.isArray(recJson) ? recJson : [];
+      
+      setCategorias(catData.map(c => ({ ...c, estado: 'INACTIVA' })));
+      setPlatos(platoData);
+      setRecetas(recData);
+    } catch (err) {
+      console.error('Error cargando datos del menú:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Escuchar eventos de WebSocket para refresco automático
+  useEffect(() => {
+    const handleWSMessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'import.completa' || msg.type === 'dashboard.refresh') {
+          console.log('[WS] Refrescando datos de menú tras importación...');
+          fetchMenuData();
+        }
+      } catch (err) {}
     };
 
-    reader.readAsArrayBuffer(file);
-  };
+    window.addEventListener('message', handleWSMessage); // Si el WS vive en App y lo envía vía postMessage
+    // Si el WS llega directamente al socket global, App debería disparar un evento custom
+    document.addEventListener('cartaya:refresh', fetchMenuData);
+
+    return () => {
+      window.removeEventListener('message', handleWSMessage);
+      document.removeEventListener('cartaya:refresh', fetchMenuData);
+    };
+  }, []);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
@@ -3324,33 +2581,13 @@ function ViewMenu({
 
       {/* TABS HEADER COMPARTIDO */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-2 border-b border-gray-200 pb-6">
-        <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="page-heading mb-1">Carta & Menú: <span>{menuTab === 'configuracion' ? 'El Origen de los Datos' : 'El Laboratorio Inteligente'}</span></div>
-            <p className="text-gray-500 max-w-2xl text-sm">
-              {menuTab === 'configuracion' 
-                ? 'Punto de partida del sistema. Ningún módulo puede operar sin que existan platos y categorías configurados aquí.' 
-                : 'Sube tu menú actual y deja que la IA convierta cada plato en un activo financiero. Descubre qué te hace ganar dinero y qué te retrasa.'}
-            </p>
-          </div>
-          {menuTab === 'configuracion' && (
-            <button
-              onClick={handleLimpiarCarta}
-              style={{
-                padding:'8px 16px',
-                background:'transparent',
-                color:'#E24B4A',
-                border:'1px solid #E24B4A',
-                borderRadius:'8px',
-                fontWeight:500,
-                fontSize:'13px',
-                cursor:'pointer',
-                whiteSpace:'nowrap'
-              }}
-            >
-              Limpiar contenido
-            </button>
-          )}
+        <div>
+          <div className="page-heading mb-1">Carta & Menú: <span>{menuTab === 'configuracion' ? 'El Origen de los Datos' : 'El Laboratorio Inteligente'}</span></div>
+          <p className="text-gray-500 max-w-2xl text-sm">
+            {menuTab === 'configuracion' 
+              ? 'Punto de partida del sistema. Ningún módulo puede operar sin que existan platos y categorías configurados aquí.' 
+              : 'Sube tu menú actual y deja que la IA convierta cada plato en un activo financiero. Descubre qué te hace ganar dinero y qué te retrasa.'}
+          </p>
         </div>
         <div className="flex gap-2 bg-gray-100 p-1.5 rounded-xl shrink-0">
             <button 
@@ -3367,19 +2604,13 @@ function ViewMenu({
             </button>
         </div>
       </div>
+
+      {/* ========================================================= */}
+      {/* PESTAÑA 1: NUEVA CONFIGURACIÓN BASE (LOS 5 BLOQUES)       */}
+      {/* ========================================================= */}
       {menuTab === 'configuracion' && (
         <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
            
-           <style dangerouslySetInnerHTML={{ __html: `
-              :root {
-                --color-background-primary: var(--surface);
-                --color-border-tertiary: var(--gray-200);
-                --color-text-secondary: var(--gray-500);
-                --color-text-tertiary: var(--gray-300);
-                --border-radius-lg: var(--r-lg);
-              }
-           `}} />
-
            {/* Context Banner */}
            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-start gap-4">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0">🕸</div>
@@ -3391,93 +2622,105 @@ function ViewMenu({
               </div>
            </div>
 
-           {/* Submódulo 1 — Categorías de la Carta */}
-           <div className="w-full">
-             {categorias.length === 0 ? (
-               <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-400 text-sm">Sin categorías — sube tu plantilla Excel para comenzar</div>
-             ) : <MenuCategoriasBlock restauranteId={restauranteActivoId} categorias={categorias} setCategorias={setCategorias} platos={platos} activeCatNames={activeCatNames} setActiveCatNames={setActiveCatNames} setFocusCatName={setFocusCatName} platosRef={platosRef} setCategoriasExpandidas={setCategoriasExpandidas} />}
+           {/* BLOQUE 1: CATEGORÍAS (AHORA DINÁMICO) */}
+           <MenuCategoriasBlock restauranteId={restauranteActivoId} categorias={categorias} setCategorias={setCategorias} platos={platos} activeCatNames={activeCatNames} setActiveCatNames={setActiveCatNames} setFocusCatName={setFocusCatName} platosRef={platosRef} />
+
+           {/* BLOQUE 2: PLATOS E ÍTEMS (AHORA DINÁMICO) */}
+           <MenuPlatosBlock restauranteId={restauranteActivoId} categorias={categorias} platos={platos} setPlatos={setPlatos} activeCatNames={activeCatNames} focusCatName={focusCatName} setFocusCatName={setFocusCatName} platosRef={platosRef} />
+
+           {/* BLOQUE 3: MODIFICADORES Y VARIANTES (AHORA DINÁMICO, REEMPLAZA AL MOCK ESTATICO) */}
+           <MenuModificadoresBlock restauranteId={restauranteActivoId} platos={platos} />
+
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* BLOQUE 4: RECETA TÉCNICA (Se movió para reacomodar el espacio) */}
+              <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 p-6 shadow-sm flex flex-col">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">📋</div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800">4. Recetas e Ingredientes</h3>
+                      <p className="text-[10px] text-purple-700 bg-purple-100 px-2 py-0.5 rounded inline-block mt-0.5 font-bold uppercase tracking-wider">Stock Sincronizado</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex-1">
+                  {recetas.length === 0 ? (
+                    <div className="bg-white border-2 border-dashed border-gray-100 rounded-xl p-8 flex flex-col items-center justify-center text-center">
+                       📦
+                       <p className="text-xs text-gray-400">No hay recetas cargadas en la base de datos.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                       {recetas.map((rec, idx) => (
+                         <div key={idx} className="p-3 bg-gray-50 border border-gray-100 rounded-xl hover:border-purple-200 transition-colors">
+                           <div className="flex justify-between items-start mb-1">
+                             <span className="text-[10px] font-black text-purple-600 uppercase">Fórmula</span>
+                             <span className="text-[10px] text-gray-400">#{idx + 1}</span>
+                           </div>
+                           <h4 className="text-xs font-bold text-slate-800 mb-2 truncate" title={rec.nombre_plato}>{rec.nombre_plato}</h4>
+                           <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                             <span className="text-[11px] font-medium text-slate-700 truncate">{rec.ingrediente_nombre}</span>
+                             <span className="text-[11px] font-black text-slate-900 ml-2">{rec.cantidad || 0} {rec.unidad_medida || 'und'}</span>
+                           </div>
+                         </div>
+                       ))}
+                    </div>
+                  )}
+                </div>
+              </div>
            </div>
 
-           {/* Submódulo 2 — Platos e Ítems */}
-           <div className="w-full">
-             {loading ? (
-               <div className="p-8 text-center text-gray-400 text-sm">Cargando...</div>
-             ) : (platos.length === 0 ? (
-               <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-400 text-sm">Sin platos — activa una categoría o sube tu plantilla</div>
-             ) : (
-               <MenuPlatosBlock restauranteId={restauranteActivoId} categorias={categorias} platos={platos} setPlatos={setPlatos} activeCatNames={activeCatNames} focusCatName={focusCatName} setFocusCatName={setFocusCatName} platosRef={platosRef} categoriasExpandidas={categoriasExpandidas} setCategoriasExpandidas={setCategoriasExpandidas} vistaPlatos={vistaPlatos} />
-             ))}
-           </div>
-
-           {/* Submódulo 3 — Modificadores y Variantes */}
-           <div className="w-full">
-             {loading ? (
-               <div className="p-8 text-center text-gray-400 text-sm">Cargando...</div>
-             ) : (platos.length === 0 ? (
-               <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center text-gray-400 text-sm">Sin modificadores — sube tu plantilla Excel</div>
-             ) : (
-               <MenuModificadoresBlock restauranteId={restauranteActivoId} platos={platos} />
-             ))}
-           </div>
-
-           {/* Submódulo 4 — Recetas e Ingredientes */}
-           <div className="w-full">
-             <MenuRecetasBlock 
-               platos={platos} setPlatos={setPlatos}
-               recetas={recetas} setRecetas={setRecetas} 
-               inventario={inventario} setInventario={setInventario} 
-             />
-           </div>
-
-           {/* Submódulo 5 — Importación Masiva (siempre visible al final) */}
-           <div style={{background:'#0F1117', borderRadius:'var(--border-radius-lg)', padding:'1.5rem', marginBottom:'1.5rem', position:'relative', overflow:'hidden'}}>
-             <div className="absolute -right-10 -bottom-10 text-slate-800 opacity-20">☁</div>
-             <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', position:'relative', zIndex:10}}>
-               <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
-                 <span style={{fontSize:'20px', color:'white'}}>⬆</span>
+           {/* BLOQUE 5: IMPORTACIÓN MASIVA */}
+           <div className="bg-slate-900 rounded-3xl border border-slate-800 p-8 shadow-xl text-white relative overflow-hidden">
+             <div className="absolute -right-10 -bottom-10 text-slate-800">☁</div>
+             <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+               <div className="flex items-center gap-4">
+                 <div className="w-14 h-14 bg-slate-800 text-emerald-400 rounded-2xl flex items-center justify-center border border-slate-700 shadow-inner">🗄</div>
                  <div>
-                   <h3 style={{fontWeight:500, fontSize:'16px', margin:0, color:'white'}}>5. Importación Masiva (CSV / Excel)</h3>
-                   <p style={{fontSize:'12px', color:'#9CA3AF', margin:0}}>¿Tienes cientos de platos? Sube tu base de datos con un clic siguiendo la estructura requerida.</p>
+                   <h3 className="text-xl font-bold text-white mb-1">5. Importación Masiva (CSV / Excel)</h3>
+                   <p className="text-sm text-slate-400">¿Tienes cientos de platos? Sube tu base de datos con un clic siguiendo la estructura requerida.</p>
                  </div>
                </div>
-               <div style={{display:'flex', gap:'8px'}}>
-                 <button onClick={handleDescargarPlantilla} style={{padding:'8px 16px', fontSize:'13px', border:'0.5px solid #374151', borderRadius:'6px', background:'transparent', color:'white', cursor:'pointer'}}>1. Bajar Plantilla</button>
-                 <button onClick={handleSubirArchivo} style={{padding:'8px 16px', fontSize:'13px', border:'none', borderRadius:'6px', background:'#00A066', color:'white', cursor:'pointer', fontWeight:500}}>2. Subir Archivo CSV</button>
+               <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                  <button className="flex-1 sm:flex-none btn bg-slate-800 text-white border border-slate-600 hover:bg-slate-700 text-sm py-3 px-5 rounded-xl flex items-center gap-2 justify-center shadow-md transition-colors"><span style={{fontSize:'15px', lineHeight:1}}>📥</span> 1. Bajar Plantilla</button>
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={importing}
+                    className={`flex-1 sm:flex-none btn bg-emerald-500 text-white hover:bg-emerald-600 text-sm py-3 px-5 rounded-xl flex items-center gap-2 justify-center shadow-md shadow-emerald-900/50 transition-colors ${importing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {importing ? <span style={{fontSize:'15px', lineHeight:1}}>🔄</span> : ☁}
+                    {importing ? 'Procesando...' : '2. Subir Archivo CSV'}
+                   </button>
                </div>
              </div>
-             
+
              {/* Reporte de resultados/errores */}
              {(importError || importResult) && (
-               <div style={{marginTop:'1rem', padding:'12px', borderRadius:'8px', background: importError ? '#FEF2F2' : '#E6FAF3', color: importError ? '#791F1F' : '#085041', border: `0.5px solid ${importError ? '#FECACA' : '#BBF7D0'}`, position:'relative', zIndex:10}}>
-                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'start', marginBottom:'8px'}}>
-                    <h4 style={{margin:0, fontWeight:700, fontSize:'14px', display:'flex', alignItems:'center', gap:'8px'}}>
-                       {importError ? '⚠️ Error en la Importación' : '✅ Importación Exitosa'}
+               <div className={`mt-6 p-4 rounded-xl border relative z-10 animate-in fade-in slide-in-from-top-4 ${importError ? 'bg-red-500/10 border-red-500/50 text-red-200' : 'bg-emerald-500/10 border-emerald-500/50 text-emerald-200'}`}>
+                 <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-bold text-sm flex items-center gap-2">
+                       {importError ? <span style={{fontSize:'15px', lineHeight:1}}>⚠️</span> : <span style={{fontSize:'15px', lineHeight:1}}>✅</span>}
+                       {importError ? 'Error en la Importación' : 'Importación Exitosa'}
                     </h4>
-                    <button onClick={() => {setImportError(null); setImportResult(null)}} style={{background:'transparent', border:'none', color:'inherit', cursor:'pointer', fontSize:'16px'}}>✕</button>
+                    <button onClick={() => {setImportError(null); setImportResult(null)}} className="text-slate-400 hover:text-white">✕</button>
                  </div>
-                 <p style={{margin:0, fontSize:'12px'}}>{importError || 'El archivo se ha procesado correctamente. Los módulos se actualizarán en tiempo real.'}</p>
+                 <p className="text-xs mb-2">{importError || 'El archivo se ha procesado correctamente. Los módulos se actualizarán en tiempo real.'}</p>
                  {importResult && (
-                    <React.Fragment>
-                      <div style={{marginTop:'8px', display:'flex', gap:'16px', fontSize:'10px', fontFamily:'monospace'}}>
-                         <span>Categorías: {importResult.categorias || 0}</span>
-                         <span>Platos: {importResult.platos || 0}</span>
-                         <span>Recetas: {importResult.recetas || 0}</span>
-                         <span>Insumos: {importResult.insumos || 0}</span>
-                      </div>
-                      <button 
-                        onClick={() => { setImportResult(null); setImportError(null); }}
-                        style={{marginTop:'12px', padding:'10px 24px', background:'#00A066', color:'white', border:'none', borderRadius:'8px', fontWeight:500, fontSize:'14px', cursor:'pointer', width:'100%'}}
-                      >
-                        ✅ Ver mi carta cargada
-                      </button>
-                    </React.Fragment>
-                  )}
+                   <div className="flex gap-4 text-[10px] font-mono">
+                      <span>Nuevos: {importResult.count || 0}</span>
+                      <span>Existentes: {importResult.existing || 0}</span>
+                   </div>
+                 )}
                </div>
              )}
            </div>
         </div>
       )}
-      {/* PESTAÑA 2: LABORATORIO Y OPTIMIZACIÓN */}
+
+      {/* ========================================================= */}
+      {/* PESTAÑA 2: LABORATORIO Y OPTIMIZACIÓN (CÓDIGO ANTERIOR)    */}
+      {/* ========================================================= */}
       {menuTab === 'laboratorio' && (
         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
           <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center gap-6 border border-slate-700">
@@ -3547,7 +2790,7 @@ function ViewMenu({
                       <div className="matrix-quadrant border-b border-border bg-amber-50/10">
                          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-amber-100 to-transparent opacity-50"></div>
                          <div className="flex justify-between items-start mb-2 relative z-10">
-                            <span className="q-badge q-estrella"><span style={{fontSize:'16px', lineHeight:1}}>⭐</span> Estrellas</span>
+                            <span className="q-badge q-estrella"><Star size={12} fill="currentColor"/> Estrellas</span>
                             <span className="text-xs font-black text-amber-600">Alto $ • Alta Pop.</span>
                          </div>
                          <p className="text-[10px] text-gray-500 mb-4 leading-relaxed">Tus ganadores. Alta rentabilidad y muy populares. ¡No los toques, promociónalos!</p>
@@ -3572,7 +2815,7 @@ function ViewMenu({
 
                       <div className="matrix-quadrant">
                          <div className="flex justify-between items-start mb-2">
-                            <span className="q-badge q-caballo"><span style={{fontSize:'16px', lineHeight:1}}>📈</span> Caballos (Plowhorses)</span>
+                            <span className="q-badge q-caballo"><Activity size={12}/> Caballos (Plowhorses)</span>
                             <span className="text-xs font-black text-blue-500">Bajo $ • Alta Pop.</span>
                          </div>
                          <p className="text-[10px] text-gray-500 mb-4 leading-relaxed">Populares pero poco rentables. Reducir porción o subir precio sutilmente.</p>
@@ -3624,7 +2867,7 @@ function ViewMenu({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
              <div className="bg-white rounded-3xl border border-gray-200 p-0 shadow-sm overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-                   <h3 className="dash-row-title mb-1 !mb-0"><span style={{fontSize:'16px', lineHeight:1}}>💰</span> 3. Optimizador de Precios IA</h3>
+                   <h3 className="dash-row-title mb-1 !mb-0"><CircleDollarSign size={14}/> 3. Optimizador de Precios IA</h3>
                    <p className="text-xs text-gray-500 mt-1">Simulación de impacto basada en elasticidad de demanda y costo real.</p>
                 </div>
                 <div className="overflow-x-auto flex-1">
@@ -3714,7 +2957,7 @@ function ViewBrain() {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden flex flex-col justify-center border border-slate-800">
-          <div className="absolute -right-4 -top-4 text-emerald-500/10"><span style={{fontSize:'16px', lineHeight:1}}>📈</span></div>
+          <div className="absolute -right-4 -top-4 text-emerald-500/10"><Activity size={160} /></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Salud del Negocio</p>
@@ -3884,22 +3127,22 @@ function ViewConectores() {
       </div>
 
       <div className="mt-8">
-        <h3 className="dash-row-title"><span style={{fontSize:'16px', lineHeight:1}}>🚨</span> El Núcleo Operativo (Requisitos del Dashboard)</h3>
+        <h3 className="dash-row-title"><ShieldAlert size={14}/> El Núcleo Operativo (Requisitos del Dashboard)</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           <IntegrationCard title="Punto de Venta (POS)" desc="El corazón del restaurante. Sin esto, el dashboard no tiene sentido." icon={<span style={{fontSize:'15px', lineHeight:1}}>🏪</span>} badgeText="Crítico #1" badgeType="orange" items={[{ name: "Toast POS", highlight: "El más usado USA/LATAM" }, { name: "Square POS" }, { name: "Clover" }]} />
-          <IntegrationCard title="Delivery & Pedidos Online" desc="Donde está el dinero hoy en día. Centraliza todos los canales." icon={<span style={{fontSize:'16px', lineHeight:1}}>🚚</span>} badgeText="Crítico #2" badgeType="orange" items={[{ name: "Uber Eats" }, { name: "Rappi" }, { name: "DoorDash" }]} />
-          <IntegrationCard title="Reservas" desc="Control de ocupación y previsión de mesas en tiempo real." icon={<span style={{fontSize:'16px', lineHeight:1}}>📅</span>} badgeText="Crítico #3" badgeType="orange" items={[{ name: "OpenTable" }, { name: "Resy" }, { name: "TheFork (El Tenedor)" }]} />
-          <IntegrationCard title="Pagos & Facturación" desc="Conciliación automática y cumplimiento legal en tu país." icon={<span style={{fontSize:'16px', lineHeight:1}}>🏛️</span>} badgeText="Crítico #4" badgeType="orange" items={[{ name: "Stripe" }, { name: "Wompi (Colombia)" }, { name: "DIAN / SAT / SRI", highlight: "Facturación Electrónica" }]} />
+          <IntegrationCard title="Delivery & Pedidos Online" desc="Donde está el dinero hoy en día. Centraliza todos los canales." icon={<Truck size={24} />} badgeText="Crítico #2" badgeType="orange" items={[{ name: "Uber Eats" }, { name: "Rappi" }, { name: "DoorDash" }]} />
+          <IntegrationCard title="Reservas" desc="Control de ocupación y previsión de mesas en tiempo real." icon={<Calendar size={24} />} badgeText="Crítico #3" badgeType="orange" items={[{ name: "OpenTable" }, { name: "Resy" }, { name: "TheFork (El Tenedor)" }]} />
+          <IntegrationCard title="Pagos & Facturación" desc="Conciliación automática y cumplimiento legal en tu país." icon={<Landmark size={24} />} badgeText="Crítico #4" badgeType="orange" items={[{ name: "Stripe" }, { name: "Wompi (Colombia)" }, { name: "DIAN / SAT / SRI", highlight: "Facturación Electrónica" }]} />
         </div>
       </div>
 
       <div className="mt-10">
         <h3 className="dash-row-title">⊞ Ecosistema Extendido & Especializado</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-          <IntegrationCard title="Inventario & Proveedores" desc="Control de mermas y costos." icon={<span style={{fontSize:'15px', lineHeight:1}}>📦</span>} badgeText="Importante" badgeType="blue" isSmall items={[{ name: "MarketMan" }, { name: "BlueCart" }]} />
+          <IntegrationCard title="Inventario & Proveedores" desc="Control de mermas y costos." icon={📦} badgeText="Importante" badgeType="blue" isSmall items={[{ name: "MarketMan" }, { name: "BlueCart" }]} />
           <IntegrationCard title="Nómina & Personal" desc="Productividad laboral." icon={<span style={{fontSize:'15px', lineHeight:1}}>👥</span>} badgeText="Importante" badgeType="blue" isSmall items={[{ name: "7shifts", highlight: "#1 Restaurantes" }, { name: "Deputy" }]} />
           <IntegrationCard title="Contabilidad" desc="Sincronización de libros." icon={<span style={{fontSize:'15px', lineHeight:1}}>🧮</span>} badgeText="Importante" badgeType="blue" isSmall items={[{ name: "QuickBooks" }, { name: "Siigo (Colombia)" }]} />
-          <IntegrationCard title="Reseñas & Reputación" desc="Visibilidad directa." icon={<span style={{fontSize:'16px', lineHeight:1}}>⭐</span>} badgeText="Visible en Dash" badgeType="gray" isSmall items={[{ name: "Google Business Profile" }, { name: "TripAdvisor" }]} />
+          <IntegrationCard title="Reseñas & Reputación" desc="Visibilidad directa." icon={<Star size={20} />} badgeText="Visible en Dash" badgeType="gray" isSmall items={[{ name: "Google Business Profile" }, { name: "TripAdvisor" }]} />
           <IntegrationCard title="Marketing & Fidelización" desc="Retención de clientes." icon={<span style={{fontSize:'15px', lineHeight:1}}>📢</span>} badgeText="Growth" badgeType="gray" isSmall items={[{ name: "Mailchimp" }, { name: "WhatsApp Business API" }]} />
           <IntegrationCard title="Cocina & Operación" desc="Visualización de pedidos." icon={<span style={{fontSize:'15px', lineHeight:1}}>🖨</span>} badgeText="Operativo" badgeType="gray" isSmall items={[{ name: "Toast KDS" }, { name: "Square KDS" }]} />
         </div>
@@ -3953,7 +3196,7 @@ function ViewBilling() {
       <div className="bg-gradient-to-r from-emerald-900 to-emerald-700 rounded-3xl p-8 text-white shadow-xl mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-5">
            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
-             <span style={{fontSize:'16px', lineHeight:1}}>🛡️</span>
+             <ShieldCheck size={32} className="text-emerald-400" />
            </div>
            <div>
              <p className="text-emerald-200 text-sm font-bold uppercase tracking-widest mb-1">Tu Plan Actual</p>
@@ -4001,9 +3244,9 @@ function ViewBilling() {
               {section.features.map((feature, fIdx) => (
                 <div className="pt-row" key={fIdx}>
                   <div className="pt-cell feature-col">{feature.name}</div>
-                  <div className="pt-cell">{feature.tiers[0] ? <span style={{fontSize:'18px'}}>✅</span> : <span style={{fontSize:'16px', lineHeight:1}}>−</span>}</div>
-                  <div className="pt-cell bg-emerald-50/30">{feature.tiers[1] ? <span style={{fontSize:'18px'}}>✅</span> : <span style={{fontSize:'16px', lineHeight:1}}>−</span>}</div>
-                  <div className="pt-cell">{feature.tiers[2] ? <span style={{fontSize:'18px'}}>✅</span> : <span style={{fontSize:'16px', lineHeight:1}}>−</span>}</div>
+                  <div className="pt-cell">{feature.tiers[0] ? <Check className="pt-check" /> : <Minus className="pt-minus" />}</div>
+                  <div className="pt-cell bg-emerald-50/30">{feature.tiers[1] ? <Check className="pt-check" /> : <Minus className="pt-minus" />}</div>
+                  <div className="pt-cell">{feature.tiers[2] ? <Check className="pt-check text-blue-500" /> : <Minus className="pt-minus" />}</div>
                 </div>
               ))}
             </React.Fragment>
@@ -4062,8 +3305,8 @@ function IntegrationCard({ title, desc, icon, badgeText, badgeType, items, isSma
       <p className="text-sm text-gray-500 mb-5 flex-1">{desc}</p>
       <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
         {items.map((item, idx) => (
-          item.highlight ? <div key={idx} className="app-tag bg-blue-50 border-blue-100 text-blue-800"><span style={{fontSize:'16px', lineHeight:1}}>🔗</span> {item.name}</div>
-          : <div key={idx} className="app-tag"><span style={{fontSize:'16px', lineHeight:1}}>🔗</span> {item.name}</div>
+          item.highlight ? <div key={idx} className="app-tag bg-blue-50 border-blue-100 text-blue-800"><Link2 size={12} className="opacity-50"/> {item.name}</div>
+          : <div key={idx} className="app-tag"><Link2 size={12} className="text-gray-400"/> {item.name}</div>
         ))}
       </div>
       {!isSmall && <button className="w-full mt-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl transition-colors">Configurar Módulo</button>}
@@ -4079,9 +3322,9 @@ function getTabTitle(tab) {
     operaciones: 'Operaciones de Salón', 
     inventario: 'Kardex & Proveedores',
     delivery: 'Hub de Domicilios',
-    reservas: 'Reservas & VIP',
-    marketing: 'Campañas & Marketing',
-    fidelizacion: 'Club de Fidelización',
+    marketing: 'Crecimiento y Campañas', 
+    reservas: 'Reservas & CRM',
+    fidelizacion: 'Programa VIP',
     eventos: 'Eventos & Catering',
     rrhh: 'Talento y RRHH',
     data: 'Data & Insights',

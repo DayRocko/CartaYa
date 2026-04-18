@@ -12,6 +12,7 @@ async function insertToDB(data) {
 
   let insertedCount = 0;
   let skippedCount = 0;
+  const counts = { categorias: 0, platos: 0, modificadores: 0, opciones: 0, recetas: 0 };
 
   try {
     const transaction = db.transaction(() => {
@@ -29,7 +30,7 @@ async function insertToDB(data) {
             cat.hora_fin, cat.dias_activos, cat.orden, cat.activa,
             cat.descripcion, cat.color_hex
           );
-          if (result.changes > 0) insertedCount++;
+          if (result.changes > 0) { insertedCount++; counts.categorias++; }
           else skippedCount++;
         });
       }
@@ -50,7 +51,7 @@ async function insertToDB(data) {
             p.descripcion_carta, p.foto_url, p.es_destacado, p.tiempo_prep_min,
             p.iva_aplica, p.impuesto_consumo, p.calorias, p.tags, p.orden_en_categoria
           );
-          if (result.changes > 0) insertedCount++;
+          if (result.changes > 0) { insertedCount++; counts.platos++; }
           else skippedCount++;
         });
       }
@@ -70,7 +71,7 @@ async function insertToDB(data) {
             m.max_opciones, m.activo, m.descripcion, m.aplica_a_platos,
             m.orden_en_plato, m.visible_en_delivery
           );
-          if (result.changes > 0) insertedCount++;
+          if (result.changes > 0) { insertedCount++; counts.modificadores++; }
           else skippedCount++;
         });
       }
@@ -89,7 +90,7 @@ async function insertToDB(data) {
             o.nombre_grupo, o.nombre, o.precio_adicional, o.disponible,
             o.es_agotado, o.descripcion, o.orden_en_grupo, o.foto_url
           );
-          if (result.changes > 0) insertedCount++;
+          if (result.changes > 0) { insertedCount++; counts.opciones++; }
           else skippedCount++;
         });
       }
@@ -108,7 +109,28 @@ async function insertToDB(data) {
             r.nombre_plato, r.ingrediente_nombre, r.cantidad, r.unidad_medida,
             r.costo_unitario, r.proveedor, r.es_critico, r.stock_minimo, r.notas
           );
-          if (result.changes > 0) insertedCount++;
+          if (result.changes > 0) { insertedCount++; counts.recetas++; }
+          else skippedCount++;
+        });
+      }
+
+      // 6. INVENTARIO INSUMOS
+      if (data.inventario) {
+        if (counts.inventario === undefined) counts.inventario = 0;
+        const insertInsumo = db.prepare(`
+          INSERT INTO inventario_insumos (
+            nombre, unidad_compra, precio_por_unidad, proveedor, stock_actual, stock_minimo_alerta
+          ) VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(nombre) DO UPDATE SET
+            precio_por_unidad=excluded.precio_por_unidad,
+            stock_actual=stock_actual+excluded.stock_actual
+        `);
+
+        data.inventario.forEach(i => {
+          const result = insertInsumo.run(
+            i.nombre, i.unidad_compra, i.precio_por_unidad || 0, i.proveedor, i.stock_actual || 0, i.stock_minimo_alerta || 0
+          );
+          if (result.changes > 0) { insertedCount++; counts.inventario++; }
           else skippedCount++;
         });
       }
@@ -119,6 +141,7 @@ async function insertToDB(data) {
 
     return {
       success: true,
+      counts,
       insertedCount,
       skippedCount,
       timestamp: new Date().toISOString()

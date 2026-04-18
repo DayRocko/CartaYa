@@ -45,6 +45,7 @@ async function processImport(tempPath, broadcast) {
   return {
     count: dbResult.insertedCount,
     existing: dbResult.skippedCount,
+    counts: dbResult.counts,
     message: 'Importación exitosa'
   };
 }

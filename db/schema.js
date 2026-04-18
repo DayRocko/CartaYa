@@ -112,6 +112,21 @@ function initDB() {
     )
   `).run();
 
+  // TABLA: Inventario de Insumos
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS inventario_insumos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT UNIQUE NOT NULL,
+      unidad_compra TEXT NOT NULL,
+      precio_por_unidad REAL DEFAULT 0,
+      proveedor TEXT,
+      stock_actual REAL DEFAULT 0,
+      stock_minimo_alerta REAL DEFAULT 0,
+      estado TEXT DEFAULT 'ACTIVO',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
   console.log(`[DB] Base de datos lista en: ${dbPath}`);
 }
 

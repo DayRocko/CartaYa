@@ -44,9 +44,53 @@ const server = http.createServer((req, res) => {
     // 2. Platos
     if (req.url === '/api/platos') {
       try {
-        const rows = db.prepare('SELECT * FROM platos_menu ORDER BY categoria_nombre, nombre').all();
+        const rows = db.prepare(`
+          SELECT 
+            p.*, 
+            c.nombre as categoria
+          FROM platos_menu p
+          LEFT JOIN categorias_menu c ON p.categoria_nombre = c.nombre
+          ORDER BY p.categoria_nombre, p.nombre
+        `).all();
+
+        const recetas = db.prepare('SELECT nombre_plato, ingrediente_nombre, cantidad, unidad_medida FROM recetas_ingredientes').all();
+        const insumos = db.prepare('SELECT nombre, precio_por_unidad, unidad_compra FROM inventario_insumos').all();
+
+        // Calcular costo y margen en JavaScript
+        const platosConMargen = rows.map(plato => {
+          let costoTotal = 0;
+          const platoRecetas = recetas.filter(r => r.nombre_plato === plato.nombre);
+          
+          platoRecetas.forEach(rec => {
+            const insumo = insumos.find(i => i.nombre === rec.ingrediente_nombre);
+            if (insumo && insumo.precio_por_unidad) {
+              let multiplicador = 1;
+              // Conversión básica de unidades si son diferentes (ej. kg a g)
+              if (insumo.unidad_compra === 'kg' && rec.unidad_medida === 'g') multiplicador = 0.001;
+              else if (insumo.unidad_compra === 'g' && rec.unidad_medida === 'kg') multiplicador = 1000;
+              else if (insumo.unidad_compra === 'litro' && rec.unidad_medida === 'ml') multiplicador = 0.001;
+              else if (insumo.unidad_compra === 'ml' && rec.unidad_medida === 'litro') multiplicador = 1000;
+              // Si la conversión no está cubierta, se asume 1 y luego el usuario puede ajustarlo, pero esto cubre lo del documento
+              
+              costoTotal += rec.cantidad * (insumo.precio_por_unidad * multiplicador);
+            }
+          });
+
+          let margen = '100.00%';
+          if (costoTotal > 0 && plato.precio_venta > 0) {
+            margen = ((plato.precio_venta - costoTotal) / plato.precio_venta * 100).toFixed(2) + '%';
+          } else if (plato.precio_venta === 0) {
+            margen = '0.00%';
+          }
+          return {
+            ...plato,
+            costo_produccion: costoTotal,
+            margen_bruto: margen
+          };
+        });
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(rows));
+        res.end(JSON.stringify(platosConMargen));
       } catch (err) {
         console.error('Error en /api/platos:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -55,22 +99,18 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // 3. Modificadores (Grupos con sus opciones anidadas)
-    if (req.url === '/api/modificadores') {
+    if (req.url === '/api/modificadores' && req.method === 'GET') {
       try {
-        const grupos = db.prepare('SELECT * FROM grupos_modificadores ORDER BY nombre').all();
-        const opciones = db.prepare('SELECT * FROM opciones_modificadores ORDER BY nombre_grupo, orden_en_grupo').all();
-        
-        // Agrupar opciones por nombre de grupo
-        const result = grupos.map(grupo => ({
-          ...grupo,
-          opciones: opciones.filter(opt => opt.nombre_grupo === grupo.nombre)
-        }));
-
+        const grupos = db.prepare('SELECT * FROM grupos_modificadores').all();
+        const resultado = grupos.map(grupo => {
+          const opciones = db.prepare(
+            'SELECT * FROM opciones_modificadores WHERE nombre_grupo = ?'
+          ).all(grupo.nombre);
+          return { ...grupo, opciones };
+        });
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result));
+        res.end(JSON.stringify(resultado));
       } catch (err) {
-        console.error('Error en /api/modificadores:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
       }
@@ -90,6 +130,38 @@ const server = http.createServer((req, res) => {
       }
       return;
     }
+
+    // 5. Inventario de Insumos
+    if (req.url === '/api/inventario') {
+      try {
+        const rows = db.prepare('SELECT * FROM inventario_insumos ORDER BY nombre').all();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(rows));
+      } catch (err) {
+        console.error('Error en /api/inventario:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    }
+  }
+
+  // POST: Toggle estado de categoría
+  if (req.url === '/api/categorias/toggle' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { id, estado } = JSON.parse(body);
+        db.prepare('UPDATE categorias_menu SET estado = ? WHERE id = ?').run(estado === 'ACTIVA' ? 'ACTIVA' : 'INACTIVA', id);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', id, estado }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
   }
 
   // --- ENDPOINT DE IMPORTACIÓN (POST) ---
@@ -132,6 +204,107 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ status: 'error', message: procErr.message }));
       }
     });
+    return;
+  }
+
+  // 9. Configuración de Mi Restaurante
+  if (req.url === '/api/restaurante' && req.method === 'GET') {
+    const configPath = path.join(__dirname, 'data', 'restaurante.json');
+    try {
+      if (fs.existsSync(configPath)) {
+        const data = fs.readFileSync(configPath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(data);
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({}));
+      }
+    } catch (err) {
+      console.error('Error leyendo config restaurante:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  if (req.url === '/api/restaurante' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        const dataPath = path.join(__dirname, 'data');
+        if (!fs.existsSync(dataPath)) fs.mkdirSync(dataPath, { recursive: true });
+        
+        fs.writeFileSync(path.join(dataPath, 'restaurante.json'), JSON.stringify(payload, null, 2));
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'success' }));
+      } catch (err) {
+        console.error('Error guardando config restaurante:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'error', message: err.message }));
+      }
+    });
+    return;
+  }
+  
+  if (req.url === '/api/inventario' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { id, precio_por_unidad, stock_actual } = JSON.parse(body);
+        const stmt = db.prepare('UPDATE inventario_insumos SET precio_por_unidad = ?, stock_actual = ? WHERE id = ?');
+        const info = stmt.run(precio_por_unidad, stock_actual, id);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'success', changes: info.changes }));
+      } catch (err) {
+        console.error('Error en POST /api/inventario:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  if (req.url === '/api/categorias/toggle' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { nombre, activa } = JSON.parse(body);
+        const stmt = db.prepare('UPDATE categorias_menu SET activa = ? WHERE nombre = ?');
+        const info = stmt.run(activa ? 1 : 0, nombre);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'success', nombre, activa, changes: info.changes }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  
+  if (req.url === '/api/carta/limpiar' && req.method === 'DELETE') {
+    try {
+      db.prepare('DELETE FROM recetas_ingredientes').run();
+      db.prepare('DELETE FROM opciones_modificadores').run();
+      db.prepare('DELETE FROM grupos_modificadores').run();
+      db.prepare('DELETE FROM platos_menu').run();
+      db.prepare('DELETE FROM categorias_menu').run();
+      if (typeof broadcast === 'function') {
+        broadcast({ type: 'carta.limpiada', message: 'Contenido de Carta & Menú eliminado' });
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'success', message: 'Carta limpiada correctamente' }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
     return;
   }
 

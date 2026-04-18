@@ -153,334 +153,256 @@ const DesignSystemStyles = () => (
 
     * { box-sizing: border-box; }
     body { font-family: var(--f-ui); background: var(--bg-app-2); color: var(--ink); margin: 0; overflow: hidden; }
-    
-    /* SIDEBAR COMPONENT */
-    .sidebar-dark { width: 280px; background: var(--navy-950); display: flex; flex-direction: column; z-index: 10; height: 100vh; color: #94A3B8; }
-    .sidebar-brand-dark { display: flex; align-items: center; justify-content: space-between; padding: 24px 20px; }
-    .nav-group-label-dark { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 24px 24px 8px; }
-    .nav-item-dark { display: flex; align-items: center; gap: 12px; padding: 10px 24px; cursor: pointer; font-size: 14px; font-weight: 500; color: #94A3B8; transition: all var(--dur) var(--ease); }
-    .nav-item-dark:hover:not(.nav-item-dark--active) { color: #F1F5F9; }
-    .nav-highlight-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-md); margin: 0 16px; padding: 4px 0; }
-    .nav-item-dark--active { background: rgba(16, 185, 129, 0.1); color: #10B981; font-weight: 600; border-radius: var(--r-sm); margin: 0 8px; padding: 10px 16px; }
-
-    /* STAT CARDS */
-    .stat-card { background: var(--surface); border-radius: var(--r-xl); padding: 24px; box-shadow: var(--shadow-card); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; gap: 16px; height: 100%;}
-    .stat-card__icon-wrap { width: 48px; height: 48px; border-radius: var(--r-full); background: var(--gray-100); display: flex; align-items: center; justify-content: center; color: var(--gray-500); }
-    .stat-card__label { display: flex; align-items: center; gap: 8px; font-size: var(--t-sm); font-weight: var(--fw-semibold); color: var(--gray-500); }
-    .stat-card__value { font-family: var(--f-data); font-size: var(--t-xl); font-weight: var(--fw-black); letter-spacing: -0.04em; color: var(--ink); line-height: 1; margin-top: 4px; }
-    
-    .delta-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: var(--r-full); font-size: var(--t-xs); font-weight: var(--fw-bold); }
-    .delta-badge--up { background: var(--green-100); color: var(--green-700); border: 1px solid var(--green-200); }
-    .delta-badge--down { background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; }
-    .delta-badge--neutral { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
-    
-    /* BUTTONS */
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--f-ui); font-weight: var(--fw-semibold); cursor: pointer; border: none; transition: all var(--dur) var(--ease); }
-    .btn:active { transform: scale(0.97); }
-    .btn--outline-soft { background: transparent; color: var(--ink); font-size: var(--t-sm); font-weight: var(--fw-medium); padding: 12px 24px; border-radius: var(--r-full); border: 1.5px solid var(--gray-200); }
-    .btn--outline-soft:hover { border-color: var(--gray-300); background: var(--gray-50); }
-    .btn--dark { background: var(--navy-950); color: #fff; font-size: var(--t-sm); font-weight: var(--fw-semibold); padding: 14px 24px; border-radius: var(--r-full); width: 100%; box-shadow: 0 4px 16px rgba(15,23,42,0.25); }
-    .btn--green { background: var(--green-500); color: #fff; font-size: var(--t-sm); font-weight: var(--fw-semibold); padding: 14px 24px; border-radius: var(--r-full); width: 100%; box-shadow: 0 4px 16px rgba(34,197,94,0.3); }
-    
-    /* CARDS & TABLES */
-    .feature-card { background: var(--surface); border-radius: var(--r-xl); padding: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; }
-    .feature-card__title { font-size: var(--t-md); font-weight: var(--fw-bold); color: var(--ink); }
-    
-    .token-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
-    .token-table th { text-align: left; font-weight: var(--fw-semibold); font-size: var(--t-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400); padding: 12px 16px; border-bottom: 1px solid var(--border); }
-    .token-table td { padding: 16px; border-bottom: 1px solid rgba(0,0,0,0.04); color: var(--gray-500); vertical-align: middle; }
-    .token-table tr:last-child td { border-bottom: none; }
-
-    .page-heading { font-size: var(--t-2xl); font-weight: var(--fw-bold); letter-spacing: -0.02em; color: var(--ink); margin-bottom: 24px; }
-    .page-heading span { font-weight: var(--fw-black); }
-    .dash-row-title { font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .dash-row-title::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
-    
-    /* DASHBOARD ESPECÍFICOS */
-    .dash-hero-card { background: var(--surface); border-radius: var(--r-xl); padding: 20px; box-shadow: var(--shadow-card); border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; transition: transform var(--dur) var(--ease); }
-    .dash-hero-card:hover { transform: translateY(-2px); }
-    .dash-hero-icon { width: 48px; height: 48px; border-radius: var(--r-xl); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .dash-hero-content { flex: 1; }
-    .dash-hero-label { font-size: var(--t-xs); font-weight: var(--fw-bold); color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-    .dash-hero-value { font-family: var(--f-data); font-size: var(--t-xl); font-weight: var(--fw-black); color: var(--ink); line-height: 1; }
-    .dash-metric-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gray-100); }
-    .dash-metric-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .dash-metric-label { font-size: var(--t-sm); font-weight: var(--fw-semibold); color: var(--gray-600); }
-    .dash-metric-value { font-size: var(--t-md); font-weight: var(--fw-bold); color: var(--ink); }
-
-    /* MENU MATRIX SPECIFIC */
-    .matrix-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-xl); overflow: hidden; position: relative; }
-    .matrix-quadrant { background: white; padding: 24px; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: all 0.2s; }
-    .matrix-quadrant:hover { background: var(--gray-50); }
-    .matrix-label-y { position: absolute; left: -30px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gray-400); }
-    .matrix-label-x { text-align: center; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gray-400); margin-top: 12px; }
-    
-    .q-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-    .q-estrella { background: #FFFBEB; color: #D97706; border: 1px solid #FEF3C7; }
-    .q-caballo { background: #EFF6FF; color: #2563EB; border: 1px solid #DBEAFE; }
-    .q-enigma { background: #F5F3FF; color: #7C3AED; border: 1px solid #EDE9FE; }
-    .q-perro { background: #FEF2F2; color: #DC2626; border: 1px solid #FEE2E2; }
-
-    /* PRICING TABLE CLASSES */
-    .pricing-table-container { background: var(--surface); border-radius: var(--r-2xl); border: 1px solid var(--border); box-shadow: var(--shadow-card); overflow: hidden; }
-    .pt-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; background: var(--surface-subtle); border-bottom: 1px solid var(--border); }
-    .pt-header-cell { padding: 20px 24px; text-align: center; border-right: 1px solid var(--border); }
-    .pt-header-cell:last-child { border-right: none; }
-    .pt-header-cell.feature-col { text-align: left; display: flex; align-items: center; }
-    .pt-category { background: var(--navy-950); color: white; font-size: var(--t-xs); font-weight: var(--fw-bold); letter-spacing: 0.1em; text-transform: uppercase; padding: 12px 24px; grid-column: 1 / -1; }
-    .pt-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; border-bottom: 1px solid var(--gray-100); transition: background var(--dur) var(--ease); }
-    .pt-row:hover { background: var(--gray-50); }
-    .pt-row:last-child { border-bottom: none; }
-    .pt-cell { padding: 16px 24px; display: flex; align-items: center; justify-content: center; border-right: 1px solid var(--gray-100); font-size: var(--t-sm); color: var(--gray-600); }
-    .pt-cell:last-child { border-right: none; }
-    .pt-cell.feature-col { justify-content: flex-start; font-weight: var(--fw-medium); color: var(--ink); }
-    .pt-check { color: var(--green-500); width: 20px; height: 20px; }
-    .pt-minus { color: var(--gray-300); width: 20px; height: 20px; }
-    
-    /* APP TAGS */
-    .app-tag { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; background: var(--surface); border: 1px solid var(--gray-200); border-radius: var(--r-sm); font-size: 12px; font-weight: var(--fw-semibold); color: var(--gray-700); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-    .app-tag--highlight { background: var(--blue-50); border-color: var(--blue-100); color: var(--blue-800); }
-
-    /* BRAIN AI SPECIFIC */
-    .brain-chat-bubble { border-radius: 20px; padding: 16px 20px; font-size: 14px; line-height: 1.5; max-width: 85%; }
-    .brain-chat-user { background: var(--navy-950); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
-    .brain-chat-ai { background: white; border: 1px solid var(--gray-200); color: var(--slate-800); border-bottom-left-radius: 4px; align-self: flex-start; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-    .quick-prompt-btn { background: white; border: 1px solid var(--gray-200); color: var(--slate-600); font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 999px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-    .quick-prompt-btn:hover { border-color: var(--indigo-300); background: var(--indigo-50); color: var(--indigo-700); }
   `}} />
 );
+    
 
-// --- COMPONENTE PRINCIPAL ---
-
-// =========================================================================
-// WIDGET: MI RESTAURANTE (CONFIGURACION)
-// =========================================================================
-function ViewMiRestaurante() {
-  const [loading, setLoading] = React.useState(true);
-  const [saving, setSaving] = React.useState(false);
-  const [message, setMessage] = React.useState(null);
-  
-  const [formData, setFormData] = React.useState({
-    nombre: "", nit: "", razon_social: "", direccion: "", ciudad: "", telefono: "", email: "", propietario: "", sitio_web: "", logo_url: "",
-    regimen_tributario: "simplificado", responsable_iva: false, impuesto_consumo: true, resolucion_dian: "", prefijo_facturacion: "", rango_desde: "", rango_hasta: "", fecha_vencimiento_resolucion: "",
-    zona_horaria: "America/Bogota", hora_apertura: "08:00", hora_cierre: "22:00", hora_corte: "02:00", dias_activos: ["LUN","MAR","MIE","JUE","VIE","SAB","DOM"], capacidad_mesas: 0, capacidad_sillas: 0,
-    modalidades: { salon: true, delivery: false, para_llevar: false }, propina_porcentaje: 10,
-    medios_pago: { efectivo: true, tarjeta_debito: true, tarjeta_credito: true, nequi: true, daviplata: false, transferencia: false, rappi_pay: false, vale_alimentacion: false, cortesia: false, credito_cuenta: false },
-    canales: { salon_comision: 0, delivery_propio_recargo: 0, rappi_comision: 28, domicilios_comision: 22 },
-    alertas: { email_alertas: "", umbral_ventas_meta: 85, umbral_prime_cost: 65, alerta_stock: true, resumen_diario_hora: "23:00", reporte_semanal_dia: "LUN" }
-  });
+function ViewPOS_Standalone({ setViewMode, platos = [], categorias = [] }) {
+  const [activeTab, setActiveTab] = React.useState('menu');
+  const [activeCat, setActiveCat] = React.useState(null);
+  const [orderItems, setOrderItems] = React.useState([]);
+  const [activeMesa, setActiveMesa] = React.useState('Mesa 14');
+  const [currentTime, setCurrentTime] = React.useState(new Date());
 
   React.useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        setLoading(true);
-        const resp = await fetch('/api/restaurante');
-        if (!resp) {
-          throw new Error('fetch() para restaurante retornó undefined');
-        }
-        if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        }
-        const d = await resp.json();
-        if(d && Object.keys(d).length > 0) setFormData(d);
-      } catch (err) {
-        console.warn('Fallback Perfil:', err.message);
-        setFormData(prev => ({ ...prev, ...MOCK_DATA.restaurante }));
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProfile();
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
-  };
+  const formatTime = (date) => date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+  const formatMoney = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
 
-  const handleNested = (c, f, v) => setFormData(p => ({ ...p, [c]: { ...p[c], [f]: v } }));
-  const handleArray = (f, i) => setFormData(p => {
-    const arr = p[f] || [];
-    return { ...p, [f]: arr.includes(i) ? arr.filter(x => x !== i) : [...arr, i] };
-  });
+  const cats = React.useMemo(() => {
+    return categorias.filter(c => c.estado === 'activo' || c.estado === 'ACTIVA');
+  }, [categorias]);
 
-  const getProgress = () => {
-    const reqFields = ['nombre','nit','razon_social','direccion','ciudad','telefono','email','propietario','regimen_tributario','resolucion_dian','prefijo_facturacion','rango_desde','rango_hasta','fecha_vencimiento_resolucion','hora_apertura','hora_cierre','hora_corte'];
-    const filled = reqFields.filter(x => formData[x] && String(formData[x]).trim() !== '');
-    return Math.round((filled.length / reqFields.length) * 100);
-  };
+  const currentPlatos = React.useMemo(() => {
+    if (!activeCat) return platos;
+    return platos.filter(p => {
+      const pCat = (p.categoria_nombre || p.categoria || '').toString().toLowerCase();
+      const aCat = activeCat.nombre.toString().toLowerCase();
+      return pCat === aCat;
+    });
+  }, [platos, activeCat]);
 
-  const getDaysUntilExpiry = () => {
-    if(!formData.fecha_vencimiento_resolucion) return 0;
-    const diff = new Date(formData.fecha_vencimiento_resolucion).getTime() - Date.now();
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-  };
+  const subtotal = orderItems.reduce((acc, item) => acc + (item.precio_venta || item.precio || 0) * item.cantidad, 0);
 
-  const isExpiring = () => {
-    const days = getDaysUntilExpiry();
-    return days > 0 && days < 30;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(null);
-    if(!formData.nit) return setMessage({ type: 'error', text: 'El NIT es obligatorio.' });
-    if(formData.hora_corte === formData.hora_apertura) return setMessage({ type: 'error', text: 'La hora de corte no puede ser igual a la de apertura.' });
-    if((formData.dias_activos || []).length === 0) return setMessage({ type: 'error', text: 'Debe estar activo al menos un día.' });
-    if(!Object.values(formData.medios_pago || {}).some(Boolean)) return setMessage({ type: 'error', text: 'Debe activar al menos un medio de pago.' });
-    
-    const emailRegex = /^[^s@]+@[^s@]+.[^s@]+$/;
-    if(formData.alertas.email_alertas && !emailRegex.test(formData.alertas.email_alertas)) {
-      return setMessage({ type: 'error', text: 'El correo de alertas no es válido.' });
+  const addItem = (p) => {
+    const existing = orderItems.find(i => i.id === p.id);
+    if (existing) {
+      setOrderItems(orderItems.map(i => i.id === p.id ? { ...i, cantidad: i.cantidad + 1 } : i));
+    } else {
+      setOrderItems([...orderItems, { ...p, cantidad: 1 }]);
     }
-
-    setSaving(true);
-    try {
-      const res = {ok: true}; // fetch removido
-      if(res.ok) {
-        setMessage({ type: 'success', text: 'Configuración guardada correctamente.' });
-        setTimeout(() => setMessage(null), 3000);
-      } else throw new Error('Error al guardar');
-    } catch(err) {
-      setMessage({ type: 'error', text: 'Error de red al guardar.' });
-    }
-    setSaving(false);
   };
 
-  if(loading) return <div className="p-10 text-center">🔄 Cargando...</div>;
+  const updateCant = (id, delta) => {
+    setOrderItems(orderItems.map(i => {
+      if (i.id === id) {
+        const nc = Math.max(0, i.cantidad + delta);
+        return { ...i, cantidad: nc };
+      }
+      return i;
+    }).filter(i => i.cantidad > 0));
+  };
+
+  const styles = `
+    .pos-standalone { height: 100vh; width: 100vw; display: flex; flex-direction: column; background: #F8FAFC; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; overflow: hidden; position: fixed; top: 0; left: 0; z-index: 9999; }
+    .pos-topbar { height: 70px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+    .pos-sidebar { width: 80px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; padding: 24px 0; gap: 20px; flex-shrink: 0; }
+    .pos-main { flex: 1; display: flex; overflow: hidden; }
+    .pos-nav-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #94a3b8; cursor: pointer; transition: all 0.2s; }
+    .pos-nav-icon:hover { background: #f1f5f9; color: #64748b; }
+    .pos-nav-icon.active { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; }
+    .pos-col-cats { width: 220px; background: #1e293b; color: #94a3b8; padding: 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .pos-cat-item { padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; }
+    .pos-cat-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .pos-cat-item.active { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-left-color: #ef4444; }
+    .pos-col-grid { flex: 1; padding: 24px; overflow-y: auto; background: #f1f5f9; }
+    .pos-col-order { width: 380px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+    .pos-product-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s; cursor: pointer; }
+    .pos-product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+    .pos-product-img { width: 100%; aspect-ratio: 4/3; background: #f8fafc; object-cover: cover; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    .pos-product-info { padding: 16px; flex: 1; }
+    .pos-btn-add { background: #1e293b; color: white; font-weight: 800; font-size: 12px; padding: 12px; text-align: center; border-radius: 0 0 20px 20px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .pos-order-item { display: flex; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid #f1f5f9; }
+    .pos-qty-ctrl { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 14px; }
+    .pos-btn-kitchen { background: #ef4444; color: white; font-weight: 900; padding: 20px; border-radius: 16px; text-align: center; margin: 24px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; }
+    .pos-btn-kitchen:hover { background: #dc2626; transform: scale(1.02); }
+  `;
 
   return (
-    <div className="max-w-[1000px] mx-auto pb-20 animate-in fade-in">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-6 flex justify-between items-center sticky top-4 z-50">
-        <div>
-          <h2 className="text-2xl font-black text-slate-800">Mi Restaurante</h2>
-          <p className="text-sm text-gray-500">Mi Restaurante está {getProgress()}% configurado.</p>
+    <div className="pos-standalone">
+      <style dangerouslySetInnerHTML={{ __html: styles }} />
+      <header className="pos-topbar">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center text-white font-black">C</div>
+          <h1 className="text-xl font-black tracking-tight">CartaYa <span className="text-red-600">POS</span></h1>
         </div>
-        <div className="flex gap-4 items-center">
-          <div className="w-32 bg-gray-100 h-2 rounded-full overflow-hidden">
-             <div className={`h-full transition-all ${getProgress() > 80 ? 'bg-green-500' : getProgress() < 40 ? 'bg-red-500' : 'bg-orange-500'}`} style={{width: `${getProgress()}%`}}></div>
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
+            <span className="text-xs font-black text-slate-400 uppercase">Mesa:</span>
+            <span className="text-sm font-black text-slate-900">{activeMesa}</span>
           </div>
-          <button onClick={handleSubmit} disabled={saving} className="btn bg-slate-900 text-white hover:bg-slate-800 px-4 py-3 rounded-lg flex items-center gap-2 font-bold text-sm shadow-md">
-            {saving ? '🔄' : '💾'} Guardar Cambios
-          </button>
+          <div className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
+            <span className="text-xs font-black text-slate-400 uppercase">Staff:</span>
+            <span className="text-sm font-black text-slate-900">Carlos R.</span>
+          </div>
+          <div className="text-lg font-black font-mono tracking-tighter bg-black text-white px-4 py-1.5 rounded-lg">
+            {formatTime(currentTime)}
+          </div>
+          <button onClick={() => setViewMode('ADMON')} className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50">✕</button>
         </div>
-      </div>
-
-      {message && (
-        <div className={`p-4 mb-6 rounded-xl font-bold flex items-center gap-2 ${message.type === 'error' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-          {message.type === 'error' ? '⚠' : '✓'} {message.text}
-        </div>
-      )}
-
-      <div className="space-y-6">
-        <div className="bg-white border rounded-2xl p-6">
-          <h3 className="font-black flex items-center gap-2 mb-4">🏪 1. Datos del negocio</h3>
-          <div className="grid grid-cols-2 gap-4">
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">Nombre Comercial</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="nombre" value={formData.nombre} onChange={handleChange}/></div>
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">NIT</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="nit" value={formData.nit} onChange={handleChange}/></div>
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">Razón Social</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="razon_social" value={formData.razon_social} onChange={handleChange}/></div>
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">Logo URL</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="logo_url" value={formData.logo_url} onChange={handleChange}/></div>
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">Dirección</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="direccion" value={formData.direccion} onChange={handleChange}/></div>
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">Ciudad</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="ciudad" value={formData.ciudad} onChange={handleChange}/></div>
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">Teléfono</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="telefono" value={formData.telefono} onChange={handleChange}/></div>
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">Correo Electrónico</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="email" value={formData.email} onChange={handleChange}/></div>
-             <div><label className="text-xs font-bold text-gray-500 block mb-1">Nombre Propietario</label><input className="border p-2 rounded-lg w-full bg-gray-50 text-sm" name="propietario" value={formData.propietario} onChange={handleChange}/></div>
-          </div>
-        </div>
-
-        <div className="bg-white border rounded-2xl p-6">
-          <h3 className="font-black flex items-center gap-2 mb-4">🏛️ 2. Configuración fiscal DIAN</h3>
-          {isExpiring() && <div className="bg-orange-50 text-orange-800 p-3 rounded-lg border border-orange-200 mb-4 text-xs font-bold flex gap-2">⚠️ La resolución vence en menos de 30 días</div>}
-          <div className="grid grid-cols-3 gap-6 mb-4">
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Régimen Tributario</label><select name="regimen_tributario" value={formData.regimen_tributario} onChange={handleChange} className="w-full border p-2 rounded-lg bg-gray-50 text-sm"><option value="simplificado">Simplificado</option><option value="comun">Común</option></select></div>
-             <label className="flex items-center gap-2 font-bold text-sm bg-gray-50 p-2 rounded-lg border w-full"><input type="checkbox" className="w-4 h-4 accent-orange-500" name="responsable_iva" checked={formData.responsable_iva} onChange={handleChange}/> Responsable de IVA</label>
-             <label className="flex items-center gap-2 font-bold text-sm bg-gray-50 p-2 rounded-lg border w-full"><input type="checkbox" className="w-4 h-4 accent-orange-500" name="impuesto_consumo" checked={formData.impuesto_consumo} onChange={handleChange}/> Impuesto al Consumo (8%)</label>
-          </div>
-          <div className="grid grid-cols-5 gap-4">
-             <div className="col-span-2"><label className="block text-xs font-bold text-gray-500 mb-1">Resolución DIAN</label><input className="w-full border p-2 rounded-lg bg-gray-50 text-sm" name="resolucion_dian" value={formData.resolucion_dian} onChange={handleChange}/></div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Prefijo</label><input className="w-full border p-2 rounded-lg bg-gray-50 text-sm" name="prefijo_facturacion" value={formData.prefijo_facturacion} onChange={handleChange}/></div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Desde</label><input className="w-full border p-2 rounded-lg bg-gray-50 text-sm" type="number" name="rango_desde" value={formData.rango_desde} onChange={handleChange}/></div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Hasta</label><input className="w-full border p-2 rounded-lg bg-gray-50 text-sm" type="number" name="rango_hasta" value={formData.rango_hasta} onChange={handleChange}/></div>
-             <div className="col-span-2">
-                <label className="block text-xs font-bold text-gray-500 mb-1">Vencimiento Resolución</label>
-                <input className="w-full border p-2 rounded-lg bg-gray-50 text-sm" type="date" name="fecha_vencimiento_resolucion" value={formData.fecha_vencimiento_resolucion} onChange={handleChange}/>
-                {isExpiring() && (
-                  <p className="text-[10px] text-orange-600 font-bold mt-1 animate-pulse">
-                    ⚠ La resolución DIAN vence en {getDaysUntilExpiry()} días. Renuévala antes de quedarte sin folios.
-                  </p>
-                )}
-             </div>
-          </div>
-        </div>
-
-        <div className="bg-white border rounded-2xl p-6">
-          <h3 className="font-black flex items-center gap-2 mb-4">🕒 3. Configuración de operación</h3>
-          <div className="grid grid-cols-4 gap-4 mb-6">
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Zona horaria</label><select className="w-full border p-2 rounded-lg bg-gray-50 text-sm"><option value="America/Bogota">America/Bogota</option></select></div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Hora inicio</label><input type="time" name="hora_apertura" value={formData.hora_apertura} onChange={handleChange} className="w-full border p-2 rounded-lg bg-gray-50 text-sm"/></div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Hora cierre</label><input type="time" name="hora_cierre" value={formData.hora_cierre} onChange={handleChange} className="w-full border p-2 rounded-lg bg-gray-50 text-sm"/></div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Hora corte ❓</label><input type="time" name="hora_corte" value={formData.hora_corte} onChange={handleChange} className="w-full border p-2 rounded-lg bg-gray-50 text-sm"/></div>
-          </div>
-          <div className="mb-6">
-             <label className="block text-xs font-bold text-gray-500 mb-2">Días Activos</label>
-             <div className="flex gap-2 text-sm font-bold">
-               {['LUN','MAR','MIE','JUE','VIE','SAB','DOM'].map(dia => (
-                 <button key={dia} onClick={(e)=> {e.preventDefault(); handleArray('dias_activos',dia);}} className={`px-3 py-2 rounded-lg border transition-colors ${(formData.dias_activos || []).includes(dia) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-400 border-gray-200'}`}>{dia}</button>
-               ))}
-             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-100">
-             <div>
-                <label className="block text-xs font-bold text-gray-500 mb-2">Modalidades Activas</label>
-                {[{i:'salon',l:'Salón'},{i:'delivery',l:'Delivery'},{i:'para_llevar',l:'Para Llevar'}].map(mod => (
-                   <label key={mod.i} className="flex gap-2 items-center mb-2 font-bold text-sm hover:bg-gray-50 p-2 rounded"><input type="checkbox" className="w-4 h-4 accent-indigo-600" checked={(formData.modalidades || {})[mod.i]} onChange={e=>handleNested('modalidades',mod.i,e.target.checked)}/> {mod.l}</label>
-                ))}
-             </div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Capacidad Mesas</label><input type="number" name="capacidad_mesas" value={formData.capacidad_mesas} onChange={handleChange} className="w-full border p-2 rounded-lg bg-gray-50 text-lg font-black"/></div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Capacidad Sillas</label><input type="number" name="capacidad_sillas" value={formData.capacidad_sillas} onChange={handleChange} className="w-full border p-2 rounded-lg bg-gray-50 text-lg font-black"/></div>
-             <div><label className="block text-xs font-bold text-gray-500 mb-1">Propina sugerida (%)</label><input type="number" name="propina_porcentaje" value={formData.propina_porcentaje} onChange={handleChange} className="w-full border p-2 rounded-lg bg-indigo-50 text-lg font-black text-indigo-600"/></div>
-          </div>
-        </div>
-
-        <div className="bg-white border rounded-2xl p-6">
-          <h3 className="font-black flex items-center gap-2 mb-4">💳 4. Medios de pago</h3>
-          <div className="grid grid-cols-5 gap-4">
-             {[{i:'efectivo',l:'Efectivo'},{i:'tarjeta_debito',l:'TJ Débito'},{i:'tarjeta_credito',l:'TJ Crédito'},{i:'nequi',l:'Nequi'},{i:'daviplata',l:'Daviplata'},{i:'transferencia',l:'Transfer'},{i:'rappi_pay',l:'Rappi Pay'},{i:'vale_alimentacion',l:'Vale'},{i:'cortesia',l:'Cortesía'},{i:'credito_cuenta',l:'Crédito'}].map(p => (
-                <div key={p.i} onClick={()=>handleNested('medios_pago',p.i,!(formData.medios_pago || {})[p.i])} className={`p-4 border rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${(formData.medios_pago || {})[p.i] ? 'bg-green-50/50 border-green-500 text-green-700 font-bold' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-2 ${(formData.medios_pago || {})[p.i]?'bg-green-100':'bg-gray-200'}`}>{ (formData.medios_pago || {})[p.i] ? '✅' : ''}</div>
-                  <span className="text-[10px] font-black uppercase text-center block leading-none">{p.l}</span>
-                </div>
-             ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div className="bg-white border rounded-2xl p-6">
-            <h3 className="font-black flex items-center gap-2 mb-4">🌐 5. Canales de venta</h3>
-            <div className="space-y-4">
-               {[{i:'salon_comision',l:'Salón'},{i:'delivery_propio_recargo',l:'Delivery Propio'},{i:'rappi_comision',l:'Rappi'},{i:'domicilios_comision',l:'Domicilios.com'}].map(c=>(
-                  <div key={c.i} className="flex items-center justify-between border-b pb-2">
-                     <span className="text-sm font-bold text-gray-700">{c.l}</span>
-                     <div className="flex gap-2 font-black items-center"><input type="number" value={(formData.canales || {})[c.i]} onChange={e=>handleNested('canales',c.i,Number(e.target.value))} className="w-16 border p-1 text-center rounded"/> %</div>
+      </header>
+      <div className="pos-main">
+        <aside className="pos-sidebar">
+          <div onClick={() => setActiveTab('mesas')} className="pos-nav-icon">⊞</div>
+          <div onClick={() => setActiveTab('pedidos')} className="pos-nav-icon">📋</div>
+          <div onClick={() => setActiveTab('menu')} className="pos-nav-icon">📖</div>
+          <div onClick={() => setActiveTab('inventario')} className="pos-nav-icon">📦</div>
+          <div onClick={() => setActiveTab('staff')} className="pos-nav-icon">👤</div>
+          <div onClick={() => setActiveTab('reportes')} className="pos-nav-icon">📊</div>
+          <div style={{ marginTop: 'auto' }} onClick={() => setViewMode('ADMON')} className="pos-nav-icon">⇥</div>
+        </aside>
+        {activeTab === 'menu' ? (
+          <React.Fragment>
+            <div className="pos-col-cats">
+              <div className="pos-cat-item" onClick={() => setActiveCat(null)}>Todas</div>
+              {cats.map(c => (
+                <div key={c.id} className="pos-cat-item" onClick={() => setActiveCat(c)}>{c.nombre}</div>
+              ))}
+            </div>
+            <div className="pos-col-grid">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentPlatos.map(p => (
+                  <div key={p.id} className="pos-product-card" onClick={() => addItem(p)}>
+                    <div className="pos-product-img">{p.foto_url ? <img src={p.foto_url} alt={p.nombre} className="w-full h-full object-cover"/> : '🍽️'}</div>
+                    <div className="pos-product-info">
+                      <h4 className="font-bold text-lg mb-1">{p.nombre}</h4>
+                      <p className="text-xs text-slate-400 line-clamp-2">{p.descripcion || 'Sin descripción disponible.'}</p>
+                      <p className="mt-4 text-xl font-black text-slate-900">{formatMoney(p.precio_venta || p.precio || 0)}</p>
+                    </div>
+                    <div className="pos-btn-add">AÑADIR</div>
                   </div>
-               ))}
+                ))}
+              </div>
             </div>
+            <aside className="pos-col-order">
+              <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Pedido Actual</p>
+                  <h3 className="text-xl font-black">{activeMesa}</h3>
+                </div>
+                <div className="w-10 h-10 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-300">#</div>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {orderItems.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-50 px-10 text-center">
+                    <div className="text-5xl mb-4">🛒</div>
+                    <p className="text-xs font-bold uppercase tracking-widest">Selecciona ítems para comenzar</p>
+                  </div>
+                ) : (
+                  orderItems.map(item => (
+                    <div key={item.id} className="pos-order-item">
+                      <div className="pos-qty-ctrl">
+                        <button onClick={() => updateCant(item.id, -1)}>−</button>
+                        <span>{item.cantidad}</span>
+                        <button onClick={() => updateCant(item.id, 1)}>+</button>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold">{item.nombre}</p>
+                        <p className="text-[11px] text-slate-400">{formatMoney(item.precio_venta || item.precio || 0)}</p>
+                      </div>
+                      <p className="text-sm font-black">{formatMoney((item.precio_venta || item.precio || 0) * item.cantidad)}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="p-8 bg-slate-50 border-t border-slate-100">
+                <div className="flex justify-between items-end mb-8">
+                  <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Saldo Total</span>
+                  <span className="text-4xl font-black tracking-tighter">{formatMoney(subtotal)}</span>
+                </div>
+                <div className="pos-btn-kitchen" onClick={() => alert('¡Pedido enviado a cocina!')}>ENVIAR A COCINA</div>
+              </div>
+            </aside>
+          </React.Fragment>
+        ) : (
+          <div className="flex-1 p-8 overflow-y-auto">
+            {activeTab === 'mesas' && (
+              <div className="space-y-8 animate-in fade-in duration-300">
+                <div className="flex justify-between items-center">
+                   <h2 className="text-2xl font-black">Mapa de Mesas</h2>
+                   <div className="flex gap-2">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white border rounded-lg text-xs font-bold text-slate-500"><span className="w-2 h-2 rounded-full bg-slate-200"></span> Libre</div>
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white border rounded-lg text-xs font-bold text-slate-500"><span className="w-2 h-2 rounded-full bg-orange-400"></span> Ocupada</div>
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white border rounded-lg text-xs font-bold text-slate-500"><span className="w-2 h-2 rounded-full bg-green-500"></span> Plato Listo</div>
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white border rounded-lg text-xs font-bold text-slate-500"><span className="w-2 h-2 rounded-full bg-pink-400"></span> Cuenta</div>
+                   </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
+                  {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].map(num => {
+                    const status = num === 14 ? 'Ocupada' : num === 5 ? 'Plato Listo' : num === 8 ? 'Cuenta' : 'Libre';
+                    const colorClass = status === 'Ocupada' ? 'bg-orange-50 border-orange-200 text-orange-700' : status === 'Plato Listo' ? 'bg-green-50 border-green-200 text-green-700' : status === 'Cuenta' ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-white border-slate-200 text-slate-400';
+                    return (
+                      <div key={num} onClick={() => { if(num === 14) setActiveTab('menu'); }} className="aspect-square rounded-3xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105">
+                        <span className="text-[10px] font-black uppercase opacity-60">Mesa</span>
+                        <span className="text-3xl font-black">{num}</span>
+                        {status !== 'Libre' && <span className="text-[8px] font-black mt-2 uppercase tracking-widest">{status}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {activeTab === 'pedidos' && (
+              <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
+                <h2 className="text-2xl font-black">Comandas del Turno</h2>
+                <div className="space-y-4">
+                  {[{ id: 'ORD-2041', mesa: '14', staff: 'Carlos R.', estado: 'En Preparación', total: 125000 }, { id: 'ORD-2040', mesa: '05', staff: 'Carlos R.', estado: 'Listo', total: 85200 }, { id: 'ORD-2039', mesa: '08', staff: 'Marta G.', estado: 'Enviado', total: 45000 }].map(ord => (
+                    <div key={ord.id} className="bg-white p-6 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-6">
+                        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-xl font-black text-slate-400">#</div>
+                        <div>
+                          <p className="text-sm font-black text-slate-900">{ord.id}</p>
+                          <p className="text-xs text-slate-500 font-bold">Mesa {ord.mesa} · {ord.staff}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-10">
+                        <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">{ord.estado}</span>
+                        <p className="text-lg font-black text-slate-900">{formatMoney(ord.total)}</p>
+                        <button className="text-slate-400 hover:text-slate-900 font-black text-xl">⋮</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {activeTab === 'reportes' && (
+              <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300">
+                <h2 className="text-2xl font-black">Resumen del Turno</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                   <div className="bg-slate-950 text-white p-6 rounded-[32px]"><p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ventas Turno</p><p className="text-3xl font-black">.245.000</p></div>
+                   <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tickets Emitidos</p><p className="text-3xl font-black text-slate-900">24</p></div>
+                   <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ticket Promedio</p><p className="text-3xl font-black text-slate-900">.875</p></div>
+                   <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Plato Estrella</p><p className="text-xl font-black text-slate-900">Pizza Pepperoni</p></div>
+                </div>
+                <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm">
+                  <h3 className="font-black text-lg mb-6">Actividad de Ventas (Hoy)</h3>
+                  <div className="h-40 flex items-end gap-2 pb-2 border-b border-slate-100">
+                    {[40, 60, 30, 90, 100, 70, 50, 80, 40, 60, 85, 95].map((h, i) => (
+                      <div key={i} className="flex-1 bg-slate-100 rounded-t-lg transition-all hover:bg-red-500 group relative" style={{ height: `%` }}>
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                           
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-
-          <div className="bg-white border rounded-2xl p-6">
-            <h3 className="font-black flex items-center gap-2 mb-4">🔔 6. Alertas y notificaciones</h3>
-            <div className="space-y-4">
-               <div><label className="block text-xs font-bold text-gray-500 mb-1">Correo para alertas</label><input type="email" value={(formData.alertas || {}).email_alertas} onChange={e=>handleNested('alertas','email_alertas',e.target.value)} className="w-full border p-2 rounded-lg bg-gray-50 text-sm"/></div>
-               <div><label className="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>Umbral alerta ventas bajo meta</span><span>{(formData.alertas || {}).umbral_ventas_meta}%</span></label><input type="range" className="w-full accent-red-500" value={(formData.alertas || {}).umbral_ventas_meta} min="0" max="100" onChange={e=>handleNested('alertas','umbral_ventas_meta',Number(e.target.value))}/></div>
-               <div><label className="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>Umbral Prime Cost alto</span><span>{(formData.alertas || {}).umbral_prime_cost}%</span></label><input type="range" className="w-full accent-red-500" value={(formData.alertas || {}).umbral_prime_cost} min="0" max="100" onChange={e=>handleNested('alertas','umbral_prime_cost',Number(e.target.value))}/></div>
-               <div><label className="flex items-center gap-2 font-bold text-sm hover:bg-gray-50 p-1 rounded cursor-pointer"><input type="checkbox" className="accent-red-500 w-4 h-4" checked={(formData.alertas || {}).alerta_stock} onChange={e=>handleNested('alertas','alerta_stock',e.target.checked)}/> Alerta de stock bajo</label></div>
-               <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-bold text-gray-500 mb-1">Resumen Diario</label><input type="time" value={(formData.alertas || {}).resumen_diario_hora} onChange={e=>handleNested('alertas','resumen_diario_hora',e.target.value)} className="w-full border p-2 rounded-lg bg-gray-50 text-sm"/></div>
-                  <div><label className="block text-xs font-bold text-gray-500 mb-1">Reporte Semanal</label><select value={(formData.alertas || {}).reporte_semanal_dia} onChange={e=>handleNested('alertas','reporte_semanal_dia',e.target.value)} className="w-full border p-2 rounded-lg bg-gray-50 text-sm"><option value="LUN">LUN</option><option value="MIE">MIE</option><option value="DOM">DOM</option></select></div>
-               </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -488,15 +410,13 @@ function ViewMiRestaurante() {
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); 
+  const [viewMode, setViewMode] = useState('ADMON'); 
   const [restaurante, setRestaurante] = useState(MOCK_DATA.restaurante);
 
-  // ESTADO ELEVADO (Prioridad 5)
   const [categorias, setCategorias] = useState(MOCK_DATA.categorias || []);
   const [platos, setPlatos] = useState(MOCK_DATA.platos || []);
   const [recetas, setRecetas] = useState(MOCK_DATA.recetas || []);
   const [inventario, setInventario] = useState(MOCK_DATA.inventario || []);
-  
-  // MODIFICADORES ELEVADOS (Nuevos)
   const [gruposMod, setGruposMod] = useState(MOCK_DATA.grupos_modificadores || []);
   const [opcionesMod, setOpcionesMod] = useState(MOCK_DATA.opciones_modificadores || []);
   const [vinculosMod, setVinculosMod] = useState(MOCK_DATA.vinculos_modificadores || []);
@@ -505,7 +425,6 @@ function App() {
     const titles = {
       dashboard: 'Dashboard Principal',
       brain: 'Cerebro IA',
-      pos: 'POS / Pedidos',
       ventas: 'Ventas y Facturación',
       finanzas: 'Finanzas y Costos',
       operaciones: 'Gestión Operativa',
@@ -525,12 +444,12 @@ function App() {
     return titles[tab] || 'Módulo CartaYa';
   };
 
+  if (viewMode === 'POS') return <ViewPOS_Standalone setViewMode={setViewMode} platos={platos} categorias={categorias} />;
+
   return (
     <>
       <DesignSystemStyles />
       <div className="flex h-screen w-full">
-        
-        {/* SIDEBAR */}
         <aside className="sidebar-dark shrink-0 flex flex-col w-64">
           <div className="sidebar-brand-dark p-6 flex items-center justify-between">
             <h1 className="text-2xl font-black text-white tracking-tight">CartaYa</h1>
@@ -538,42 +457,36 @@ function App() {
               <span style={{fontSize:'15px', lineHeight:1}}>🧠</span>
             </div>
           </div>
-
           <div className="flex-1 overflow-y-auto pb-6" style={{ scrollbarWidth: 'none' }}>
             <div className="px-4 py-4 space-y-1">
               <NavItemDark icon={<span>🏠</span>} label="Dashboard" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
               <NavItemDark icon={<span>🧠</span>} label="Brain IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} />
             </div>
-
             <div className="px-6 py-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Gestión Operativa</div>
-              <NavItemDark icon={<span>▧</span>} label="POS / Pedidos" isActive={activeTab === 'pos'} onClick={() => setActiveTab('pos')} />
+              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">GESTIÓN OPERATIVA</div>
               <NavItemDark icon={<span>📈</span>} label="Ventas" isActive={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} />
               <NavItemDark icon={<span>🥧</span>} label="Finanzas" isActive={activeTab === 'finanzas'} onClick={() => setActiveTab('finanzas')} />
               <NavItemDark icon={<span>▦</span>} label="Operaciones" isActive={activeTab === "operaciones"} onClick={() => setActiveTab("operaciones")} />
-              <NavItemDark icon={<span>▤</span>} label="Inventario & Compras" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} />
-              <NavItemDark icon={<span>🛵</span>} label="Delivery & Domicilios" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
+              <NavItemDark icon={<span>▤</span>} label="Inventario" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} />
+              <NavItemDark icon={<span>🛵</span>} label="Delivery" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
             </div>
-
             <div className="px-6 py-2 mt-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Crecimiento & Clientes</div>
+              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">CRECIMIENTO & CLIENTES</div>
               <NavItemDark icon={<span>👥</span>} label="Reservas & CRM" isActive={activeTab === 'reservas'} onClick={() => setActiveTab('reservas')} />
               <NavItemDark icon={<span>📢</span>} label="Marketing" isActive={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} />
               <NavItemDark icon={<span>🎁</span>} label="Fidelización" isActive={activeTab === 'fidelizacion'} onClick={() => setActiveTab('fidelizacion')} />
-              <NavItemDark icon={<span>🍷</span>} label="Eventos & Catering" isActive={activeTab === 'eventos'} onClick={() => setActiveTab('eventos')} />
-              <NavItemDark icon={<span>👥</span>} label="Talento (RRHH)" isActive={activeTab === 'rrhh'} onClick={() => setActiveTab('rrhh')} />
-              <NavItemDark icon={<span>📊</span>} label="Data & Insights" isActive={activeTab === 'data'} onClick={() => setActiveTab('data')} />
+              <NavItemDark icon={<span>🍷</span>} label="Eventos" isActive={activeTab === 'eventos'} onClick={() => setActiveTab('eventos')} />
+              <NavItemDark icon={<span>👥</span>} label="Talento" isActive={activeTab === 'rrhh'} onClick={() => setActiveTab('rrhh')} />
+              <NavItemDark icon={<span>📊</span>} label="Data" isActive={activeTab === 'data'} onClick={() => setActiveTab('data')} />
             </div>
-
             <div className="px-6 py-2 mt-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Ajustes del Negocio</div>
+              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">AJUSTES DEL NEGOCIO</div>
               <NavItemDark icon={<span>🏪</span>} label="Mi Restaurante" isActive={activeTab === 'restaurante'} onClick={() => setActiveTab('restaurante')} />
               <NavItemDark icon={<span>📖</span>} label="Carta & Menú" isActive={activeTab === 'menu'} onClick={() => setActiveTab('menu')} highlight={activeTab === 'menu'} />
               <NavItemDark icon={<span>🔌</span>} label="Integraciones" isActive={activeTab === 'conectores'} onClick={() => setActiveTab('conectores')} />
-              <NavItemDark icon={<span>💳</span>} label="Plan & Facturación" isActive={activeTab === 'billing'} onClick={() => setActiveTab('billing')} />
+              <NavItemDark icon={<span>💳</span>} label="Facturación" isActive={activeTab === 'billing'} onClick={() => setActiveTab('billing')} />
             </div>
           </div>
-          
           <div className="p-4 border-t border-slate-800/50 bg-[#121A2B] shrink-0">
             <div className="flex items-center gap-3 mb-2 px-2">
                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-bold border border-slate-600">DA</div>
@@ -584,13 +497,11 @@ function App() {
             </div>
           </div>
         </aside>
-
-        {/* MAIN CONTENT AREA */}
         <main className="flex-1 flex flex-col overflow-hidden relative bg-[#F8FAFC]">
           {activeTab !== 'menu' && (
             <header className="h-24 bg-white border-b flex items-center justify-between px-10 z-10 shrink-0" style={{ borderColor: '#E2E8F0' }}>
               <div>
-                <p className="text-[11px] font-bold text-gray-400 tracking-widest uppercase mb-1">Módulo Operativo</p>
+                <p className="text-[11px] font-bold text-gray-400 tracking-widest uppercase mb-1">Módulo Administrativo</p>
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                   {getTabTitle(activeTab)}
                   {activeTab === 'brain' && <span>✨</span>}
@@ -603,15 +514,7 @@ function App() {
               </div>
             </header>
           )}
-
           <div className="flex-1 overflow-y-auto p-10">
-            {activeTab === 'dashboard' && <ViewDashboard />}
-            {activeTab === 'pos' && <ViewPOS />}
-            {activeTab === 'ventas' && <ViewVentas />}
-            {activeTab === 'finanzas' && <ViewFinanzas platos={platos} recetas={recetas} inventario={inventario} gruposMod={gruposMod} opcionesMod={opcionesMod} />}
-            {activeTab === 'operaciones' && <ViewOperaciones />}
-            {activeTab === 'inventario' && <ViewInventario inventario={inventario} setInventario={setInventario} />}
-            {activeTab === 'delivery' && <ViewDelivery />}
             
             {activeTab === 'reservas' && <ViewReservas />}
             {activeTab === 'marketing' && <ViewMarketing />}
@@ -644,290 +547,372 @@ function App() {
 
 // VISTAS PLACEHOLDER (Para evitar errores de renderizado)
 // =========================================================================
-function ViewPOS() {
-  const [currentCat, setCurrentCat] = React.useState('Todos');
-  const [orderItems, setOrderItems] = React.useState([]);
+function ViewPOS({ platos = [], categorias = [] }) {
+  // --- Estados de Navegación ---
+  const [activeTab, setActiveTab] = React.useState('caja');
+  const [activeZone, setActiveZone] = React.useState('Salón');
+  
+  // --- Estados de Caja ---
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [orderType, setOrderType] = React.useState('mesa');
-  const [discountVal, setDiscountVal] = React.useState('');
-  const [discountType, setDiscountType] = React.useState('pct');
-  const [orderNote, setOrderNote] = React.useState('');
-  const [showModal, setShowModal] = React.useState(false);
-  const [pendingProduct, setPendingProduct] = React.useState(null);
-  const [selectedMods, setSelectedMods] = React.useState([]);
-
-  const posProducts = [
-    {id:1,name:'Bandeja Paisa',price:28000,cat:'Platos fuertes',emoji:'🍛',tag:'popular'},
-    {id:2,name:'Churrasco 300g',price:42000,cat:'Parrilla',emoji:'🥩',tag:'popular'},
-    {id:3,name:'Pollo a la plancha',price:24000,cat:'Platos fuertes',emoji:'🍗',tag:''},
-    {id:4,name:'Lomo al vino',price:38000,cat:'Parrilla',emoji:'🥩',tag:'new'},
-    {id:5,name:'Ensalada César',price:18000,cat:'Entradas',emoji:'🥗',tag:'veg'},
-    {id:6,name:'Ceviche de camarón',price:22000,cat:'Entradas',emoji:'🦐',tag:''},
-    {id:7,name:'Sopa del día',price:12000,cat:'Entradas',emoji:'🍲',tag:'popular'},
-    {id:8,name:'Coca-Cola',price:5000,cat:'Bebidas',emoji:'🥤',tag:''},
-    {id:9,name:'Jugo natural',price:8000,cat:'Bebidas',emoji:'🍊',tag:'veg'},
-    {id:10,name:'Cerveza artesanal',price:12000,cat:'Bebidas',emoji:'🍺',tag:'popular'},
-    {id:11,name:'Agua mineral',price:4000,cat:'Bebidas',emoji:'💧',tag:''},
-    {id:12,name:'Brownie con helado',price:16000,cat:'Postres',emoji:'🍫',tag:'new'},
-    {id:13,name:'Cheesecake',price:14000,cat:'Postres',emoji:'🍰',tag:'popular'},
-    {id:14,name:'Papas fritas',price:9000,cat:'Adiciones',emoji:'🍟',tag:''},
-    {id:15,name:'Patacones',price:8000,cat:'Adiciones',emoji:'🫓',tag:'veg'},
-    {id:16,name:'Arroz',price:5000,cat:'Adiciones',emoji:'🍚',tag:'86'},
-  ];
+  const [activeCategory, setActiveCategory] = React.useState('Todos');
+  const [orderItems, setOrderItems] = React.useState([]);
+  const [orderType, setOrderType] = React.useState('COMER AQUÍ'); // Mesa vs Para Llevar
   
-  const categories = ['Todos','Platos fuertes','Parrilla','Entradas','Bebidas','Postres','Adiciones'];
+  // --- Mocks Dinámicos (Solo para Demo) ---
+  const [mesas, setMesas] = React.useState([
+    { id: 1, num: 'M1', estado: 'Libre', zona: 'Salón', mesero: '-', monto: 0 },
+    { id: 2, num: 'M2', estado: 'Ocupada', zona: 'Salón', mesero: 'Carlos P.', monto: 85200, tiempo: '45m' },
+    { id: 3, num: 'M3', estado: 'Plato Listo', zona: 'Salón', mesero: 'Marta G.', monto: 120500 },
+    { id: 4, num: 'T1', estado: 'Libre', zona: 'Terraza', mesero: '-', monto: 0 },
+    { id: 5, num: 'V1', estado: 'Cuenta Solicitada', zona: 'VIP', mesero: 'Luis F.', monto: 215000 },
+    { id: 6, num: 'M4', estado: 'En Espera', zona: 'Salón', mesero: 'Carlos P.', monto: 45000 },
+  ]);
 
-  const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const dv = parseFloat(discountVal) || 0;
-  let disc = discountType === 'pct' ? subtotal * (dv / 100) : dv;
-  disc = Math.min(disc, subtotal);
-  const iva = (subtotal - disc) * 0.08;
-  const total = subtotal - disc + iva;
+  const [comandosMonitor, setComandosMonitor] = React.useState([
+    { id: 'C1', mesa: 'M2', plato: 'Pizza Pepperoni XL', cant: 1, tiempo: 8 },
+    { id: 'C2', mesa: 'M4', plato: 'Hamburguesa Smash', cant: 2, tiempo: 14 },
+    { id: 'C3', mesa: 'V1', plato: 'Pasta Carbonara', cant: 1, tiempo: 22 },
+  ]);
 
-  const handleAddProduct = (p) => {
-    if(p.tag === '86') return;
-    const existing = orderItems.find(x => x.id === p.id && !x.mods);
-    if(existing) {
-      setOrderItems(orderItems.map(x => x.id === p.id && !x.mods ? {...x, qty: x.qty + 1} : x));
+  // --- Sincronización con Datos del Dashboard ---
+  const catalogo = React.useMemo(() => {
+    return platos.map(p => ({
+      ...p,
+      categoria: p.categoria_nombre || p.categoria || 'Sin Categoría'
+    }));
+  }, [platos]);
+
+  const categoriasFiltradas = React.useMemo(() => {
+    const cats = ['Todos'];
+    catalogo.forEach(p => { if (p.categoria && !cats.includes(p.categoria)) cats.push(p.categoria); });
+    return cats;
+  }, [catalogo]);
+
+  const itemsVisibles = catalogo.filter(p => 
+    (activeCategory === 'Todos' || p.categoria === activeCategory) &&
+    p.nombre.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // --- Cálculos Financieros ---
+  const subtotal = orderItems.reduce((acc, item) => acc + (item.precio_venta * item.cantidad), 0);
+  const impuesto = subtotal * 0.08;
+  const total = subtotal + impuesto;
+
+  // --- Acciones de Caja ---
+  const agregarItem = (producto) => {
+    const existe = orderItems.find(i => i.id === producto.id);
+    if (existe) {
+      setOrderItems(orderItems.map(i => i.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i));
     } else {
-      setOrderItems([...orderItems, {id: p.id, name: p.name, price: p.price, qty: 1, emoji: p.emoji, mods: ''}]);
+      setOrderItems([...orderItems, { ...producto, cantidad: 1 }]);
     }
   };
 
-  const handleChangeQty = (index, delta) => {
-    const newItems = [...orderItems];
-    newItems[index].qty += delta;
-    if(newItems[index].qty <= 0) {
-      newItems.splice(index, 1);
-    }
-    setOrderItems(newItems);
+  const modificarCantidad = (id, delta) => {
+    setOrderItems(orderItems.map(i => {
+      if (i.id === id) {
+        const nuevaCant = Math.max(0, i.cantidad + delta);
+        return { ...i, cantidad: nuevaCant };
+      }
+      return i;
+    }).filter(i => i.cantidad > 0));
   };
 
-  const handeRemoveItem = (index) => {
-    const newItems = [...orderItems];
-    newItems.splice(index, 1);
-    setOrderItems(newItems);
-  };
+  // --- Estilos Específicos (Rediseño SDD) ---
+  const posStyles = `
+    .pos-layout { display: flex; flex-direction: column; height: 100vh; background: #F0F2F5; color: #111; overflow: hidden; font-family: 'DM Sans', sans-serif; margin: -40px -40px; }
+    .pos-header { background: white; padding: 12px 32px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+    .pos-nav { background: white; padding: 0 32px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; }
+    .pos-tab { padding: 16px 24px; font-weight: 700; font-size: 13px; color: #64748B; cursor: pointer; position: relative; transition: all 0.2s; border-bottom: 2px solid transparent; }
+    .pos-tab:hover { color: #111; }
+    .pos-tab.active { color: #111; border-bottom-color: #22C55E; }
+    
+    .pos-main { flex: 1; display: flex; overflow: hidden; }
+    .pos-catalog { flex: 4; display: flex; flex-direction: column; padding: 24px; gap: 24px; overflow-y: auto; }
+    .pos-order { flex: 1; background: white; border-l: 1px solid #E2E8F0; display: flex; flex-direction: column; min-width: 320px; }
+    
+    .pos-search-bar { position: relative; width: 100%; border-radius: 12px; border: 1px solid #E2E8F0; padding: 12px 16px; display: flex; align-items: center; gap: 12px; background: white; }
+    .pos-product-card { background: white; border-radius: 16px; border: 1px solid #E2E8F0; padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: all 0.2s; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .pos-product-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-color: #CBD5E1; }
+    
+    .pos-footer { background: white; border-top: 1px solid #E2E8F0; padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+    
+    .table-state { width: 100%; aspect-ratio: 1; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px; gap: 4px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+    .state-Libre { background: white; border-color: #E2E8F0; color: #94A3B8; }
+    .state-Ocupada { background: #FFF7ED; border-color: #FB923C; color: #9A3412; }
+    .state-Plato-Listo { background: #F0FDF4; border-color: #4ADE80; color: #166534; }
+    .state-En-Espera { background: #FEFCE8; border-color: #FACC15; color: #854D0E; }
+    .state-Cuenta-Solicitada { background: #FDF2F8; border-color: #F472B6; color: #9D174D; }
 
-  const handleClearOrder = () => {
-    if(window.confirm('¿Cancelar esta orden?')) {
-      setOrderItems([]);
-    }
-  };
-
-  const handleSendKDS = () => {
-    if(orderItems.length === 0) {
-      alert('Agrega productos a la orden primero.');
-      return;
-    }
-    alert('✅ Orden enviada a cocina. El KDS ha recibido el ticket #ORD-2041.');
-  };
-  
-  const handleOpenModal = (p) => {
-    setPendingProduct(p);
-    setSelectedMods(['3/4']);
-    setShowModal(true);
-  };
-  
-  const handleToggleMod = (mod) => {
-    if (selectedMods.includes(mod)) {
-      setSelectedMods(selectedMods.filter(m => m !== mod));
-    } else {
-      setSelectedMods([...selectedMods, mod]);
-    }
-  };
-
-  const handleAddFromModal = () => {
-    if(!pendingProduct) return;
-    const modsStr = selectedMods.join(', ');
-    setOrderItems([...orderItems, {
-      id: pendingProduct.id,
-      name: pendingProduct.name,
-      price: pendingProduct.price,
-      qty: 1,
-      emoji: pendingProduct.emoji,
-      mods: modsStr
-    }]);
-    setShowModal(false);
-    setPendingProduct(null);
-  };
-
-  const filteredProducts = posProducts.filter(p => {
-    const matchCat = currentCat === 'Todos' || p.cat === currentCat;
-    const matchQ = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchQ;
-  });
+    .kds-card { background: white; border-radius: 16px; border: 1px solid #E2E8F0; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .kds-timer { font-family: 'DM Mono', monospace; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 14px; }
+    .timer-green { background: #DCFCE7; color: #166534; }
+    .timer-amber { background: #FEF9C3; color: #854D0E; }
+    .timer-red { background: #FEE2E2; color: #991B1B; }
+  `;
 
   return (
-    <div className="h-full max-h-screen flex animate-in fade-in -m-10" style={{height: 'calc(100vh - 96px)'}}>
-      {/* LEFT: order panel */}
-      <div className="w-[380px] bg-white border-r border-gray-200 flex flex-col shrink-0 relative z-10 shadow-sm">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-2 bg-gray-50/50">
-          <div className="flex bg-gray-100 p-1 rounded-xl">
-             <button onClick={() => setOrderType('mesa')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${orderType === 'mesa' ? 'bg-white shadow-sm text-slate-800' : 'text-gray-500 hover:text-slate-700'}`}>Mesa</button>
-             <button onClick={() => setOrderType('llevar')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${orderType === 'llevar' ? 'bg-white shadow-sm text-slate-800' : 'text-gray-500 hover:text-slate-700'}`}>Para llevar</button>
-             <button onClick={() => setOrderType('domicilio')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${orderType === 'domicilio' ? 'bg-white shadow-sm text-slate-800' : 'text-gray-500 hover:text-slate-700'}`}>Domicilio</button>
-          </div>
-          <span className="text-xs font-black text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">#ORD-2041</span>
-        </div>
+    <div className="pos-layout">
+      <style dangerouslySetInnerHTML={{ __html: posStyles }} />
 
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50/20">
-          {orderItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
-              <span className="text-4xl opacity-50 mb-2">🛒</span>
-              <p className="font-bold text-sm text-slate-500">Orden vacía</p>
-              <p className="text-xs">Toca un producto para agregar</p>
+      {/* FIXED HEADER */}
+      <header className="pos-header">
+        <div>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Módulo Operativo</p>
+          <h1 className="text-xl font-black tracking-tight uppercase">POS / Pedidos</h1>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="text-right">
+            <p className="text-xs font-black text-slate-800">11 Abril, 2026</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase">Terminal: BOG-01 / Principal</p>
+          </div>
+          <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">👤</div>
+        </div>
+      </header>
+
+      {/* TOP TABS NAVIGATION */}
+      <nav className="pos-nav">
+        <div className="flex">
+          {[
+            { id: 'caja', label: 'Caja / TPV' },
+            { id: 'mesas', label: 'Mapa de Mesas' },
+            { id: 'kds', label: 'Monitor Cocina' }
+          ].map(tab => (
+            <div 
+              key={tab.id} 
+              onClick={() => setActiveTab(tab.id)}
+              className={`pos-tab ${activeTab === tab.id ? 'active' : ''}`}
+            >
+              {tab.label}
             </div>
-          ) : (
-            <div className="space-y-2">
-              {orderItems.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:border-gray-300 transition-colors">
-                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-0.5 border border-gray-200">
-                    <button onClick={() => handleChangeQty(i, -1)} className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white hover:shadow-sm rounded-md transition-all font-black">−</button>
-                    <span className="text-sm font-black text-slate-800 w-4 text-center">{item.qty}</span>
-                    <button onClick={() => handleChangeQty(i, 1)} className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white hover:shadow-sm rounded-md transition-all font-black">+</button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">BOG-01 / Principal Activo</span>
+        </div>
+      </nav>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="pos-main">
+        {activeTab === 'caja' && (
+          <React.Fragment>
+            {/* IZQUIERDA: CATÁLOGO */}
+            <div className="pos-catalog">
+              {/* BUSCADOR Y CATEGORÍAS */}
+              <div className="flex flex-col gap-4">
+                <div className="pos-search-bar">
+                  <span className="text-gray-400">🔍</span>
+                  <input 
+                    type="text" 
+                    placeholder="Buscar producto por nombre..." 
+                    className="flex-1 outline-none text-sm font-medium"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {categoriasFiltradas.map(cat => (
+                    <button 
+                      key={cat} 
+                      onClick={() => setActiveCategory(cat)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeCategory === cat ? 'bg-slate-900 text-white shadow-lg' : 'bg-white border border-gray-200 text-slate-500 hover:border-slate-400'}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* GRILLA DE PRODUCTOS */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-10">
+                {itemsVisibles.map(p => (
+                  <div key={p.id} onClick={() => agregarItem(p)} className="pos-product-card">
+                      <div key={num} onClick={() => { if(num === 14) setActiveTab('menu'); }} className="aspect-square rounded-3xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105">
+                       {p.foto_url ? <img src={p.foto_url} alt="" className="w-full h-full object-cover"/> : '🍽️'}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm text-slate-800 line-clamp-1">{p.nombre}</h4>
+                      <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">{p.descripcion || '—'}</p>
+                    </div>
+                    <div className="flex justify-between items-end mt-2">
+                      <span className="text-sm font-black text-slate-900">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(p.precio_venta)}</span>
+                      <button className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-lg font-bold">+</button>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800 truncate">{item.emoji} {item.name}</p>
-                    {item.mods && <p className="text-[10px] text-gray-500 mt-0.5 font-medium leading-tight">{item.mods}</p>}
+                ))}
+              </div>
+            </div>
+
+            {/* DERECHA: ORDEN ACTIVA */}
+            <aside className="pos-order">
+              <div className="p-6 bg-slate-50/50 border-b border-gray-100">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Orden Activa</p>
+                    <h3 className="text-lg font-black text-slate-900">#ORD-2041</h3>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-slate-800 mb-0.5">${(item.price * item.qty).toLocaleString('es-CO')}</p>
-                    <button onClick={() => handeRemoveItem(i)} className="text-[10px] text-red-500 hover:bg-red-100 font-bold px-2 py-0.5 bg-red-50 rounded-md transition-colors">✕ Quitar</button>
+                  <button 
+                    onClick={() => setOrderType(orderType === 'LLEVAR' ? 'MESA' : 'LLEVAR')}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${orderType === 'LLEVAR' ? 'bg-amber-100 text-amber-700' : 'bg-slate-900 text-white'}`}
+                  >
+                    {orderType}
+                  </button>
+                </div>
+              </div>
+
+              {/* LISTADO DE ITEMS EN ORDEN */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {orderItems.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
+                    <div className="text-4xl mb-2">🛒</div>
+                    <p className="text-[10px] font-black uppercase tracking-widest">Sin ítems seleccionados</p>
                   </div>
+                ) : (
+                  orderItems.map(item => (
+                    <div key={item.id} className="flex gap-3 pb-3 border-b border-gray-50 group">
+                      <div className="flex flex-col items-center bg-slate-100 rounded-lg p-1">
+                        <button onClick={() => modificarCantidad(item.id, 1)} className="text-slate-500 hover:text-slate-900">+</button>
+                        <span className="text-xs font-black text-slate-900 py-1">{item.cantidad}</span>
+                        <button onClick={() => modificarCantidad(item.id, -1)} className="text-slate-500 hover:text-slate-900">-</button>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">{item.nombre}</p>
+                        <p className="text-[9px] text-gray-400 mt-1">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(item.precio_venta)} c/u</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-black text-slate-900">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(item.precio_venta * item.cantidad)}</p>
+                        <button onClick={() => modificarCantidad(item.id, -999)} className="text-[8px] text-red-400 font-bold uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Eliminar</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* RESUMEN FINANCIERO */}
+              <div className="p-6 bg-slate-50 border-t border-gray-200 mt-auto">
+                <div className="space-y-2 mb-6">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <span>Subtotal</span>
+                    <span>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold text-red-500 uppercase tracking-widest">
+                    <span>Descuento</span>
+                    <span>-$0</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <span>Impuestos (8%)</span>
+                    <span>{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(impuesto)}</span>
+                  </div>
+                  <div className="pt-4 border-t border-dashed border-gray-300 flex justify-between items-center">
+                    <span className="text-sm font-black text-slate-900 uppercase">Total</span>
+                    <span className="text-2xl font-black text-slate-950">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(total)}</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => setOrderItems([])} className="py-3 rounded-xl border border-gray-200 text-xs font-bold text-slate-500 hover:bg-white transition-all">Limpiar</button>
+                  <button className="py-3 rounded-xl bg-slate-950 text-white text-xs font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all">Confirmar Pedido</button>
+                </div>
+              </div>
+            </aside>
+          </React.Fragment>
+        )}
+
+        {activeTab === 'mesas' && (
+          <div className="flex-1 p-8 flex flex-col gap-6">
+            <div className="flex justify-between items-center bg-white p-2 rounded-2xl border border-gray-100 shadow-sm max-w-fit mx-auto">
+              {['Salón', 'Terraza', 'VIP'].map(z => (
+                <button 
+                  key={z} 
+                  onClick={() => setActiveZone(z)}
+                  className={`px-8 py-2 rounded-xl text-xs font-black uppercase transition-all ${activeZone === z ? 'bg-slate-950 text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  {z}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+              {mesas.filter(m => m.zona === activeZone).map(m => (
+                <div key={m.id} onClick={() => { if(m.estado !== 'Libre') setActiveTab('caja'); }} className={`table-state state-${m.estado.replace(' ', '-')}`}>
+                  <span className="text-xs font-black opacity-40">Mesa</span>
+                  <span className="text-2xl font-black">{m.num}</span>
+                  <p className="text-[10px] font-bold mt-1 text-center leading-tight">{m.mesero}</p>
+                  {m.monto > 0 && <p className="text-[11px] font-black mt-1">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(m.monto)}</p>}
+                  {m.tiempo && <span className="text-[8px] font-black uppercase tracking-widest mt-1 opacity-50">{m.tiempo}</span>}
                 </div>
               ))}
             </div>
-          )}
-        </div>
 
-        <div className="p-4 border-t border-gray-200 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
-          <div className="flex gap-2 mb-3">
-            <input type="number" placeholder="Descuento" value={discountVal} onChange={e => setDiscountVal(e.target.value)} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all font-medium bg-gray-50 focus:bg-white" />
-            <select value={discountType} onChange={e => setDiscountType(e.target.value)} className="border border-gray-200 rounded-xl px-2 py-2 text-sm outline-none focus:border-emerald-500 font-bold bg-gray-50 cursor-pointer">
-              <option value="pct">%</option>
-              <option value="fix">$</option>
-            </select>
+            <div className="mt-auto grid grid-cols-5 gap-4">
+              {[
+                { label: 'Libre', color: 'bg-white border-gray-200' },
+                { label: 'Ocupada', color: 'bg-orange-50 border-orange-200' },
+                { label: 'Plato Listo', color: 'bg-green-50 border-green-200' },
+                { label: 'En Espera', color: 'bg-yellow-50 border-yellow-200' },
+                { label: 'Cuenta Solicitada', color: 'bg-pink-50 border-pink-200' },
+              ].map(leg => (
+                <div key={leg.label} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full border ${leg.color}`}></div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{leg.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <textarea rows="1" placeholder="Nota para la orden (opcional)..." value={orderNote} onChange={e => setOrderNote(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all resize-none mb-3 font-medium bg-gray-50 focus:bg-white"></textarea>
-          
-          <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 mb-4">
-             <div className="flex justify-between items-center mb-1.5"><span className="text-xs font-bold text-gray-500">Subtotal</span><span className="text-sm font-black text-slate-700">${Math.round(subtotal).toLocaleString('es-CO')}</span></div>
-             <div className="flex justify-between items-center mb-1.5"><span className="text-xs font-bold text-gray-500">Descuento</span><span className="text-sm font-black text-red-500">-${Math.round(disc).toLocaleString('es-CO')}</span></div>
-             <div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-gray-500">IVA (8%)</span><span className="text-sm font-black text-slate-700">${Math.round(iva).toLocaleString('es-CO')}</span></div>
-             <div className="flex justify-between items-center pt-2 border-t border-gray-200"><span className="text-sm font-black text-slate-800">TOTAL</span><span className="text-xl font-black text-emerald-600">${Math.round(total).toLocaleString('es-CO')}</span></div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <button onClick={handleClearOrder} className="py-2.5 rounded-xl border border-red-200 text-red-600 font-bold text-xs hover:bg-red-50 transition-colors">🗑 Cancelar</button>
-            <button onClick={handleSendKDS} className="py-2.5 rounded-xl border border-gray-200 text-slate-700 font-bold text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"><span className="text-lg leading-none">📤</span> Cocina</button>
-          </div>
-          <button onClick={() => alert('Abriendo módulo de pagos...')} className="w-full py-3.5 rounded-xl bg-emerald-500 text-white font-black text-sm hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30 active:scale-[0.98] flex items-center justify-center gap-2"><span className="text-lg leading-none">💳</span> COBRAR</button>
-        </div>
-      </div>
+        )}
 
-      {/* RIGHT: products */}
-      <div className="flex-1 flex flex-col bg-[#F8FAFC]">
-        <div className="p-4 border-b border-gray-200 bg-white shrink-0 shadow-sm z-10">
-          <div className="flex items-center gap-3 border border-gray-200 bg-gray-50 rounded-xl px-4 py-2.5 mb-3 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-            <span className="text-gray-400 text-lg leading-none">🔍</span>
-            <input type="text" placeholder="Buscar producto, código o categoría..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-800 placeholder-gray-400" />
+        {activeTab === 'kds' && (
+          <div className="flex-1 p-8 flex flex-col gap-6 overflow-y-auto">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Monitor de Cocina (En Tiempo Real)</h3>
+            <div className="space-y-4 max-w-2xl mx-auto w-full">
+              {comandosMonitor.map(c => {
+                const timerClass = c.tiempo < 10 ? 'timer-green' : c.tiempo < 20 ? 'timer-amber' : 'timer-red';
+                return (
+                  <div key={c.id} className="kds-card">
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-slate-900 text-white rounded-2xl flex flex-col items-center justify-center">
+                        <span className="text-[10px] font-black opacity-50">MESA</span>
+                        <span className="text-2xl font-black">{c.mesa}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-900 text-lg">{c.cant}x {c.plato}</h4>
+                        <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Pedido recibido hace {c.tiempo} min</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className={`kds-timer ${timerClass}`}>{c.tiempo}:00 min</div>
+                      <button className="px-6 py-3 rounded-2xl bg-slate-100 text-slate-900 text-xs font-black uppercase hover:bg-emerald-500 hover:text-white transition-all">Marcar Listo</button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 items-center" style={{scrollbarWidth:'none'}}>
-            {categories.map(c => (
-              <button key={c} onClick={() => setCurrentCat(c)} className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${currentCat === c ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white text-slate-600 border-gray-200 hover:bg-gray-50'}`}>{c}</button>
-            ))}
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-5">
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-            {filteredProducts.map(p => (
-              <div key={p.id} onClick={() => handleAddProduct(p)} onContextMenu={(e) => {e.preventDefault(); handleOpenModal(p);}} className={`bg-white rounded-2xl p-5 border border-gray-200 cursor-pointer transition-all hover:shadow-lg hover:border-emerald-200 active:scale-95 group relative ${p.tag === '86' ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
-                {p.tag && (
-                  <span className={`absolute top-2.5 right-2.5 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md ${
-                    p.tag === 'popular' ? 'bg-amber-100 text-amber-700' : 
-                    p.tag === 'new' ? 'bg-blue-100 text-blue-700' : 
-                    p.tag === 'veg' ? 'bg-emerald-100 text-emerald-700' : 
-                    p.tag === '86' ? 'bg-red-100 text-red-700' : ''
-                  }`}>
-                    {p.tag === 'popular' ? '★ Top' : p.tag === 'new' ? 'Nuevo' : p.tag === 'veg' ? 'Veg' : p.tag === '86' ? 'Agotado' : ''}
-                  </span>
-                )}
-                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform origin-bottom inline-block">{p.emoji}</div>
-                <h3 className="text-sm font-bold text-slate-800 leading-snug mb-1">{p.name}</h3>
-                <p className="text-sm font-black text-emerald-600">${p.price.toLocaleString('es-CO')}</p>
-                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900/90 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg pointer-events-none scale-90 group-hover:scale-100 tracking-wide text-center w-max shadow-xl">Clic derecho para modif.</div>
-              </div>
-            ))}
-            {filteredProducts.length === 0 && (
-              <div className="col-span-full py-20 text-center">
-                <p className="text-gray-400 font-bold mb-2 text-4xl">🔍</p>
-                <p className="text-gray-500 font-bold">No se encontraron productos.</p>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
+      </main>
 
-        <div className="bg-white border-t border-gray-200 p-3 flex gap-2 shrink-0 shadow-sm z-10">
-          <button className="flex-1 py-2.5 rounded-xl border border-gray-200 text-slate-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"><span className="text-lg leading-none shrink-0">🗺</span> Mesas</button>
-          <button className="flex-1 py-2.5 rounded-xl border border-gray-200 text-slate-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"><span className="text-lg leading-none shrink-0">🍳</span> Cocina</button>
-          <button className="flex-1 py-2.5 rounded-xl border border-gray-200 text-slate-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors" onClick={() => alert('Selecciona el producto a marcar como agotado (86) desde el catálogo.')}><span className="text-lg leading-none shrink-0">🚫</span> 86 Producto</button>
-          <button className="flex-1 py-2.5 rounded-xl border border-gray-200 text-slate-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors" onClick={() => alert('Admin notificado')}><span className="text-lg leading-none shrink-0">📞</span> Llamar Admin</button>
-        </div>
-      </div>
-      
-      {/* MODAL MODIFICADORES */}
-      {showModal && pendingProduct && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
-             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">{pendingProduct.emoji} {pendingProduct.name}</h3>
-                <button onClick={() => {setShowModal(false); setPendingProduct(null);}} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200 transition-colors">✕</button>
+      {/* FIXED FOOTER METRICS */}
+      <footer className="pos-footer">
+        <div className="flex gap-8">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-sm">🎫</div>
+             <div>
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Tickets Hoy</p>
+                <p className="text-sm font-black text-slate-900">12 órdenes</p>
              </div>
-             
-             <div className="p-6 space-y-6">
-                <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Punto de cocción</h4>
-                   <div className="flex flex-wrap gap-2.5">
-                     {['Término rojo', '3/4', 'Bien cocido'].map(mod => (
-                       <button key={mod} onClick={() => handleToggleMod(mod)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedMods.includes(mod) ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm' : 'bg-white border-gray-200 text-slate-600 hover:border-emerald-300'}`}>
-                         {mod}
-                       </button>
-                     ))}
-                   </div>
-                </div>
-                <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Adicionales (+$3.000)</h4>
-                   <div className="flex flex-wrap gap-2.5">
-                     {['+ Tocineta', '+ Aguacate', '+ Queso extra', '+ Huevo'].map(mod => (
-                       <button key={mod} onClick={() => handleToggleMod(mod)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedMods.includes(mod) ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm' : 'bg-white border-gray-200 text-slate-600 hover:border-emerald-300'}`}>
-                         {mod}
-                       </button>
-                     ))}
-                   </div>
-                </div>
-                <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Excluir</h4>
-                   <div className="flex flex-wrap gap-2.5">
-                     {['Sin cebolla', 'Sin tomate', 'Sin lechuga'].map(mod => (
-                       <button key={mod} onClick={() => handleToggleMod(mod)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedMods.includes(mod) ? 'bg-red-50 border-red-500 text-red-700 shadow-sm' : 'bg-white border-gray-200 text-slate-600 hover:border-red-300'}`}>
-                         {mod}
-                       </button>
-                     ))}
-                   </div>
-                </div>
-                <div>
-                  <textarea rows="2" placeholder="Nota especial para cocina..." className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 bg-gray-50 focus:bg-white resize-none transition-all font-medium placeholder-gray-400"></textarea>
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button onClick={() => {setShowModal(false); setPendingProduct(null);}} className="flex-1 py-3.5 bg-white border border-gray-200 text-slate-600 font-bold rounded-xl text-sm hover:bg-gray-50 transition-colors shadow-sm cursor-pointer">Cancelar</button>
-                  <button onClick={handleAddFromModal} className="flex-[2] py-3.5 bg-slate-900 text-white font-black rounded-xl text-sm shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all cursor-pointer transform active:scale-[0.98]">Agregar a orden</button>
-                </div>
+          </div>
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-sm">🧾</div>
+             <div>
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Ticket Prom.</p>
+                <p className="text-sm font-black text-slate-900">$45.500</p>
              </div>
           </div>
         </div>
-      )}
+        <div>
+           <span className="px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest">Estación: Barra Principal</span>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -935,8 +920,36 @@ function ViewPOS() {
 // =========================================================================
 // 1. DASHBOARD PRINCIPAL (ACTUALIZADO SEGÚN REGLAS Y REQUISITOS)
 // =========================================================================
-function ViewDashboard() {
-  return (
+function ViewDashboard({ setViewMode }) {
+  return (<React.Fragment>
+      {/* PORTAL DE ACCESO RÁPIDO */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <button 
+          onClick={() => setViewMode('POS')}
+          className="bg-slate-950 text-white p-8 rounded-[32px] flex items-center gap-6 hover:bg-slate-900 transition-all shadow-2xl shadow-slate-950/20 group relative overflow-hidden"
+        >
+          <div className="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-3xl group-hover:rotate-12 transition-transform">📟</div>
+          <div className="text-left relative z-10">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Terminal de Ventas</p>
+            <p className="text-2xl font-black">Punto de Venta (POS)</p>
+            <p className="text-[11px] text-slate-500 mt-1">Interfaz optimizada para tablets y mostrador</p>
+          </div>
+          <div className="ml-auto w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:translate-x-2 transition-transform">→</div>
+        </button>
+
+        <button 
+          className="bg-white border-2 border-indigo-600/20 p-8 rounded-[32px] flex items-center gap-6 shadow-xl relative overflow-hidden cursor-default"
+        >
+          <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-3xl text-indigo-600">⚙️</div>
+          <div className="text-left">
+            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Panel de Control</p>
+            <p className="text-2xl font-black text-slate-900">Administración</p>
+            <p className="text-[11px] text-slate-400 mt-1">Configuración general y reportes avanzados</p>
+          </div>
+          <div className="ml-auto px-4 py-1.5 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest">ACTIVO</div>
+        </button>
+      </div>
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       
       {/* Bloque 1 — Ventas (resumen financiero del día) */}
@@ -1060,7 +1073,7 @@ function ViewDashboard() {
          
       </div>
     </div>
-  );
+    </React.Fragment>);
 }
 
 // =========================================================================
@@ -1166,35 +1179,297 @@ function ViewFinanzas() {
 // 4. OPERACIONES Y MESAS
 // =========================================================================
 function ViewOperaciones() {
-  const mesas = [
-    { num: 1, pax: 2, estado: 'Ocupada', tiempo: '45 min', monto: 85000 },
-    { num: 2, pax: 4, estado: 'Ocupada', tiempo: '15 min', monto: 120000 },
-    { num: 3, pax: 0, estado: 'Libre', tiempo: '-', monto: 0 },
-    { num: 4, pax: 3, estado: 'Por Pagar', tiempo: '60 min', monto: 95000 },
-    { num: 5, pax: 0, estado: 'Reservada', tiempo: '19:00', monto: 0 },
-    { num: 6, pax: 0, estado: 'Libre', tiempo: '-', monto: 0 },
+  const [isKds, setIsKds] = React.useState(false);
+  const [selectedMesa, setSelectedMesa] = React.useState(null);
+  const [currentTime, setCurrentTime] = React.useState(new Date());
+  
+  // Mocks de datos reactivos
+  const [mesas, setMesas] = React.useState([
+    { id: 'T1', num: 1, pax: 4, estado: 'OCUPADA', tiempo: 15, monto: 120000 },
+    { id: 'T2', num: 2, pax: 2, estado: 'OCUPADA', tiempo: 95, monto: 85000 }, // Supera 90 min -> Alerta
+    { id: 'T3', num: 3, pax: 0, estado: 'LIBRE', tiempo: 0, monto: 0 },
+    { id: 'T4', num: 4, pax: 3, estado: 'POR PAGAR', tiempo: 60, monto: 95000 }, // Pulse anim
+    { id: 'T5', num: 5, pax: 0, estado: 'RESERVADA', tiempo: '19:00', monto: 0 },
+    { id: 'T6', num: 6, pax: 0, estado: 'LIBRE', tiempo: 0, monto: 0 },
+    { id: 'T7', num: 7, pax: 5, estado: 'OCUPADA', tiempo: 32, monto: 210000 },
+    { id: 'T8', num: 8, pax: 2, estado: 'CERRADA', tiempo: 45, monto: 45000 },
+  ]);
+
+  const [ticketsKDS, setTicketsKDS] = React.useState([
+    { id: 'K1', mesa: 'T1', items: ['2x Burger Special', '1x Papas'], estado: 'RECIBIDO', tiempo: 2 },
+    { id: 'K2', mesa: 'T7', items: ['1x Pasta Carbonara', '1x Vino Chianti'], estado: 'EN PREPARACIÓN', tiempo: 18 }, // > 15 min -> Alerta
+    { id: 'K3', mesa: 'T4', items: ['3x Pizza Napo'], estado: 'LISTO PARA SERVIR', tiempo: 25 },
+  ]);
+
+  const alerts = [
+    { id: 1, type: 'CRITIC', text: 'Mesa T2 lleva 95 min sin cerrar — Alerta Rotación', time: 'hace 5m' },
+    { id: 2, type: 'WARNING', text: 'Mesa T7: ticket en cocina hace 18 min sin marcar listo', time: 'hace 2m' },
+    { id: 3, type: 'INFO', text: 'Reserva T5 en 45 minutos — confirmar preparación', time: 'hace 10m' },
   ];
 
+  // Reloj en vivo
+  React.useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Formateadores
+  const formatTime = (date) => date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const formatDate = (date) => date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  const formatMoney = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
+
+  // Estilos específicos corregidos para no interferir
+  const opStyles = `
+    @keyframes pulse-amber {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(217, 119, 6, 0); }
+      50% { transform: scale(1.02); box-shadow: 0 0 15px rgba(217, 119, 6, 0.3); }
+    }
+    .status-badge { font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.02em; }
+    .status-LIBRE { background: #F9FAFB; color: #9CA3AF; border: 1px solid #E5E7EB; }
+    .status-OCUPADA { background: #E8F0FE; color: #3B5BDB; border: 1px solid #D0EBFF; }
+    .status-RESERVADA { background: #F3E8FF; color: #7C3AED; border: 1px solid #EBE4FF; }
+    .status-POR-PAGAR { background: #FFFBEB; color: #D97706; border: 1px solid #FCD34D; animation: pulse-amber 4s infinite; }
+    .status-CERRADA { background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; }
+    .status-ALERT { background: #FFFBEB; color: #D97706; border: 2px solid #F59E0B; }
+    
+    .kds-col { flex: 1; min-width: 280px; background: #F1F5F9; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; height: 100%; }
+    .kds-card { background: white; border-radius: 12px; padding: 16px; border: 1px solid #E2E8F0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .kds-card-alert { border: 2px solid #EF4444; }
+    
+    .drawer-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-blur: 4px; z-index: 1000; display: flex; justify-content: flex-end; }
+    .drawer-content { width: 450px; background: white; height: 100%; box-shadow: -10px 0 40px rgba(0,0,0,0.1); border-l: 1px solid #E2E8F0; display: flex; flex-direction: column; }
+    
+    .op-footer { position: fixed; bottom: 0; left: 280px; right: 0; background: white; border-top: 1px solid #E2E8F0; padding: 12px 24px; z-index: 50; display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 13px; color: #475569; }
+    .alert-chip { padding: 10px 16px; border-radius: 12px; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 12px; font-size: 12px; transition: all 0.2s; cursor: pointer; }
+    .alert-chip:hover { border-color: #3B5BDB; background: #F8FAFC; }
+  `;
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
-      <div className="flex items-center justify-between mb-2">
-         <h3 className="text-lg font-bold text-slate-800">Mapa del Salón (En Vivo)</h3>
-         <button className="btn btn--dark py-2 px-4 text-xs">Modo KDS (Cocina)</button>
+    <div className="flex flex-col h-full bg-[#F0F2F5] -m-10 p-10 font-['DM_Sans',sans-serif] text-[#111827] overflow-hidden">
+      <style dangerouslySetInnerHTML={{ __html: opStyles }} />
+
+      {/* TOPBAR */}
+      <div className="flex items-center justify-between mb-8 sticky top-0 z-50 bg-[#F0F2F5]/80 backdrop-blur-md py-2">
+        <div>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Módulo Operativo</p>
+          <h1 className="text-3xl font-black tracking-tight">Gestión Operativa</h1>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="text-right">
+            <p className="text-xl font-black font-mono leading-none">{formatTime(currentTime)}</p>
+            <p className="text-[10px] font-bold text-gray-500 uppercase">{formatDate(currentTime)}</p>
+          </div>
+          <div className="h-10 w-[1px] bg-gray-300"></div>
+          <button 
+            onClick={() => setIsKds(!isKds)}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest transition-all ${isKds ? 'bg-[#111827] text-white shadow-lg' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+          >
+            {isKds ? '🍳 MODO KDS ACTIVO' : '🍽️ VISTA SALÓN'}
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-         {mesas.map(m => (
-           <div key={m.num} className={`p-4 rounded-2xl border-2 flex flex-col justify-between h-32 ${m.estado === 'Libre' ? 'bg-white border-gray-200' : m.estado === 'Ocupada' ? 'bg-blue-50 border-blue-200' : m.estado === 'Por Pagar' ? 'bg-amber-50 border-amber-200' : 'bg-purple-50 border-purple-200'}`}>
-              <div className="flex justify-between items-start">
-                 <span className="text-xl font-black text-slate-800">T{m.num}</span>
-                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${m.estado === 'Libre' ? 'bg-gray-100 text-gray-500' : m.estado === 'Ocupada' ? 'bg-blue-200 text-blue-800' : m.estado === 'Por Pagar' ? 'bg-amber-200 text-amber-800' : 'bg-purple-200 text-purple-800'}`}>{m.estado}</span>
-              </div>
+
+      <div className="flex-1 flex flex-col gap-8 overflow-y-auto pb-24 custom-scrollbar">
+        {/* KPI STRIP */}
+        <div className="grid grid-cols-4 gap-4">
+          {[
+            { label: 'Mesas Activas', val: '5/8', icon: '🍽️', trend: '↑ 2' },
+            { label: 'Pax en Salón', val: '13', icon: '👥', trend: '↓ 5%' },
+            { label: 'Venta Abierta', val: '$300,000', icon: '💰', trend: '↑ 12%' },
+            { label: 'Tiempo Prom.', val: '32 min', icon: '⏱️', trend: '→ 0' },
+          ].map((k, i) => (
+            <div key={i} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
               <div>
-                 {m.estado !== 'Libre' && <p className="text-xs font-bold text-slate-600 mb-1">{m.pax} Pax • {m.tiempo}</p>}
-                 {m.monto > 0 && <p className="text-sm font-black text-emerald-600">${m.monto.toLocaleString()}</p>}
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{k.label}</p>
+                <p className="text-2xl font-black">{k.val}</p>
               </div>
-           </div>
-         ))}
+              <div className="text-right">
+                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-xl mb-1">{k.icon}</div>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{k.trend}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {!isKds ? (
+          <React.Fragment>
+            {/* SALÓN MAP */}
+            <div className="flex flex-col gap-4">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Mapa del Salón</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {mesas.map((m) => {
+                  const isTimeAlert = m.estado === 'OCUPADA' && m.tiempo >= 90;
+                  const statusClass = `status-${m.estado.replace(' ', '-')}`;
+                  return (
+                    <div 
+                      key={m.id} 
+                      onClick={() => m.estado !== 'LIBRE' && setSelectedMesa(m)}
+                      className={`bg-white p-5 rounded-2xl border-2 cursor-pointer transition-all hover:translate-y-[-4px] hover:shadow-xl flex flex-col justify-between h-40 ${isTimeAlert ? 'border-amber-500 shadow-lg shadow-amber-500/10' : 'border-gray-100'}`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <span className="text-2xl font-black">T{m.num}</span>
+                        <span className={`status-badge ${statusClass}`}>
+                          {isTimeAlert ? '⚠️ TIEMPO CRÍTICO' : m.estado}
+                        </span>
+                      </div>
+                      <div className="mt-4">
+                        <p className="text-[11px] font-bold text-gray-500 mb-1">
+                          {m.estado === 'LIBRE' ? 'Mesa disponible' : `${m.pax} Pax • ${m.tiempo} min`}
+                        </p>
+                        {m.monto > 0 && <p className="text-xl font-black text-emerald-600 tracking-tight">{formatMoney(m.monto)}</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ALERTS SECTION */}
+            <div className="flex flex-col gap-4 mt-4">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Alertas Operativas</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {alerts.map((a) => (
+                  <div key={a.id} className="alert-chip bg-white">
+                    <span className={a.type === 'CRITIC' ? 'text-red-500' : a.type === 'WARNING' ? 'text-amber-500' : 'text-blue-500'}>
+                      {a.type === 'CRITIC' ? '🔴' : a.type === 'WARNING' ? '🟡' : '🔵'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-[13px] truncate">{a.text}</p>
+                      <p className="text-[10px] text-gray-400 font-medium uppercase">{a.time}</p>
+                    </div>
+                    <button className="text-[10px] font-black text-blue-600 hover:underline">VER</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </React.Fragment>
+        ) : (
+          /* KDS VIEW */
+          <div className="flex-1 flex gap-6 overflow-x-auto pb-4 custom-scrollbar h-full min-h-[500px]">
+            {['RECIBIDO', 'EN PREPARACIÓN', 'LISTO PARA SERVIR', 'ENTREGADO'].map((col) => {
+              const ticketsCol = ticketsKDS.filter(t => t.estado === col);
+              return (
+                <div key={col} className="kds-col">
+                  <div className="flex justify-between items-center mb-2 px-2">
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">{col}</h3>
+                    <span className="bg-slate-200 text-slate-600 text-[10px] font-black px-2 py-0.5 rounded-full">{ticketsCol.length}</span>
+                  </div>
+                  <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1">
+                    {ticketsCol.map(t => {
+                      const isKdsAlert = t.estado === 'EN PREPARACIÓN' && t.tiempo > 15;
+                      return (
+                        <div key={t.id} className={`kds-card ${isKdsAlert ? 'kds-card-alert' : ''}`}>
+                          <div className="flex justify-between mb-3 border-b border-gray-50 pb-2">
+                            <span className="text-lg font-black">Mesa {t.mesa}</span>
+                            <span className={`text-[11px] font-black font-mono ${isKdsAlert ? 'bg-red-50 text-red-600' : 'text-slate-400'} px-2 py-0.5 rounded`}>
+                              {isKdsAlert && '⚠️ '} {t.tiempo}m
+                            </span>
+                          </div>
+                          <ul className="space-y-1 mb-4">
+                            {t.items.map((item, idx) => (
+                              <li key={idx} className="text-[13px] font-medium text-slate-700 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span> {item}
+                              </li>
+                            ))}
+                          </ul>
+                          <button className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${col === 'LISTO PARA SERVIR' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-gray-100 text-slate-500 hover:bg-slate-200'}`}>
+                            {col === 'RECIBIDO' ? 'Preparar' : col === 'EN PREPARACIÓN' ? 'Listo' : col === 'LISTO PARA SERVIR' ? 'Servido' : 'Archivar'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* STICKY FOOTER */}
+      <div className="op-footer">
+        <div className="flex gap-8">
+          <span className="flex items-center gap-2">🍽️ <strong className="text-slate-800">6 Mesas</strong></span>
+          <span className="flex items-center gap-2">👥 <strong className="text-slate-800">13 Pax</strong></span>
+          <span className="flex items-center gap-2">💰 Venta Abierta <strong className="text-emerald-600">$300,000</strong></span>
+        </div>
+        <div className="flex gap-4">
+          <span className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[11px]">2 mesas por cerrar</span>
+          <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[11px]">1 alerta activa</span>
+        </div>
+      </div>
+
+      {/* MESA DRAWER */}
+      {selectedMesa && (
+        <div className="drawer-overlay animate-in fade-in duration-300" onClick={() => setSelectedMesa(null)}>
+          <div className="drawer-content animate-in slide-in-from-right duration-500" onClick={e => e.stopPropagation()}>
+            {/* Drawer Header */}
+            <div className={`p-8 border-b border-gray-100 flex items-start justify-between ${selectedMesa.estado === 'POR PAGAR' ? 'bg-amber-50/30' : 'bg-gray-50/30'}`}>
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Mesa Seleccionada</p>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-4xl font-black">T{selectedMesa.num}</h2>
+                  <span className={`status-badge status-${selectedMesa.estado.replace(' ', '-')}`}>{selectedMesa.estado}</span>
+                </div>
+                <p className="text-sm font-bold text-gray-500 mt-2">{selectedMesa.pax} Pax • {selectedMesa.tiempo} min ocupada</p>
+              </div>
+              <button onClick={() => setSelectedMesa(null)} className="w-12 h-12 rounded-full hover:bg-white hover:shadow-lg transition-all flex items-center justify-center text-xl">✕</button>
+            </div>
+
+            {/* Drawer Comanda */}
+            <div className="flex-1 overflow-y-auto p-8 flex flex-col">
+              <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Detalle de Comanda</h4>
+              <div className="flex-1 space-y-4">
+                {[
+                  { name: 'Hamburguesa Smash', q: 2, p: 35000 },
+                  { name: 'Cerveza Club Colombia', q: 4, p: 12000 },
+                  { name: 'Papas Rústicas XL', q: 1, p: 18000 },
+                ].map((item, i) => (
+                  <div key={i} className="flex justify-between items-center pb-4 border-b border-gray-50">
+                    <div>
+                      <p className="font-black text-slate-800 text-sm">{item.q}x {item.name}</p>
+                      <p className="text-[11px] text-gray-400 font-bold">{formatMoney(item.p)} c/u</p>
+                    </div>
+                    <p className="font-black font-mono text-slate-900">{formatMoney(item.q * item.p)}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Totales Drawer */}
+              <div className="mt-8 pt-8 border-t-2 border-dashed border-gray-100 space-y-3">
+                <div className="flex justify-between text-gray-400 text-sm font-bold"><span>Subtotal</span><span className="font-black font-mono">{formatMoney(selectedMesa.monto)}</span></div>
+                <div className="flex justify-between text-gray-400 text-sm font-bold"><span>Impoconsumo (8%)</span><span className="font-black font-mono">{formatMoney(selectedMesa.monto * 0.08)}</span></div>
+                
+                <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 my-4">
+                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Propinas sugeridas</p>
+                  <div className="flex justify-between text-xs font-bold text-emerald-800">
+                    <span>10%: {formatMoney(selectedMesa.monto * 0.1)}</span>
+                    <span>15%: {formatMoney(selectedMesa.monto * 0.15)}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end pt-4">
+                  <span className="text-xl font-black uppercase text-slate-950">Total</span>
+                  <span className="text-4xl font-black font-mono text-emerald-600 tracking-tighter">{formatMoney(selectedMesa.monto * 1.08)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions Drawer */}
+            <div className="p-8 bg-gray-50 flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <button className="py-3 bg-white border border-gray-200 rounded-xl text-[11px] font-black uppercase text-gray-600 shadow-sm hover:shadow-md transition-all">Add Ítem</button>
+                <button className="py-3 bg-white border border-gray-200 rounded-xl text-[11px] font-black uppercase text-gray-600 shadow-sm hover:shadow-md transition-all">Dividir</button>
+              </div>
+              <button 
+                className={`w-full py-4 rounded-2xl text-[13px] font-black uppercase tracking-widest transition-all ${selectedMesa.estado === 'POR PAGAR' ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-500/20' : 'bg-[#111827] text-white shadow-xl shadow-slate-900/10'}`}
+              >
+                {selectedMesa.estado === 'POR PAGAR' ? '💳 CERRAR Y FACTURAR' : '🧾 SOLICITAR CUENTA'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1567,7 +1842,7 @@ function ViewRestaurante() {
 // =========================================================================
 // 14. CATEGORÍAS DE LA CARTA
 // =========================================================================
-function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias = null, activeCatNames = [], toggleCatVisibility = () => {} }) {
+function MenuCategoriasBlock({ restauranteId, categorias = [], setCategorias = () => {}, platos = [], activeCatNames = [], setActiveCatNames = () => {}, setFocusCatName = () => {}, platosRef = null, setCategoriasExpandidas = () => {} }) {
   const [showModal, setShowModal] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState(null);
   const [formError, setFormError] = React.useState('');
@@ -1597,12 +1872,12 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
     setFormError('');
     const nombreLimpio = formData.nombre.trim();
     if (!nombreLimpio) return setFormError('El nombre de la categoría es obligatorio.');
-    const isDuplicate = activeCategorias.some(c => c.nombre.toLowerCase() === nombreLimpio.toLowerCase() && c.id !== editingCategory?.id);
+    const isDuplicate = categorias.some(c => c.nombre.toLowerCase() === nombreLimpio.toLowerCase() && c.id !== editingCategory?.id);
     if (isDuplicate) return setFormError('Ya existe una categoría con este nombre (Error 409).');
     const nuevaCategoria = {
       id: editingCategory ? editingCategory.id : `uuid-${Date.now()}`,
       nombre: nombreLimpio, canal: formData.canal,
-      orden: editingCategory ? editingCategory.orden : (activeCategorias.length > 0 ? Math.max(...activeCategorias.map(c => c.orden)) + 1 : 1),
+      orden: editingCategory ? editingCategory.orden : (categorias.length > 0 ? Math.max(...categorias.map(c => c.orden)) + 1 : 1),
       estado: formData.estado,
       horario: formData.hasHorario ? { inicio: formData.hora_inicio, fin: formData.hora_fin, dias: formData.dias } : null
     };
@@ -1622,10 +1897,10 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
     }
     setCategorias(categorias.map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
     if (nuevoEstado === 'ACTIVA') {
-      setActiveCatNames(prev => prev.includes(cat.nombre) ? prev : [...prev, cat.nombre]);
-      setCategoriasExpandidas(prev => prev.includes(cat.nombre) ? prev : [...prev, cat.nombre]);
+      setActiveCatNames(prev => Array.isArray(prev) && prev.includes(cat.nombre) ? prev : [...(Array.isArray(prev) ? prev : []), cat.nombre]);
+      setCategoriasExpandidas(prev => Array.isArray(prev) && prev.includes(cat.nombre) ? prev : [...(Array.isArray(prev) ? prev : []), cat.nombre]);
     } else {
-      setActiveCatNames(prev => prev.filter(n => n !== cat.nombre));
+      setActiveCatNames(prev => Array.isArray(prev) ? prev.filter(n => n !== cat.nombre) : []);
     }
     // fetch toggle removido
   };
@@ -1639,7 +1914,7 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
   const handleDragStart = (e, position) => { dragItem.current = position; };
   const handleDragEnter = (e, position) => { dragOverItem.current = position; };
   const handleDragEnd = () => {
-    const copy = [...activeCategorias];
+    const copy = [...categorias];
     const dragged = copy[dragItem.current];
     copy.splice(dragItem.current, 1);
     copy.splice(dragOverItem.current, 0, dragged);
@@ -1649,7 +1924,7 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
 
   const handleToggleScheduleActive = (cat) => {
     if (cat.horario) {
-      activeSetCategorias(activeCategorias.map(c => c.id === cat.id ? { ...c, horario: null } : c));
+      setCategorias(categorias.map(c => c.id === cat.id ? { ...c, horario: null } : c));
       setExpandedSchedule(null);
     } else {
       setInlineHorario(prev => ({ ...prev, [cat.id]: { inicio: '07:00', fin: '22:00', dias: ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO','DOMINGO'] } }));
@@ -1715,7 +1990,7 @@ function MenuCategoriasBlock({ restauranteId, categorias = null, setCategorias =
             </tr>
           </thead>
           <tbody>
-            {[...activeCategorias].sort((a,b) => a.orden - b.orden).map((cat, index) => (
+            {[...categorias].sort((a,b) => a.orden - b.orden).map((cat, index) => (
               <React.Fragment key={cat.id}>
                 <tr
                   draggable onDragStart={(e) => handleDragStart(e, index)} onDragEnter={(e) => handleDragEnter(e, index)}
@@ -1965,7 +2240,7 @@ function MenuPlatosBlock({ restauranteId, categorias, platos = null, setPlatos =
       console.log(`[Evento Backend Simulado] PUT /api/carta/platos/${nuevoPlato.id}`);
     } else {
 
-      activeSetPlatos([...activePlatos, nuevoPlato]);
+      setPlatos([...platos, nuevoPlato]);
       console.log(`[Evento] plato.creado: ${nuevoPlato.id}. Operaciones y Delivery sincronizados.`);
     }
 
@@ -3189,84 +3464,161 @@ function ViewMenu({
         const data = new Uint8Array(evt.target.result);
         const wb = XLSX.read(data, { type: 'array' });
 
+        // Normaliza tildes y caracteres especiales antes de comparar
+        const normalize = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+        console.log('=== DIAGNÓSTICO EXCEL ===');
         console.log('Hojas encontradas:', wb.SheetNames);
 
-        const readSheet = (keyword) => {
-          const match = wb.SheetNames.find(n =>
-            n.toUpperCase().replace(/[^A-Z0-9]/g, '').includes(
-              keyword.toUpperCase().replace(/[^A-Z0-9]/g, '')
-            )
-          );
-          if (!match) {
-            console.warn('Hoja no encontrada para keyword:', keyword);
+        const readSheet = (keyword, fallbackIndex = -1) => {
+          const normKeyword = normalize(keyword);
+          const match = wb.SheetNames.find(n => normalize(n).includes(normKeyword));
+          const sheetName = match || (fallbackIndex >= 0 ? wb.SheetNames[fallbackIndex] : null);
+
+          if (!sheetName) {
+            console.warn(`[readSheet] Hoja no encontrada: "${keyword}"`);
+            console.warn('Hojas disponibles:', wb.SheetNames);
             return [];
           }
-          console.log('Leyendo hoja:', match);
-          const rows = XLSX.utils.sheet_to_json(wb.Sheets[match], { defval: '' });
-          console.log('Filas leídas en', match, ':', rows.length, rows[0]);
-          return rows;
+
+          if (!match && fallbackIndex >= 0) {
+            console.warn(`[readSheet] Fallback [${fallbackIndex}]: "${sheetName}" para "${keyword}"`);
+          } else {
+            console.log(`[readSheet] OK: "${sheetName}" para keyword "${keyword}"`);
+          }
+
+          // Leer como array de arrays para manejar fila-titulo + fila-header
+          const raw = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: '', header: 1 });
+
+          // Detectar que fila son los headers reales:
+          // Si raw[0] tiene pocas celdas con texto largo = titulo descriptivo -> headers en raw[1]
+          // Si raw[0] tiene multiples celdas con texto corto = headers directamente en raw[0]
+          let headers, dataStart;
+          const firstRow = raw[0] || [];
+          const nonEmptyFirst = firstRow.filter(c => c !== '' && c !== null && c !== undefined);
+          const isTitle = nonEmptyFirst.length <= 2 && String(nonEmptyFirst[0] || '').length > 30;
+
+          if (isTitle) {
+            headers = (raw[1] || []).map(h => String(h || '').trim());
+            dataStart = 2;
+            console.log('   -> Fila 1 es titulo, headers en fila 2:', headers.filter(h => h));
+          } else {
+            headers = firstRow.map(h => String(h || '').trim());
+            dataStart = 1;
+            console.log('   -> Headers en fila 1:', headers.filter(h => h));
+          }
+
+          const dataRows = raw.slice(dataStart).filter(r =>
+            Array.isArray(r) && r.some(c => c !== '' && c !== null && c !== undefined)
+          );
+
+          const mapped = dataRows.map(r =>
+            Object.fromEntries(headers.map((h, i) => [h, r[i] !== undefined ? r[i] : '']))
+          );
+
+          console.log('   -> ' + mapped.length + ' filas de datos');
+          if (mapped.length > 0) console.log('   -> Primera fila:', mapped[0]);
+
+          return mapped;
         };
 
-        const catRows = readSheet('CATEGORIAS');
+        // Función para leer columna con múltiples aliases posibles
+        const col = (row, ...aliases) => {
+          for (const a of aliases) {
+            if (row[a] !== undefined && row[a] !== '') return String(row[a]).trim();
+          }
+          return '';
+        };
+
+        // Versión auto: busca alias normalizando los headers reales del Excel
+        const colAuto = (row, ...aliases) => {
+          const keys = Object.keys(row);
+          for (const alias of aliases) {
+            const normAlias = normalize(alias);
+            const found = keys.find(k => normalize(k) === normAlias || normalize(k).includes(normAlias));
+            if (found && row[found] !== undefined && row[found] !== '') return String(row[found]).trim();
+          }
+          // último recurso: primer valor no vacío del row
+          const firstKey = keys.find(k => row[k] !== undefined && row[k] !== '');
+          return firstKey ? String(row[firstKey]).trim() : '';
+        };
+
+        // Tu Excel: [0]INSTRUCCIONES, [1]1_CATEGORIAS, [2]2_PLATOS, [3]3_MODIFICADORES, [4]4_OPCIONES_MOD, [5]5_RECETAS
+        const catRows = readSheet('CATEGOR', 1);   // fallback: índice 1
+        if (catRows.length > 0) console.log('🔍 Columnas en 1_CATEGORIAS:', Object.keys(catRows[0]));
         const cats = catRows
-          .filter(r => r['nombre'] && String(r['nombre']).trim() !== '')
+          .filter(r => Object.values(r).some(v => v !== '' && v !== null && v !== undefined))
           .map((r, i) => ({
             id: 'cat-' + i,
-            nombre: String(r['nombre']).trim(),
-            canal: String(r['canal'] || 'AMBOS').toUpperCase(),
-            orden: Number(r['orden']) || (i + 1),
-            estado: String(r['activa'] || 'SI').toUpperCase() === 'NO' ? 'INACTIVA' : 'ACTIVA',
+            nombre: colAuto(r, 'nombre', 'Nombre', 'NOMBRE', 'name', 'categoria', 'Categoria', 'CATEGORIA'),
+            canal: (colAuto(r, 'canal', 'Canal', 'CANAL', 'channel') || 'AMBOS').toUpperCase(),
+            orden: Number(colAuto(r, 'orden', 'Orden', 'ORDEN', 'order', 'posicion', 'position')) || (i + 1),
+            estado: (colAuto(r, 'activa', 'Activa', 'ACTIVA', 'estado', 'Estado', 'active', 'status') || 'SI').toUpperCase() === 'NO' ? 'INACTIVA' : 'ACTIVA',
             horario: null
-          }));
+          }))
+          .filter(c => c.nombre !== '');
 
-        const platoRows = readSheet('PLATOS');
+        console.log(`✅ Categorías procesadas: ${cats.length}`, cats.map(c => c.nombre));
+
+        const platoRows = readSheet('PLATO', 2);   // fallback: índice 2
+        if (platoRows.length > 0) console.log('🔍 Columnas en 2_PLATOS:', Object.keys(platoRows[0]));
         const pls = platoRows
-          .filter(r => r['nombre'] && String(r['nombre']).trim() !== '')
+          .filter(r => Object.values(r).some(v => v !== '' && v !== null && v !== undefined))
           .map((r, i) => {
-            const catNombre = String(r['categoria_nombre'] || '').trim();
+            const catNombre = colAuto(r, 'categoria_nombre', 'Categoria', 'categoria', 'CATEGORIA', 'category', 'Categoría', 'categoría', 'cat', 'categoria nombre');
             const catObj = cats.find(c => c.nombre.toLowerCase() === catNombre.toLowerCase());
-            const precio = Number(r['precio_venta']) || 0;
-            const costo = r['costo_produccion'] ? Number(r['costo_produccion']) : null;
+            const precio = Number(colAuto(r, 'precio_venta', 'precio', 'Precio', 'PRECIO', 'price', 'Precio Venta', 'precio venta', 'valor', 'Valor')) || 0;
+            const costoStr = colAuto(r, 'costo_produccion', 'costo', 'Costo', 'COSTO', 'cost', 'Costo Producción', 'costo produccion', 'costo producción');
+            const costo = costoStr ? Number(costoStr) : null;
             return {
               id: 'plato-' + i,
-              nombre: String(r['nombre']).trim(),
-              descripcion: String(r['descripcion_carta'] || ''),
+              nombre: colAuto(r, 'nombre', 'Nombre', 'NOMBRE', 'name', 'plato', 'Plato', 'PLATO', 'item', 'Item'),
+              descripcion: colAuto(r, 'descripcion_carta', 'descripcion', 'Descripcion', 'DESCRIPCION', 'description', 'Descripción', 'descripcion carta'),
               precio_venta: precio,
               costo_produccion: costo,
               margen_bruto: precio > 0 && costo ? Number((((precio - costo) / precio) * 100).toFixed(1)) : null,
               categoria_id: catObj ? catObj.id : (cats[0] ? cats[0].id : ''),
-              categoria_nombre: catNombre,
-              canal: String(r['canal'] || 'AMBOS').toUpperCase(),
-              estado: String(r['estado_inicial'] || 'DISPONIBLE').toUpperCase(),
+              categoria_nombre: catNombre || (catObj ? catObj.nombre : ''),
+              canal: (colAuto(r, 'canal', 'Canal', 'CANAL', 'channel') || 'AMBOS').toUpperCase(),
+              estado: (colAuto(r, 'estado_inicial', 'estado', 'Estado', 'ESTADO', 'status', 'estado inicial') || 'DISPONIBLE').toUpperCase(),
               iva_pct: 8,
               foto_url: null
             };
-          });
+          })
+          .filter(p => p.nombre !== '');
 
-        const recRows = readSheet('RECETAS');
+        console.log(`✅ Platos procesados: ${pls.length}`, pls.slice(0,3).map(p => p.nombre));
+
+        const recRows = readSheet('RECETA', 5);   // fallback: índice 5
+        if (recRows.length > 0) console.log('🔍 Columnas en 5_RECETAS:', Object.keys(recRows[0]));
         const recs = recRows
-          .filter(r => r['nombre_plato'] && r['ingrediente_nombre'])
+          .filter(r => Object.values(r).some(v => v !== '' && v !== null && v !== undefined))
           .map((r, i) => ({
             id: 'rec-' + i,
-            nombre_plato: String(r['nombre_plato']).trim(),
-            ingrediente_nombre: String(r['ingrediente_nombre']).trim(),
-            cantidad: Number(r['cantidad']) || 0,
-            unidad_medida: String(r['unidad_medida'] || 'und'),
-            costo_unitario: Number(r['costo_unitario']) || 0
-          }));
+            nombre_plato: colAuto(r, 'nombre_plato', 'plato', 'Plato', 'PLATO', 'nombre plato', 'item', 'dish'),
+            ingrediente_nombre: colAuto(r, 'ingrediente_nombre', 'ingrediente', 'Ingrediente', 'INGREDIENTE', 'insumo', 'Insumo', 'ingredient', 'nombre ingrediente'),
+            cantidad: Number(colAuto(r, 'cantidad', 'Cantidad', 'CANTIDAD', 'qty', 'quantity')) || 0,
+            unidad_medida: colAuto(r, 'unidad_medida', 'unidad', 'Unidad', 'UNIDAD', 'unit', 'unidad medida') || 'und',
+            costo_unitario: Number(colAuto(r, 'costo_unitario', 'costo', 'Costo', 'COSTO', 'precio', 'costo unitario')) || 0
+          }))
+          .filter(r => r.nombre_plato !== '' || r.ingrediente_nombre !== '');
 
-        // Leer hoja de Inventario/Insumos
-        const invRows = readSheet('INVENTARIO') || readSheet('INSUMOS') || readSheet('INGREDIENTES') || [];
+        console.log(`✅ Recetas procesadas: ${recs.length}`);
+
+        // Tu Excel no tiene hoja de inventario — se construye desde recetas
+        let invRows = [];
+        console.log('ℹ️ No hay hoja de inventario — construyendo desde recetas.');
+
         const inv = invRows
-          .filter(r => r['nombre'] && String(r['nombre']).trim() !== '')
+          .filter(r => col(r, 'nombre', 'Nombre', 'NOMBRE', 'ingrediente', 'Ingrediente', 'insumo', 'Insumo'))
           .map((r, i) => ({
             id: 'inv-' + i,
-            nombre: String(r['nombre'] || r['ingrediente'] || r['insumo'] || '').trim(),
-            unidad_compra: String(r['unidad_compra'] || r['unidad'] || r['unidad_medida'] || 'und').toLowerCase(),
-            precio_por_unidad: Number(r['precio_por_unidad'] || r['precio'] || r['costo'] || r['precio_unitario'] || 0),
-            stock_actual: Number(r['stock_actual'] || r['stock'] || 0),
-            stock_minimo_alerta: Number(r['stock_minimo'] || r['stock_minimo_alerta'] || 0),
-            proveedor: String(r['proveedor'] || '')
+            nombre: col(r, 'nombre', 'Nombre', 'NOMBRE', 'ingrediente', 'Ingrediente', 'insumo', 'Insumo'),
+            unidad_compra: (col(r, 'unidad_compra', 'unidad', 'Unidad', 'UNIDAD', 'unit', 'unidad_medida') || 'und').toLowerCase(),
+            precio_por_unidad: Number(col(r, 'precio_por_unidad', 'precio', 'Precio', 'PRECIO', 'costo', 'Costo', 'precio_unitario')) || 0,
+            stock_actual: Number(col(r, 'stock_actual', 'stock', 'Stock', 'STOCK')) || 0,
+            stock_minimo_alerta: Number(col(r, 'stock_minimo', 'stock_minimo_alerta', 'minimo', 'Minimo')) || 0,
+            proveedor: col(r, 'proveedor', 'Proveedor', 'PROVEEDOR')
           }));
 
         // Si no hay hoja de inventario, construir desde recetas con precio 0
@@ -3280,7 +3632,14 @@ function ViewMenu({
           proveedor: ''
         })).filter((v, i, a) => a.findIndex(t => t.nombre === v.nombre) === i);
 
-        console.log('Resultado:', cats.length, 'cats,', pls.length, 'platos,', recs.length, 'recetas,', invFinal.length, 'insumos');
+        console.log(`✅ Insumos procesados: ${invFinal.length}`);
+        console.log('=== FIN DIAGNÓSTICO ===');
+
+        if (cats.length === 0 && pls.length === 0) {
+          const catCols = catRows.length > 0 ? Object.keys(catRows[0]).join(', ') : 'hoja vacía';
+          const platoCols = platoRows.length > 0 ? Object.keys(platoRows[0]).join(', ') : 'hoja vacía';
+          throw new Error(`Hojas encontradas pero columnas no reconocidas.\n\n1_CATEGORIAS columnas: [${catCols}]\n2_PLATOS columnas: [${platoCols}]\n\nAbre F12>Consola para más detalles.`);
+        }
 
         setCategorias(cats);
         setPlatos(pls);
@@ -3295,7 +3654,7 @@ function ViewMenu({
 
       } catch (err) {
         console.error('Error al parsear Excel:', err);
-        setImportError('Error al leer el Excel: ' + err.message);
+        setImportError('Error: ' + err.message);
       } finally {
         setImporting(false);
         if (e.target) e.target.value = '';

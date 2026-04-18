@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backups and Recovered files
+*.bak
+*.tmp
+tmp/
+
+# Logs and Diagnostics
+*.log
+*.txt
+diagnostic.txt
+inspect.txt
+debug_lines.txt
+overview.txt
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.project
+.settings/
+
+# Local Environment
+.env
+.env.local
+.env.*.local
+
+# Build/Dist
+dist/
+build/
+out/
+.next/
+
+# One-off utility/scratch scripts (Optional, but helps keep the repo clean)
+# If you want to keep them, you can comment these out
+# fix_*.js
+# check_*.js
+# diagnose_*.js
+# patch_*.js
+# research_*.js
+# trace_*.js
+# run_babel.js
+# babel_test.js
+# count.js
+# inspect.js

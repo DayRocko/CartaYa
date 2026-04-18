@@ -15,7 +15,8 @@ async function parseExcel(filePath) {
       'platos': ['platos', 'dishes', 'items', '2_platos'],
       'modificadores': ['modificadores', 'modifiers', 'extras', '3_modificadores'],
       'opciones': ['opciones', 'options', '4_opciones_mod'],
-      'recetas': ['recetas', 'recipes', '5_recetas']
+      'recetas': ['recetas', 'recipes', '5_recetas'],
+      'inventario': ['inventario', 'insumos', 'inventory', '6_inventario']
     };
 
     workbook.SheetNames.forEach(sheetName => {
