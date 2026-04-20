@@ -4354,19 +4354,37 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
 
   const platosEnriquecidos = (platos || []).map(plato => {
     const mock = MOCK_COSTOS[plato.nombre] || {};
-    const tieneReceta = MOCK_RECETA_ACTIVA.has(plato.nombre) ||
-      (recetas || []).some(r => 
-        r.nombre_plato && plato.nombre &&
-        r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim()
-      );
-    const costoReal = mock.costo !== undefined ? mock.costo : (plato.costo_produccion || null);
-    const margen = calcMargen(plato.precio_venta, costoReal);
+    
+    // Buscar la primera receta que coincida con el nombre del plato
+    const unaReceta = (recetas || []).find(r => 
+      r.nombre_plato && plato.nombre &&
+      r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim()
+    );
+    
+    const tieneReceta = MOCK_RECETA_ACTIVA.has(plato.nombre) || !!unaReceta;
+    
+    // Extraer campos del formato 5_RECETAS o usar fallbacks
+    const costoMP = unaReceta ? unaReceta.costo_por_plato : (mock.costo || 0);
+    const margenPctProm = unaReceta ? unaReceta.margen_plato_pct : (calcMargen(plato.precio_venta, costoMP) || 0);
+    const pvpSugerido = unaReceta ? unaReceta.pvp_plato : (plato.precio_venta || 0);
+    const margenBrutoPesos = pvpSugerido - costoMP;
+
     const fuga = MOCK_FUGAS[plato.nombre] || null;
     let alertaState = 'sync';
     if (!tieneReceta) alertaState = 'no_registrado';
     else if (fuga && fuga.tipo === 'fuga') alertaState = 'fuga';
     else if (fuga && fuga.tipo === 'no_registrado') alertaState = 'no_registrado';
-    return { ...plato, tieneReceta, costoReal, margen, alertaState, fugaMsg: fuga ? fuga.msg : null };
+    
+    return { 
+      ...plato, 
+      tieneReceta, 
+      costoMP, 
+      margenPctProm, 
+      pvpSugerido, 
+      margenBrutoPesos,
+      alertaState, 
+      fugaMsg: fuga ? fuga.msg : null 
+    };
   });
 
   // ─── ESCANDALLO PANEL ─────────────────────────────────────────────────────────
@@ -4590,12 +4608,11 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
           <table className="w-full text-left text-sm border-collapse bg-white" style={{minWidth:900}}>
             <thead>
               <tr className="bg-slate-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Foto</th>
                 <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre del Plato</th>
-                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Composición Técnica (Escandallo)</th>
-                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">M2: Precio Venta</th>
-                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">M4: Costo Real</th>
-                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Margen Final</th>
+                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Costo Materia Prima</th>
+                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Margen Bruto % Promedio</th>
+                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Precio de Venta Sugerido (Sin IVA)</th>
+                <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Margen Bruto Pesos</th>
                 <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Alerta Detección Fugas</th>
                 <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Acciones</th>
               </tr>
@@ -4604,63 +4621,38 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
               {platosEnriquecidos.map((plato, idx) => {
                 const isExpanded = expandedPlato === plato.id;
                 const rowBg = idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)';
-                const ms = margenStyle(plato.margen);
+                const ms = margenStyle(plato.margenPctProm);
                 return (
                   <React.Fragment key={plato.id || idx}>
                     <tr
                       className="border-b border-gray-100 hover:bg-purple-50/20 transition-colors"
                       style={{background: isExpanded ? '#F5F3FF' : rowBg, minHeight:64}}
                     >
-                      {/* FOTO */}
-                      <td className="px-4 py-3">
-                        <div style={{width:48,height:48,borderRadius:12,background:'#F3F4F6',border:'1px solid #E5E7EB',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                          {plato.foto_url
-                            ? <img src={plato.foto_url} alt={plato.nombre} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-                            : <span style={{fontSize:22,color:'#D1D5DB'}}>🖼</span>
-                          }
-                        </div>
-                      </td>
                       {/* NOMBRE */}
                       <td className="px-4 py-3">
                         <span className="font-bold text-slate-800 text-sm">{plato.nombre}</span>
                       </td>
-                      {/* ESCANDALLO BADGE */}
+                      {/* COSTO MATERIA PRIMA */}
                       <td className="px-4 py-3">
-                        {plato.tieneReceta ? (
-                          <button
-                            onClick={() => toggleEscandallo(plato)}
-                            style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,fontWeight:700,borderRadius:8,padding:'4px 12px',background: isExpanded ? '#D1FAE5' : '#ECFDF5',color:'#047857',border:`1px solid ${isExpanded ? '#6EE7B7' : '#A7F3D0'}`,cursor:'pointer',transition:'all 0.15s'}}
-                          >
-                            <span style={{fontSize:13}}>🔪</span> Receta Activa
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => toggleEscandallo(plato)}
-                            style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,fontWeight:700,borderRadius:8,padding:'4px 12px',background:'#FFFBEB',color:'#B45309',border:'1px solid #FCD34D',cursor:'pointer'}}
-                          >
-                            <span>⚠</span> Requiere Receta
-                          </button>
-                        )}
-                      </td>
-                      {/* PRECIO VENTA */}
-                      <td className="px-4 py-3 text-right">
-                        <span className="font-black text-slate-900 text-sm">${(plato.precio_venta||0).toLocaleString('es-CO')}</span>
-                      </td>
-                      {/* COSTO REAL */}
-                      <td className="px-4 py-3 text-right">
-                        {!plato.tieneReceta
-                          ? <span style={{color:'#D1D5DB',fontWeight:700}}>—</span>
-                          : plato.costoReal === null
-                            ? <span style={{color:'#D97706',fontWeight:700}}>$?</span>
-                            : <span className="font-black text-slate-700">${plato.costoReal.toLocaleString('es-CO')}</span>
-                        }
-                      </td>
-                      {/* MARGEN FINAL */}
-                      <td className="px-4 py-3 text-center">
-                        {plato.margen !== null
-                          ? <span className="font-black text-sm px-3 py-1 rounded-lg" style={{background: ms.bg, color: ms.color, border:`1px solid ${ms.border}`}}>{plato.margen}%</span>
+                        {plato.costoMP > 0 
+                          ? <span className="font-bold text-slate-700 text-sm">${plato.costoMP.toLocaleString('es-CO')}</span>
                           : <span style={{color:'#D1D5DB',fontWeight:700}}>—</span>
                         }
+                      </td>
+                      {/* MARGEN % PROMEDIO */}
+                      <td className="px-4 py-3 text-center">
+                        {plato.margenPctProm > 0
+                          ? <span className="font-black text-sm px-3 py-1 rounded-lg" style={{background: ms.bg, color: ms.color, border:`1px solid ${ms.border}`}}>{plato.margenPctProm}%</span>
+                          : <span style={{color:'#D1D5DB',fontWeight:700}}>—</span>
+                        }
+                      </td>
+                      {/* PRECIO VENTA SUGERIDO */}
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-black text-slate-900 text-sm">${(plato.pvpSugerido||0).toLocaleString('es-CO')}</span>
+                      </td>
+                      {/* MARGEN PESOS */}
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-bold text-slate-700 text-sm">${(plato.margenBrutoPesos||0).toLocaleString('es-CO')}</span>
                       </td>
                       {/* ALERTA FUGAS */}
                       <td className="px-4 py-3 text-center">
@@ -4677,8 +4669,8 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                       {/* ACCIONES */}
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
-                          <button title="Ver detalle" className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors" style={{background:'#F8FAFC',color:'#475569',border:'1px solid #E2E8F0'}}>👁</button>
-                          <button title="Editar receta" onClick={() => toggleEscandallo(plato)} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors" style={{background:'#EEF2FF',color:'#4338CA',border:'1px solid #C7D2FE'}}>✏</button>
+                          <button title="Ver detalle" onClick={() => toggleEscandallo(plato)} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors" style={{background:'#F8FAFC',color:'#475569',border:'1px solid #E2E8F0'}}>👁</button>
+                          <span style={{color:'#D1D5DB'}}>—</span>
                         </div>
                       </td>
                     </tr>
@@ -5337,9 +5329,9 @@ function ViewMenu({
 
             {/* ── ACORDEÓN 1: CATEGORÍAS ── */}
             <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-indigo-500">
-              <button
+             <div
                 onClick={() => toggleSeccion('categorias')}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-base shrink-0">📚</div>
@@ -5406,9 +5398,9 @@ function ViewMenu({
 
            {/* ── ACORDEÓN 2: PLATOS ── */}
            <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-emerald-500">
-             <button
+            <div
                 onClick={() => toggleSeccion('platos')}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-base shrink-0">🍽</div>
@@ -5488,9 +5480,9 @@ function ViewMenu({
 
            {/* ── ACORDEÓN 3: MODIFICADORES ── */}
            <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-orange-500">
-             <button
+            <div
                 onClick={() => toggleSeccion('modificadores')}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-base shrink-0">⚙</div>
@@ -5559,9 +5551,9 @@ function ViewMenu({
 
            {/* ── ACORDEÓN 4: RECETAS ── */}
            <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-purple-500">
-             <button
+            <div
                 onClick={() => toggleSeccion('recetas')}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-base shrink-0">📋</div>
