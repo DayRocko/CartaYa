@@ -2715,12 +2715,12 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-3 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-28">Arrastre</th>
+              <th className="px-3 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-28" style={{display:'none'}}></th>
               <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre / Platos</th>
               <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Destino Impresión</th>
               <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Impuesto</th>
               <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Canal</th>
-              <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Prioridad POS</th>
+              <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center" style={{display:'none'}}></th>
               <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Visibilidad</th>
               <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Horario Detallado</th>
               <th className="px-4 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Acciones</th>
@@ -2736,7 +2736,7 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
                   onDragEnd={handleDragEnd} onDragOver={(e) => e.preventDefault()}
                   className={`border-b border-gray-100 transition-colors h-[72px] hover:bg-slate-50 ${index % 2 === 1 ? 'bg-gray-50/40' : 'bg-white'} ${cat.estado === 'INACTIVA' ? 'opacity-55' : ''}`}
                 >
-                  <td className="px-3 py-3 w-28">
+                  <td className="px-3 py-3 w-28" style={{display:'none'}}>
                     <div className="flex items-center gap-2">
                        <span className="text-gray-300 hover:text-indigo-400 cursor-grab text-lg tracking-[-2px] -ml-1">⠿</span>
                        <span className="w-2 h-2 rounded-full shrink-0" style={{backgroundColor: cat.color}}></span>
@@ -2757,7 +2757,7 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
                     <span className={`text-xs font-black px-2 py-0.5 rounded uppercase tracking-wider ${cat.impuesto?.includes('19') ? 'text-red-500 bg-red-50' : cat.impuesto?.includes('Exento') ? 'text-emerald-600 bg-emerald-50' : 'text-gray-500 bg-gray-100'}`}>{cat.impuesto || '8% Impoconsumo'}</span>
                   </td>
                   <td className="px-4 py-3 text-center">{canalBadge(cat.canal)}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center" style={{display:'none'}}>
                     <input 
                       type="number" min="1" 
                       value={cat.prioridad_pos} 
@@ -3240,15 +3240,15 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
         ) : vistaPlatos === 'accordion' ? (
           <div className="p-4 space-y-3">
             {/* COLUMN HEADERS — shown once above all groups */}
-            <div className="hidden md:grid bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" style={{gridTemplateColumns:'52px 28px 1fr 100px 80px 100px 130px 60px 130px',gap:'8px',alignItems:'center'}}>
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Foto</span>
+            <div className="hidden md:grid bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" style={{gridTemplateColumns:'28px 1fr 100px 80px 100px 130px 130px',gap:'8px',alignItems:'center'}}>
+              {/* col Foto eliminada */}
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">⠿</span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre del Plato</span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Precio Venta</span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Margen</span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Canales</span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Disponibilidad</span>
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">POS</span>
+              {/* col POS eliminada */}
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Acciones</span>
             </div>
 
@@ -3257,7 +3257,8 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                 .filter(p => {
                   const cp = (p.categoria_nombre || p.categoria || '').toString().trim().toLowerCase();
                   const cn = (cat.nombre || '').toString().trim().toLowerCase();
-                  return cp === cn;
+                  const catIdMatch = p.categoria_id && cat.id && p.categoria_id.toString() === cat.id.toString();
+                  return cp === cn || catIdMatch;
                 })
                 .sort((a,b) => (a.prioridad_pos||99) - (b.prioridad_pos||99));
               const isExpanded = (categoriasExpandidas || []).includes(cat.nombre);
@@ -3296,10 +3297,10 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                               <div key={plato.id}>
                                 <div
                                   className="hidden md:grid px-3 py-2 border-b border-gray-100 hover:bg-slate-50 transition-colors group"
-                                  style={{gridTemplateColumns:'52px 28px 1fr 100px 80px 100px 130px 60px 130px',gap:'8px',alignItems:'center',minHeight:68,background: focusCatName && (plato.categoria_nombre === focusCatName || plato.categoria === focusCatName) ? 'rgba(209,250,229,0.3)' : rowBg}}
+                                  style={{gridTemplateColumns:'28px 1fr 100px 80px 100px 130px 130px',gap:'8px',alignItems:'center',minHeight:68,background: focusCatName && (plato.categoria_nombre === focusCatName || plato.categoria === focusCatName) ? 'rgba(209,250,229,0.3)' : rowBg}}
                                 >
-                                  {/* COL 1 — FOTO */}
-                                  <div className="relative flex items-center justify-center" style={{width:52,height:52}}>
+                                  {/* COL 1 — FOTO OCULTA */}
+                                  <div style={{display:'none'}}>
                                     <div className="w-full h-full rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
                                       {plato.foto_url
                                         ? <img src={plato.foto_url} alt={plato.nombre} className="w-full h-full object-cover"/>
@@ -3314,10 +3315,10 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                                   {/* COL 2 — DRAG */}
                                   <div className="flex items-center justify-center text-gray-300 text-lg cursor-grab hover:text-gray-500 select-none" title="Arrastrar para reordenar">⠿</div>
 
-                                  {/* COL 3 — NOMBRE */}
+                                  {/* COL 3 — NOMBRE + CATEGORÍA */}
                                   <div className="min-w-0">
                                     <p className="font-bold text-slate-800 text-sm leading-tight truncate">{plato.nombre}</p>
-                                    <p style={{fontSize:'10px',color:'#9CA3AF',marginTop:2}}>{plato.categoria_nombre || cat.nombre}</p>
+                                    <span style={{fontSize:'10px',color:'#6366F1',fontWeight:700,background:'#EEF2FF',padding:'1px 7px',borderRadius:5,display:'inline-block',marginTop:3}}>{plato.categoria_nombre || cat.nombre}</span>
                                   </div>
 
                                   {/* COL 4 — PRECIO */}
@@ -3327,7 +3328,9 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
 
                                   {/* COL 5 — MARGEN */}
                                   <div className="flex items-center justify-center">
-                                    <GaugeSVG pct={margen}/>
+                                    {margen !== null
+                                      ? <span style={{fontWeight:900, fontSize:13, color: margen>=60?'#15803D':margen>=40?'#2563EB':'#DC2626'}}>{margen}%</span>
+                                      : <span style={{color:'#D1D5DB'}}>—</span>}
                                   </div>
 
                                   {/* COL 6 — CANALES */}
@@ -3357,30 +3360,19 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                                     )}
                                   </div>
 
-                                  {/* COL 8 — PRIORIDAD POS */}
-                                  <div className="flex items-center justify-center">
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      max="999"
-                                      value={plato.prioridad_pos || 1}
-                                      onChange={(e) => handlePrioridadChange(plato.id, plato.categoria_id, e.target.value)}
-                                      className="w-14 h-9 text-center font-black text-sm border border-gray-200 rounded-lg bg-gray-50 focus:border-indigo-400 outline-none"
-                                      style={{fontFamily:'inherit'}}
-                                    />
-                                  </div>
+                                  {/* col POS eliminada */}
 
                                   {/* COL 9 — ACCIONES */}
-                                  <div className="flex flex-col gap-1 items-center">
-                                    <div className="flex gap-1">
-                                      <button title="Ver detalle" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors" style={{background:'#F0FDF4',color:'#15803D',border:'1px solid #BBF7D0'}} onClick={() => handleOpenForm(plato)}>👁</button>
-                                      <button title="Editar" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors" style={{background:'#EEF2FF',color:'#4338CA',border:'1px solid #C7D2FE'}} onClick={() => handleOpenForm(plato)}>✏</button>
-                                      <button title="Eliminar" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors" style={{background:'#FEF2F2',color:'#DC2626',border:'1px solid #FECACA'}} onClick={() => handleDeletePlato(plato)}>🗑</button>
-                                    </div>
-                                    <div className="flex gap-1">
-                                      <button title="Duplicar" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors" style={{background:'#F9FAFB',color:'#6B7280',border:'1px solid #E5E7EB'}} onClick={() => handleDuplicatePlato(plato)}>⧉</button>
-                                      <button title="Análisis" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors" style={{background:'#EFF6FF',color:'#2563EB',border:'1px solid #BFDBFE'}}>📊</button>
-                                    </div>
+                                  <div className="flex gap-1 items-center justify-center">
+                                    <button title="Ver detalle" className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{background:'#F0FDF4',color:'#15803D',border:'1px solid #BBF7D0'}} onClick={() => handleOpenForm(plato)}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                    <button title="Editar" className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{background:'#EEF2FF',color:'#4338CA',border:'1px solid #C7D2FE'}} onClick={() => handleOpenForm(plato)}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                    <button title="Eliminar" className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{background:'#FEF2F2',color:'#DC2626',border:'1px solid #FECACA'}} onClick={() => handleDeletePlato(plato)}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                    </button>
                                   </div>
                                 </div>
 
@@ -3432,7 +3424,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-3 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Foto</th>
+                    <th style={{display:'none'}}></th>
                     <th className="px-2 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">⠿</th>
                     <th className="px-3 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre del Plato</th>
                     <th className="px-3 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Precio Venta</th>
@@ -3448,7 +3440,8 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                     const platosCat = (platos||[]).filter(p => {
                       const cp = (p.categoria_nombre||p.categoria||'').toLowerCase().trim();
                       const cn = (cat.nombre||'').toLowerCase().trim();
-                      return cp === cn;
+                      const catIdMatch = p.categoria_id && cat.id && p.categoria_id.toString() === cat.id.toString();
+                      return cp === cn || catIdMatch;
                     }).sort((a,b) => (a.prioridad_pos||99)-(b.prioridad_pos||99));
                     return platosCat.map((plato, idx) => {
                       const margen = calcMargen(plato.precio_venta, plato.costo_produccion);
@@ -3456,8 +3449,8 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                       const isShowingTemporal = showTemporalFor === plato.id;
                       return [
                         <tr key={plato.id} className="border-b border-gray-100 hover:bg-slate-50 transition-colors group" style={{minHeight:68,background: idx%2===1 ? 'rgba(248,250,252,0.6)' : 'white'}}>
-                          {/* FOTO */}
-                          <td className="px-3 py-2">
+                          {/* FOTO OCULTA */}
+                          <td className="px-3 py-2" style={{display:'none'}}>
                             <div className="relative" style={{width:52,height:52}}>
                               <div className="w-full h-full rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
                                 {plato.foto_url ? <img src={plato.foto_url} alt={plato.nombre} className="w-full h-full object-cover"/> : <span style={{fontSize:20,color:'#D1D5DB'}}>🖼</span>}
@@ -3480,7 +3473,11 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                           </td>
                           {/* MARGEN */}
                           <td className="px-3 py-2 text-center">
-                            <div className="flex justify-center"><GaugeSVG pct={margen}/></div>
+                            <div className="flex justify-center">
+                            {margen !== null
+                              ? <span style={{fontWeight:900, fontSize:13, color: margen>=60?'#15803D':margen>=40?'#2563EB':'#DC2626'}}>{margen}%</span>
+                              : <span style={{color:'#D1D5DB'}}>—</span>}
+                          </div>
                           </td>
                           {/* CANALES */}
                           <td className="px-3 py-2 text-center">
@@ -4297,10 +4294,30 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
     // Load lines if not already loaded for this plato
     setPlatosLineas(prev => {
       if (prev[plato.id]) return prev; // already loaded
-      const mockLineas = MOCK_LINEAS[plato.nombre]
-        ? MOCK_LINEAS[plato.nombre].map(l => ({ ...l }))
-        : [];
-      return { ...prev, [plato.id]: mockLineas };
+      // Primero intenta cargar desde recetas importadas del Excel
+      const recetasDelPlato = (recetas || []).filter(r =>
+        r.nombre_plato && plato.nombre &&
+        r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim()
+      );
+      
+      let lineasIniciales = [];
+      if (recetasDelPlato.length > 0) {
+        lineasIniciales = recetasDelPlato.map((r, idx) => ({
+          id: idx + 1,
+          ingrediente: r.ingrediente_nombre || '',
+          costo_unitario: r.costo_unitario || 0,
+          unidad_compra: r.unidad_compra || 'kg',
+          cantidad: r.cantidad || 0,
+          unidad_receta: r.unidad_medida || 'g',
+          factor: 1.0,
+        }));
+      } else {
+        // Fallback a datos mock hardcodeados
+        lineasIniciales = MOCK_LINEAS[plato.nombre]
+          ? MOCK_LINEAS[plato.nombre].map(l => ({ ...l }))
+          : [];
+      }
+      return { ...prev, [plato.id]: lineasIniciales };
     });
     setBuscarInsumo('');
     setExpandedPlato(plato.id);
@@ -4338,7 +4355,10 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
   const platosEnriquecidos = (platos || []).map(plato => {
     const mock = MOCK_COSTOS[plato.nombre] || {};
     const tieneReceta = MOCK_RECETA_ACTIVA.has(plato.nombre) ||
-      (recetas || []).some(r => r.nombre_plato === plato.nombre);
+      (recetas || []).some(r => 
+        r.nombre_plato && plato.nombre &&
+        r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim()
+      );
     const costoReal = mock.costo !== undefined ? mock.costo : (plato.costo_produccion || null);
     const margen = calcMargen(plato.precio_venta, costoReal);
     const fuga = MOCK_FUGAS[plato.nombre] || null;
@@ -4965,6 +4985,19 @@ function ViewMenu({
         return match ? wb.Sheets[match] : null;
       };
 
+      const readSheetRowsFromIndex = (sheet, headerRowIndex) => {
+        if (!sheet) return [];
+        const raw = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (!raw || raw.length <= headerRowIndex) return [];
+        const headers = (raw[headerRowIndex] || []).map(h => String(h || '').trim().toLowerCase());
+        const dataRows = raw.slice(headerRowIndex + 1).filter(r =>
+          Array.isArray(r) && r.some(c => c !== '' && c !== null && c !== undefined)
+        );
+        return dataRows.map(r =>
+          Object.fromEntries(headers.map((h, i) => [h, r[i] !== undefined ? String(r[i]).trim() : '']))
+        );
+      };
+
       const readSheetRows = (sheet) => {
         if (!sheet) return [];
         const raw = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
@@ -5031,8 +5064,8 @@ function ViewMenu({
       });
 
       // 3. MODIFICADORES
-      const modSheet = findSheet(['MODIFICADORES', 'MODIFICADOR', 'GRUPOS']);
-      const modRows = readSheetRows(modSheet);
+      const modSheet = findSheet(['MODIFICADORES', 'MODIFICADOR', 'GRUPOS', '3_MOD', '3MOD', 'MOD']);
+      const modRows = modSheet ? readSheetRowsFromIndex(modSheet, 1) : [];
       const grupos = modRows.filter(r => r['nombre']).map((r, i) => ({
         id: `gmod-import-${i}`, nombre: r['nombre'],
         tipo_seleccion: String(r['tipo_seleccion'] || 'UNICA').toUpperCase().trim(),
@@ -5044,8 +5077,8 @@ function ViewMenu({
         _orden_en_plato: parseInt(r['orden_en_plato']) || (i + 1)
       }));
 
-      const opSheet = findSheet(['OPCIONES_MOD', 'OPCIONES']);
-      const opRows = readSheetRows(opSheet);
+      const opSheet = findSheet(['OPCIONES_MOD', 'OPCIONES', '4_OPCIONES', '4OPCIONES']);
+      const opRows = opSheet ? readSheetRowsFromIndex(opSheet, 1) : [];
       const opciones = opRows.filter(r => r['nombre']).map((r, i) => {
         const grupoObj = grupos.find(g => normalize(g.nombre) === normalize(r['nombre_grupo']));
         return {
@@ -5068,38 +5101,116 @@ function ViewMenu({
         }
       });
 
-      // 4. RECETAS E INVENTARIO
-      const recSheet = findSheet(['RECETAS', 'RECETA', 'INGREDIENTES']);
-      const recRows = readSheetRows(recSheet);
-      const recs = recRows.filter(r => r['nombre_plato'] && r['ingrediente_nombre']).map((r, i) => ({
-        id: `rec-import-${i}`, nombre_plato: r['nombre_plato'],
-        ingrediente_nombre: r['ingrediente_nombre'],
-        cantidad: parseFloat(r['cantidad']) || 0, unidad_medida: r['unidad_medida'] || 'und',
-        costo_unitario: parseFloat(String(r['costo_unitario'] || '0').replace(/[^0-9.]/g, '')) || 0
-      }));
+      // 4. RECETAS E INVENTARIO — compatible con 5_RECETAS (Plato, Ingrediente, Proveedor, Stock Mínimo, Presentación, Cantidad, U.M., Costo Total, ..., Costo Unitario Base, Cantidad (Porción), U.M., ...)
+      const recSheet = findSheet(['5_RECETAS', 'RECETAS', 'RECETA', 'INGREDIENTES', '5RECETA', '5REC']);
+      
+      // La hoja 5_RECETAS tiene: fila 1 = título, fila 2 = sección, fila 3 = headers, fila 4+ = datos
+      const recRows5 = recSheet ? readSheetRowsFromIndex(recSheet, 2) : [];
+      
+      // Mapeo de columnas del formato 5_RECETAS:
+      // Col 1: plato, Col 2: ingrediente, Col 3: proveedor, Col 4: stock mínimo (cada semana)
+      // Col 5: presentación de compra, Col 6: cantidad, Col 7: u.m. (unidad compra)
+      // Col 8: costo total, Col 9: precio libra/unidad, Col 10: costo unitario base
+      // Col 11: cantidad (porción), Col 12: u.m. (unidad porción), Col 13: subtotal costo mp
+      // Col 14: margen bruto %, Col 15: pvp sin iva, Col 16: margen bruto pesos
+      // Col 17: costo mp x plato, Col 18: margen % promedio x plato, Col 19: pvp plato, Col 20: margen pesos plato
 
-      const invMap = {};
-      recs.forEach(r => {
-        const key = normalize(r.ingrediente_nombre);
-        if (!invMap[key]) invMap[key] = {
-          id: `inv-${key}`, nombre: r.ingrediente_nombre,
-          unidad_compra: r.unidad_medida, precio_por_unidad: r.costo_unitario,
-          stock_actual: 0, stock_minimo_alerta: 0, proveedor: ''
+      const parseCOP = (val) => {
+        if (!val) return 0;
+        const s = String(val).replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, '');
+        return parseFloat(s) || 0;
+      };
+
+      const recs = recRows5.filter(r => {
+        const plato = r['plato'] || r['nombre_plato'] || r['nombre'];
+        const ing = r['ingrediente'] || r['ingrediente_nombre'];
+        return plato && ing && plato.trim() !== '' && ing.trim() !== '';
+      }).map((r, i) => {
+        const nombrePlato = (r['plato'] || r['nombre_plato'] || r['nombre'] || '').trim();
+        const nombreIng = (r['ingrediente'] || r['ingrediente_nombre'] || '').trim();
+        const proveedor = (r['proveedor'] || '').trim();
+        const stockMin = parseFloat(r['stock mínimo (cada semana)'] || r['stock_minimo'] || r['stock minimo'] || 0) || 0;
+        const cantidadCompra = parseFloat(r['cantidad'] || 0) || 0;
+        const umCompra = (r['u.m.'] || r['unidad_medida'] || r['um'] || 'g').trim();
+        const costoTotalStr = r['costo total'] || r['costo_total'] || '0';
+        const costoUnitBase = parseCOP(r['costo unitario base'] || r['costo_unitario_base'] || r['costo_unitario'] || '0');
+        const cantPorcion = parseFloat(r['cantidad (porción)'] || r['cantidad_porcion'] || r['cantidad (porcion)'] || 0) || 0;
+        const umPorcion = '';
+        const subtotalCosto = parseCOP(r['subtotal costo materia prima'] || r['subtotal_costo'] || '0');
+        const margenPct = parseCOP(r['margen bruto %'] || r['margen_bruto'] || '0');
+        const pvpSinIva = parseCOP(r['precio de venta sugerido (sin iva)'] || r['pvp_sin_iva'] || '0');
+        const costoPorPlato = parseCOP(r['costo materia prima x plato'] || r['costo_plato'] || '0');
+        const margenPromPlato = parseCOP(r['margen bruto % promedio x plato'] || r['margen_plato'] || '0');
+        const pvpPlato = parseCOP(r['precio de venta sugerido (sin iva)'] || '0');
+
+        return {
+          id: `rec-import-${i}`,
+          nombre_plato: nombrePlato,
+          ingrediente_nombre: nombreIng,
+          proveedor: proveedor,
+          stock_minimo: stockMin,
+          presentacion_compra: (r['presentación de compra'] || r['presentacion de compra'] || r['presentacion_compra'] || '').trim(),
+          cantidad_compra: cantidadCompra,
+          unidad_compra: umCompra,
+          costo_total_compra: parseCOP(costoTotalStr),
+          costo_unitario: costoUnitBase,
+          cantidad: cantPorcion,
+          unidad_medida: umCompra,
+          subtotal_costo: subtotalCosto,
+          margen_ingrediente_pct: margenPct > 1 ? margenPct : margenPct * 100,
+          pvp_sugerido: pvpSinIva,
+          costo_por_plato: costoPorPlato,
+          margen_plato_pct: margenPromPlato > 1 ? margenPromPlato : margenPromPlato * 100,
+          pvp_plato: pvpPlato,
         };
       });
 
-      setCategorias(cats); setPlatos(pls);
+      // Construir inventario desde las recetas (un insumo = un ítem de inventario)
+      const invMap = {};
+      recs.forEach(r => {
+        const key = normalize(r.ingrediente_nombre);
+        if (!invMap[key]) {
+          invMap[key] = {
+            id: `inv-${key}`,
+            nombre: r.ingrediente_nombre,
+            proveedor: r.proveedor,
+            unidad_compra: r.unidad_compra || 'g',
+            precio_por_unidad: r.costo_unitario || 0,
+            costo_total_compra: r.costo_total_compra || 0,
+            presentacion_compra: r.presentacion_compra || '',
+            stock_actual: r.cantidad_compra || 0,
+            stock_minimo_alerta: r.stock_minimo || 0,
+          };
+        }
+      });
+
+      setCategorias(cats); 
+      setPlatos(pls);
       if (typeof setGruposMod === 'function') setGruposMod(grupos);
       if (typeof setOpcionesMod === 'function') setOpcionesMod(opciones);
       if (typeof setVinculosMod === 'function') setVinculosMod(vinculos);
+      setActiveCatNames(cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre));
+      setCategoriasExpandidas(cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre));
       setRecetas(recs); setInventario(Object.values(invMap));
 
       localStorage.setItem('cartaya_menu_data', JSON.stringify({
         categorias: cats, platos: pls, gruposMod: grupos, opcionesMod: opciones,
-        vinculosMod: vinculos, recetas: recs, inventario: Object.values(invMap)
+        vinculosMod: vinculos, recetas: recs, inventario: Object.values(invMap),
+        activeCatNames: cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre),
+        categoriasExpandidas: cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre)
       }));
 
-      setImportResult({ categorias: cats.length, platos: pls.length, grupos: grupos.length, recetas: recs.length });
+      setImportResult({ 
+        categorias: cats.length, 
+        platos: pls.length, 
+        grupos: grupos.length, 
+        opciones: opciones.length,
+        vinculos: vinculos.length,
+        recetas: recs.length 
+      });
+      console.log('[Import OK] Grupos:', grupos.length, '| Opciones:', opciones.length, '| Vínculos:', vinculos.length);
+      console.log('[Grupos importados]', grupos.map(g => g.nombre));
+      console.log('[Opciones importadas]', opciones.map(o => o.nombre));
       setImporting(false);
     } catch (err) {
       console.error('Error importando Excel:', err);
@@ -5320,11 +5431,7 @@ function ViewMenu({
                         className={`px-2 py-1 rounded text-[10px] font-black transition-all ${vistaPlatos === 'accordion' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-slate-600'}`}
                         title="Vista Acordeón"
                       >≡</button>
-                      <button
-                        onClick={() => setVistaPlatos('table')}
-                        className={`px-2 py-1 rounded text-[10px] font-black transition-all ${vistaPlatos === 'table' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-slate-600'}`}
-                        title="Vista Tabla"
-                      >⊞</button>
+                      {/* Vista tabla eliminada */}
                     </div>
 
                     <button 
