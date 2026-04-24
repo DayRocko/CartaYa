@@ -510,6 +510,7 @@ function ViewMiRestaurante() {
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [restaurante, setRestaurante] = useState(MOCK_DATA.restaurante);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // ESTADO ELEVADO (Prioridad 5)
   const [categorias, setCategorias] = useState(MOCK_DATA.categorias || []);
@@ -552,56 +553,72 @@ function App() {
       <div className="flex h-screen w-full">
         
         {/* SIDEBAR */}
-        <aside className="sidebar-dark shrink-0 flex flex-col w-64">
-          <div className="sidebar-brand-dark p-6 flex items-center justify-between">
-            <h1 className="text-2xl font-black text-white tracking-tight">CartaYa</h1>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
-              <span style={{fontSize:'15px', lineHeight:1}}>🧠</span>
+        <aside className={`sidebar-dark shrink-0 flex flex-col transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
+          <div className={`p-6 flex items-center h-[88px] ${sidebarCollapsed ? 'justify-center flex-col gap-3 px-2 pt-8' : 'justify-between'}`}>
+            {!sidebarCollapsed && <h1 className="text-2xl font-black text-white tracking-tight">CartaYa</h1>}
+            <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'flex-col mx-auto' : ''}`}>
+               <div className={`w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0 ${sidebarCollapsed ? 'absolute top-5 left-1/2 min-w-8 -translate-x-1/2' : ''}`}>
+                 <span style={{fontSize:'15px', lineHeight:1}}>🧠</span>
+               </div>
+               <button 
+                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
+                 className={`text-gray-400 hover:text-white transition-colors bg-slate-800 rounded-md flex items-center justify-center ${sidebarCollapsed ? 'absolute top-[60px] left-1/2 -translate-x-1/2 w-8 h-8 mt-1' : 'w-7 h-7'}`}
+                 title={sidebarCollapsed ? "Expandir Menú" : "Contraer Menú"}
+               >
+                 <span className="text-[12px] opacity-70">
+                   {sidebarCollapsed ? '››' : '‹‹'}
+                 </span>
+               </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto pb-6" style={{ scrollbarWidth: 'none' }}>
-            <div className="px-4 py-4 space-y-1">
-              <NavItemDark icon={<span>🏠</span>} label="Dashboard" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-              <NavItemDark icon={<span>🧠</span>} label="Brain IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} />
+          <div className="flex-1 overflow-y-auto pb-6 w-full" style={{ scrollbarWidth: 'none' }}>
+            <div className={`py-4 space-y-1 ${sidebarCollapsed ? 'px-2 pb-0 mt-6' : 'px-4'}`}>
+              <NavItemDark icon={<span>🏠</span>} label="Dashboard" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>🧠</span>} label="Brain IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} collapsed={sidebarCollapsed} />
             </div>
 
-            <div className="px-6 py-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Gestión Operativa</div>
-              <NavItemDark icon={<span>▧</span>} label="POS / Pedidos" isActive={activeTab === 'pos'} onClick={() => setActiveTab('pos')} />
-              <NavItemDark icon={<span>📈</span>} label="Ventas" isActive={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} />
-              <NavItemDark icon={<span>🥧</span>} label="Finanzas" isActive={activeTab === 'finanzas'} onClick={() => setActiveTab('finanzas')} />
-              <NavItemDark icon={<span>▦</span>} label="Operaciones" isActive={activeTab === "operaciones"} onClick={() => setActiveTab("operaciones")} />
-              <NavItemDark icon={<span>▤</span>} label="Inventario & Compras" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} />
-              <NavItemDark icon={<span>🛵</span>} label="Delivery & Domicilios" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
+            <div className={`py-2 pt-0 ${sidebarCollapsed ? 'px-2 flex flex-col gap-1 items-center justify-center' : 'px-6 mt-2'}`}>
+              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Gestión Operativa</div>}
+              {sidebarCollapsed && <div className="w-8 border-b border-slate-700/50 my-2 mx-auto"></div>}
+              <NavItemDark icon={<span>▧</span>} label="POS / Pedidos" isActive={activeTab === 'pos'} onClick={() => setActiveTab('pos')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>📈</span>} label="Ventas" isActive={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>🥧</span>} label="Finanzas" isActive={activeTab === 'finanzas'} onClick={() => setActiveTab('finanzas')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>▦</span>} label="Operaciones" isActive={activeTab === "operaciones"} onClick={() => setActiveTab("operaciones")} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>▤</span>} label="Inventario & Compras" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>🛵</span>} label="Delivery & Domicilios" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} collapsed={sidebarCollapsed} />
             </div>
 
-            <div className="px-6 py-2 mt-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Crecimiento & Clientes</div>
-              <NavItemDark icon={<span>👥</span>} label="Reservas & CRM" isActive={activeTab === 'reservas'} onClick={() => setActiveTab('reservas')} />
-              <NavItemDark icon={<span>📢</span>} label="Marketing" isActive={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} />
-              <NavItemDark icon={<span>🎁</span>} label="Fidelización" isActive={activeTab === 'fidelizacion'} onClick={() => setActiveTab('fidelizacion')} />
-              <NavItemDark icon={<span>🍷</span>} label="Eventos & Catering" isActive={activeTab === 'eventos'} onClick={() => setActiveTab('eventos')} />
-              <NavItemDark icon={<span>👥</span>} label="Talento (RRHH)" isActive={activeTab === 'rrhh'} onClick={() => setActiveTab('rrhh')} />
-              <NavItemDark icon={<span>📊</span>} label="Data & Insights" isActive={activeTab === 'data'} onClick={() => setActiveTab('data')} />
+            <div className={`py-2 mt-2 ${sidebarCollapsed ? 'px-2 flex flex-col gap-1 items-center justify-center' : 'px-6 mt-2'}`}>
+              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Crecimiento & Clientes</div>}
+              {sidebarCollapsed && <div className="w-8 border-b border-slate-700/50 my-2 mx-auto"></div>}
+              <NavItemDark icon={<span>👥</span>} label="Reservas & CRM" isActive={activeTab === 'reservas'} onClick={() => setActiveTab('reservas')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>📢</span>} label="Marketing" isActive={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>🎁</span>} label="Fidelización" isActive={activeTab === 'fidelizacion'} onClick={() => setActiveTab('fidelizacion')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>🍷</span>} label="Eventos & Catering" isActive={activeTab === 'eventos'} onClick={() => setActiveTab('eventos')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>👥</span>} label="Talento (RRHH)" isActive={activeTab === 'rrhh'} onClick={() => setActiveTab('rrhh')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>📊</span>} label="Data & Insights" isActive={activeTab === 'data'} onClick={() => setActiveTab('data')} collapsed={sidebarCollapsed} />
             </div>
 
-            <div className="px-6 py-2 mt-2">
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Ajustes del Negocio</div>
-              <NavItemDark icon={<span>🏪</span>} label="Mi Restaurante" isActive={activeTab === 'restaurante'} onClick={() => setActiveTab('restaurante')} />
-              <NavItemDark icon={<span>📖</span>} label="Carta & Menú" isActive={activeTab === 'menu'} onClick={() => setActiveTab('menu')} highlight={activeTab === 'menu'} />
-              <NavItemDark icon={<span>🔌</span>} label="Integraciones" isActive={activeTab === 'conectores'} onClick={() => setActiveTab('conectores')} />
-              <NavItemDark icon={<span>💳</span>} label="Plan & Facturación" isActive={activeTab === 'billing'} onClick={() => setActiveTab('billing')} />
+            <div className={`py-2 mt-2 ${sidebarCollapsed ? 'px-2 flex flex-col gap-1 items-center justify-center' : 'px-6 mt-2'}`}>
+              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Ajustes del Negocio</div>}
+              {sidebarCollapsed && <div className="w-8 border-b border-slate-700/50 my-2 mx-auto"></div>}
+              <NavItemDark icon={<span>🏪</span>} label="Mi Restaurante" isActive={activeTab === 'restaurante'} onClick={() => setActiveTab('restaurante')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>📖</span>} label="Carta & Menú" isActive={activeTab === 'menu'} onClick={() => setActiveTab('menu')} highlight={activeTab === 'menu'} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>🔌</span>} label="Integraciones" isActive={activeTab === 'conectores'} onClick={() => setActiveTab('conectores')} collapsed={sidebarCollapsed} />
+              <NavItemDark icon={<span>💳</span>} label="Plan & Facturación" isActive={activeTab === 'billing'} onClick={() => setActiveTab('billing')} collapsed={sidebarCollapsed} />
             </div>
           </div>
           
-          <div className="p-4 border-t border-slate-800/50 bg-[#121A2B] shrink-0">
-            <div className="flex items-center gap-3 mb-2 px-2">
-               <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-bold border border-slate-600">DA</div>
-               <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white truncate">Daniel Arias</p>
-                  <p className="text-[10px] text-slate-400 truncate tracking-tight">{restaurante.nombre}</p>
-               </div>
+          <div className={`border-t border-slate-800/50 bg-[#121A2B] shrink-0 ${sidebarCollapsed ? 'p-2 flex justify-center pb-4' : 'p-4'}`}>
+            <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'flex-col mx-auto px-0' : 'mb-2 px-2'}`}>
+               <div className={`rounded-full bg-slate-700 flex shrink-0 items-center justify-center text-white text-sm font-bold border border-slate-600 ${sidebarCollapsed ? 'w-10 h-10 mx-auto' : 'w-10 h-10'}`}>DA</div>
+               {!sidebarCollapsed && (
+                 <div className="flex-1 min-w-0 transition-opacity duration-200">
+                    <p className="text-sm font-bold text-white truncate">Daniel Arias</p>
+                    <p className="text-[10px] text-slate-400 truncate tracking-tight">{restaurante.nombre}</p>
+                 </div>
+               )}
             </div>
           </div>
         </aside>
@@ -4310,6 +4327,10 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
           cantidad: r.cantidad || 0,
           unidad_receta: r.unidad_medida || 'g',
           factor: 1.0,
+          subtotal_costo: r.subtotal_costo !== null ? r.subtotal_costo : null,
+          margen_bruto_pct: r.margen_ingrediente_pct !== null ? r.margen_ingrediente_pct : null,
+          pvp_sugerido: r.pvp_sugerido_ing !== null ? r.pvp_sugerido_ing : null,
+          margen_bruto_pesos: r.margen_bruto_pesos_ing !== null ? r.margen_bruto_pesos_ing : null
         }));
       } else {
         // Fallback a datos mock hardcodeados
@@ -4353,31 +4374,31 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
   ]);
 
   const platosEnriquecidos = (platos || []).map(plato => {
-    const mock = MOCK_COSTOS[plato.nombre] || {};
-    
-    // Buscar la primera receta que coincida con el nombre del plato
+    // Buscar la PRIEMRA receta que coincida con el nombre del plato y tenga los valores calculados
     const unaReceta = (recetas || []).find(r => 
-      r.nombre_plato && plato.nombre &&
-      r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim()
+      r.nombre_plato &&
+      r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim() &&
+      r.costo_por_plato !== null
     );
     
-    const tieneReceta = MOCK_RECETA_ACTIVA.has(plato.nombre) || !!unaReceta;
+    // Check if it has any recipe rows (to determine state)
+    const tieneCualquierReceta = MOCK_RECETA_ACTIVA.has(plato.nombre) || (recetas || []).some(r => r.nombre_plato && r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim());
     
-    // Extraer campos del formato 5_RECETAS o usar fallbacks
-    const costoMP = unaReceta ? unaReceta.costo_por_plato : (mock.costo || 0);
-    const margenPctProm = unaReceta ? unaReceta.margen_plato_pct : (calcMargen(plato.precio_venta, costoMP) || 0);
-    const pvpSugerido = unaReceta ? unaReceta.pvp_plato : (plato.precio_venta || 0);
-    const margenBrutoPesos = pvpSugerido - costoMP;
+    // Extraer campos del formato 5_RECETAS o usar fallbacks si es null
+    const costoMP = unaReceta && unaReceta.costo_por_plato !== null ? unaReceta.costo_por_plato : null;
+    const margenPctProm = unaReceta && unaReceta.margen_plato_pct !== null ? unaReceta.margen_plato_pct : null;
+    const pvpSugerido = unaReceta && unaReceta.pvp_sugerido_plato !== null ? unaReceta.pvp_sugerido_plato : null;
+    const margenBrutoPesos = unaReceta && unaReceta.margen_plato_pesos !== null ? unaReceta.margen_plato_pesos : null;
 
     const fuga = MOCK_FUGAS[plato.nombre] || null;
     let alertaState = 'sync';
-    if (!tieneReceta) alertaState = 'no_registrado';
+    if (!tieneCualquierReceta) alertaState = 'no_registrado';
     else if (fuga && fuga.tipo === 'fuga') alertaState = 'fuga';
     else if (fuga && fuga.tipo === 'no_registrado') alertaState = 'no_registrado';
     
     return { 
       ...plato, 
-      tieneReceta, 
+      tieneReceta: tieneCualquierReceta, 
       costoMP, 
       margenPctProm, 
       pvpSugerido, 
@@ -4440,48 +4461,37 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                 <thead>
                   <tr style={{background:'#F8FAFC', borderBottom:'1px solid #E5E7EB'}}>
                     <th style={{padding:'10px 12px', textAlign:'left', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Ingrediente</th>
-                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Costo Unitario (Compra)</th>
-                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Cantidad Neta (Receta)</th>
-                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Factor Rendimiento</th>
-                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Operación (Costo Real)</th>
-                    <th style={{padding:'10px 12px', textAlign:'right', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Total Ingrediente</th>
+                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Cantidad (Porción)</th>
+                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Unidad Medida</th>
+                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Subtotal Costo Materia Prima</th>
+                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Margen Bruto %</th>
+                    <th style={{padding:'10px 12px', textAlign:'center', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Precio de Venta Sugerido (Sin IVA)</th>
+                    <th style={{padding:'10px 12px', textAlign:'right', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.06em', color:'#94A3B8'}}>Margen Bruto Pesos</th>
                     <th style={{padding:'10px 8px', width:32}}></th>
                   </tr>
                 </thead>
                 <tbody>
                   {lineas.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{textAlign:'center', padding:'24px', color:'#9CA3AF', fontSize:13, fontStyle:'italic'}}>
+                      <td colSpan={8} style={{textAlign:'center', padding:'24px', color:'#9CA3AF', fontSize:13, fontStyle:'italic'}}>
                         No hay ingredientes. Usa el buscador para agregar insumos.
                       </td>
                     </tr>
                   ) : (
                     lineas.map((linea, li) => {
-                      const { operacion, costo } = calcFila(linea);
                       const isOdd = li % 2 === 1;
-                      const cu = Number(linea.costo_unitario) || 0;
-                      const unidadBase = (linea.unidad_compra === 'kg' || linea.unidad_compra === 'l') ? linea.unidad_compra : linea.unidad_compra;
-                      const equivalente = cu > 0 ? `($${cu.toLocaleString('es-CO')}/${unidadBase})` : '';
+                      const subtotal = Number(linea.subtotal_costo) || 0;
+                      const pvp = Number(linea.pvp_sugerido) || 0;
+                      const mbPesos = Number(linea.margen_bruto_pesos) || 0;
+                      const mbPct = Number(linea.margen_bruto_pct) || 0;
+                      const msIng = margenStyle(mbPct);
                       return (
                         <tr key={linea.id} style={{borderBottom:'1px solid #F1F5F9', background: isOdd ? '#FAFBFC' : 'white'}}>
                           {/* COL 1 — INGREDIENTE */}
                           <td style={{padding:'10px 12px'}}>
                             <span style={{fontWeight:700, color:'#1E293B', fontSize:13}}>{linea.ingrediente}</span>
                           </td>
-                          {/* COL 2 — COSTO UNITARIO */}
-                          <td style={{padding:'10px 12px', textAlign:'center'}}>
-                            {cu > 0 ? (
-                              <div>
-                                <div style={{fontWeight:700, color:'#334155', fontSize:13}}>
-                                  ${cu.toLocaleString('es-CO')} / {linea.unidad_compra}
-                                </div>
-                                <div style={{fontSize:10, color:'#94A3B8', marginTop:2}}>{equivalente}</div>
-                              </div>
-                            ) : (
-                              <span style={{color:'#D97706', fontSize:12, fontWeight:700}}>Sin precio</span>
-                            )}
-                          </td>
-                          {/* COL 3 — CANTIDAD NETA */}
+                          {/* COL 2 — CANTIDAD (PORCIÓN) */}
                           <td style={{padding:'10px 12px', textAlign:'center'}}>
                             <div style={{display:'inline-flex', alignItems:'center', gap:4}}>
                               <input
@@ -4490,45 +4500,45 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                                 step="any"
                                 value={linea.cantidad}
                                 onChange={e => updateLinea(plato.id, linea.id, 'cantidad', e.target.value)}
-                                style={{width:72, textAlign:'center', fontSize:13, border:'1px solid #E2E8F0', borderRadius:8, padding:'4px 6px', background:'white', outline:'none'}}
+                                style={{width:80, textAlign:'center', fontSize:13, border:'1px solid #E2E8F0', borderRadius:8, padding:'4px 6px', background:'white', outline:'none'}}
                               />
-                              <select
-                                value={linea.unidad_receta}
-                                onChange={e => updateLinea(plato.id, linea.id, 'unidad_receta', e.target.value)}
-                                style={{border:'1px solid #E2E8F0', borderRadius:8, fontSize:12, padding:'4px 6px', background:'white', outline:'none', cursor:'pointer'}}
-                              >
-                                {UNIDADES.map(u => <option key={u} value={u}>{u}</option>)}
-                              </select>
                             </div>
                           </td>
-                          {/* COL 4 — FACTOR RENDIMIENTO */}
+                          {/* COL 3 — UNIDAD MEDIDA */}
                           <td style={{padding:'10px 12px', textAlign:'center'}}>
-                            <div>
-                              <input
-                                type="number"
-                                min="0.01"
-                                max="1.0"
-                                step="0.01"
-                                value={linea.factor}
-                                onChange={e => updateLinea(plato.id, linea.id, 'factor', e.target.value)}
-                                style={{width:60, textAlign:'center', fontSize:13, border:'1px solid #E2E8F0', borderRadius:8, padding:'4px 6px', background:'white', outline:'none'}}
-                              />
-                              <div style={{fontSize:9, color:'#94A3B8', marginTop:3}}>{factorLabel(linea.factor)}</div>
-                            </div>
+                            <select
+                              value={linea.unidad_receta || 'g'}
+                              onChange={e => updateLinea(plato.id, linea.id, 'unidad_receta', e.target.value)}
+                              style={{border:'1px solid #E2E8F0', borderRadius:8, fontSize:12, padding:'4px 6px', background:'white', outline:'none', cursor:'pointer'}}
+                            >
+                              {UNIDADES.map(u => <option key={u} value={u}>{u}</option>)}
+                            </select>
                           </td>
-                          {/* COL 5 — OPERACIÓN */}
+                          {/* COL 4 — SUBTOTAL COSTO MP */}
                           <td style={{padding:'10px 12px', textAlign:'center'}}>
-                            <div style={{background:'#F8FAFC', borderRadius:8, padding:'5px 10px', display:'inline-block', minWidth:140}}>
-                              <div style={{fontSize:10, color:'#94A3B8', marginBottom:2}}>{operacion}</div>
-                              <div style={{fontWeight:700, color:'#1E293B', fontSize:13}}>
-                                {costo !== null ? `$${costo.toLocaleString('es-CO')}` : '—'}
-                              </div>
-                            </div>
+                            {subtotal > 0
+                              ? <span style={{fontWeight:700, color:'#334155', fontSize:13}}>${subtotal.toLocaleString('es-CO')}</span>
+                              : <span style={{color:'#D1D5DB'}}>—</span>
+                            }
                           </td>
-                          {/* COL 6 — TOTAL INGREDIENTE */}
+                          {/* COL 5 — MARGEN BRUTO % */}
+                          <td style={{padding:'10px 12px', textAlign:'center'}}>
+                            {mbPct > 0
+                              ? <span style={{fontWeight:900, fontSize:12, color: msIng.color, background: msIng.bg, border:`1px solid ${msIng.border}`, borderRadius:6, padding:'2px 8px'}}>{mbPct.toFixed(1) || mbPct}%</span>
+                              : <span style={{color:'#D1D5DB'}}>—</span>
+                            }
+                          </td>
+                          {/* COL 6 — PRECIO DE VENTA SUGERIDO */}
+                          <td style={{padding:'10px 12px', textAlign:'center'}}>
+                            {pvp > 0
+                              ? <span style={{fontWeight:700, color:'#1E293B', fontSize:13}}>${pvp.toLocaleString('es-CO')}</span>
+                              : <span style={{color:'#D1D5DB'}}>—</span>
+                            }
+                          </td>
+                          {/* COL 7 — MARGEN BRUTO PESOS */}
                           <td style={{padding:'10px 12px', textAlign:'right'}}>
-                            {costo !== null
-                              ? <span style={{fontWeight:900, color:'#047857', fontSize:13}}>${costo.toLocaleString('es-CO')}</span>
+                            {mbPesos > 0
+                              ? <span style={{fontWeight:900, color:'#047857', fontSize:13}}>${mbPesos.toLocaleString('es-CO')}</span>
                               : <span style={{color:'#D1D5DB'}}>—</span>
                             }
                           </td>
@@ -4551,7 +4561,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                   {lineas.length > 0 && (
                     <>
                       <tr style={{background:'#F8FAFC', borderTop:'2px solid #E2E8F0'}}>
-                        <td colSpan={5} style={{padding:'10px 12px'}}>
+                        <td colSpan={6} style={{padding:'10px 12px', textAlign:'right'}}>
                           <span style={{fontWeight:900, color:'#334155', fontSize:13, textTransform:'uppercase', letterSpacing:'0.04em'}}>Costo Total de Producción</span>
                         </td>
                         <td style={{padding:'10px 12px', textAlign:'right'}}>
@@ -4562,7 +4572,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                         <td></td>
                       </tr>
                       <tr style={{background:'#F8FAFC', borderTop:'1px solid #F1F5F9'}}>
-                        <td colSpan={5} style={{padding:'6px 12px'}}>
+                        <td colSpan={6} style={{padding:'6px 12px', textAlign:'right'}}>
                           <span style={{fontWeight:700, color:'#64748B', fontSize:12}}>Margen Bruto Proyectado</span>
                         </td>
                         <td style={{padding:'6px 12px', textAlign:'right'}}>
@@ -5093,70 +5103,90 @@ function ViewMenu({
         }
       });
 
-      // 4. RECETAS E INVENTARIO — compatible con 5_RECETAS (Plato, Ingrediente, Proveedor, Stock Mínimo, Presentación, Cantidad, U.M., Costo Total, ..., Costo Unitario Base, Cantidad (Porción), U.M., ...)
+      // 4. RECETAS E INVENTARIO — Mapeo estricto a las nuevas directrices
       const recSheet = findSheet(['5_RECETAS', 'RECETAS', 'RECETA', 'INGREDIENTES', '5RECETA', '5REC']);
       
-      // La hoja 5_RECETAS tiene: fila 1 = título, fila 2 = sección, fila 3 = headers, fila 4+ = datos
-      const recRows5 = recSheet ? readSheetRowsFromIndex(recSheet, 2) : [];
-      
-      // Mapeo de columnas del formato 5_RECETAS:
-      // Col 1: plato, Col 2: ingrediente, Col 3: proveedor, Col 4: stock mínimo (cada semana)
-      // Col 5: presentación de compra, Col 6: cantidad, Col 7: u.m. (unidad compra)
-      // Col 8: costo total, Col 9: precio libra/unidad, Col 10: costo unitario base
-      // Col 11: cantidad (porción), Col 12: u.m. (unidad porción), Col 13: subtotal costo mp
-      // Col 14: margen bruto %, Col 15: pvp sin iva, Col 16: margen bruto pesos
-      // Col 17: costo mp x plato, Col 18: margen % promedio x plato, Col 19: pvp plato, Col 20: margen pesos plato
-
       const parseCOP = (val) => {
-        if (!val) return 0;
-        const s = String(val).replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, '');
-        return parseFloat(s) || 0;
+        if (val === null || val === undefined || val === '') return null;
+        if (typeof val === 'number') return Math.round(val);
+        const sStr = String(val);
+        if (sStr.trim().toLowerCase() === 'none') return null;
+        const s = sStr.replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
+        if (s === '') return null;
+        return Math.round(parseFloat(s));
       };
 
-      const recs = recRows5.filter(r => {
-        const plato = r['plato'] || r['nombre_plato'] || r['nombre'];
-        const ing = r['ingrediente'] || r['ingrediente_nombre'];
-        return plato && ing && plato.trim() !== '' && ing.trim() !== '';
-      }).map((r, i) => {
-        const nombrePlato = (r['plato'] || r['nombre_plato'] || r['nombre'] || '').trim();
-        const nombreIng = (r['ingrediente'] || r['ingrediente_nombre'] || '').trim();
-        const proveedor = (r['proveedor'] || '').trim();
-        const stockMin = parseFloat(r['stock mínimo (cada semana)'] || r['stock_minimo'] || r['stock minimo'] || 0) || 0;
-        const cantidadCompra = parseFloat(r['cantidad'] || 0) || 0;
-        const umCompra = (r['u.m.'] || r['unidad_medida'] || r['um'] || 'g').trim();
-        const costoTotalStr = r['costo total'] || r['costo_total'] || '0';
-        const costoUnitBase = parseCOP(r['costo unitario base'] || r['costo_unitario_base'] || r['costo_unitario'] || '0');
-        const cantPorcion = parseFloat(r['cantidad (porción)'] || r['cantidad_porcion'] || r['cantidad (porcion)'] || 0) || 0;
-        const umPorcion = '';
-        const subtotalCosto = parseCOP(r['subtotal costo materia prima'] || r['subtotal_costo'] || '0');
-        const margenPct = parseCOP(r['margen bruto %'] || r['margen_bruto'] || '0');
-        const pvpSinIva = parseCOP(r['precio de venta sugerido (sin iva)'] || r['pvp_sin_iva'] || '0');
-        const costoPorPlato = parseCOP(r['costo materia prima x plato'] || r['costo_plato'] || '0');
-        const margenPromPlato = parseCOP(r['margen bruto % promedio x plato'] || r['margen_plato'] || '0');
-        const pvpPlato = parseCOP(r['precio de venta sugerido (sin iva)'] || '0');
+      const parsePct = (val) => {
+        if (val === null || val === undefined || val === '') return null;
+        if (typeof val === 'number') return Math.round(val * 100);
+        const sStr = String(val);
+        if (sStr.trim().toLowerCase() === 'none') return null;
+        const s = sStr.replace(/[^0-9.-]/g, '');
+        if (s === '') return null;
+        return Math.round(parseFloat(s) * 100);
+      };
 
-        return {
-          id: `rec-import-${i}`,
-          nombre_plato: nombrePlato,
-          ingrediente_nombre: nombreIng,
-          proveedor: proveedor,
-          stock_minimo: stockMin,
-          presentacion_compra: (r['presentación de compra'] || r['presentacion de compra'] || r['presentacion_compra'] || '').trim(),
-          cantidad_compra: cantidadCompra,
-          unidad_compra: umCompra,
-          costo_total_compra: parseCOP(costoTotalStr),
-          costo_unitario: costoUnitBase,
-          cantidad: cantPorcion,
-          unidad_medida: umCompra,
-          subtotal_costo: subtotalCosto,
-          margen_ingrediente_pct: margenPct > 1 ? margenPct : margenPct * 100,
-          pvp_sugerido: pvpSinIva,
-          costo_por_plato: costoPorPlato,
-          margen_plato_pct: margenPromPlato > 1 ? margenPromPlato : margenPromPlato * 100,
-          pvp_plato: pvpPlato,
-        };
-      });
+      let recs = [];
+      if (recSheet) {
+         // Leemos datos crudos para acceder por índices
+         const rawRec = window.XLSX.utils.sheet_to_json(recSheet, { header: 1, defval: '' });
+         // Los datos comienzan en la fila 4 (índice 3 en un array base 0)
+         if (rawRec && rawRec.length > 3) {
+            const dataRows = rawRec.slice(3).filter(r => Array.isArray(r) && r[0] && String(r[0]).trim() !== '');
+            recs = dataRows.map((r, i) => {
+               // A = 0, B = 1, C = 2...
+               const nombrePlato = String(r[0] || '').trim();  // A
+               const nombreIng = String(r[1] || '').trim();    // B
+               const proveedor = String(r[2] || '').trim();    // C
+               const stockMin = parseFloat(r[3]) || 0;         // D
+               const presCompra = String(r[4] || '').trim();   // E
+               const cantidadCompra = parseFloat(r[5]) || 0;   // F
+               const umCompra = String(r[6] || 'g').trim();    // G
+               const costoTotalCompra = parseCOP(r[7]);        // H
+               const costoUnitBase = parseCOP(r[9]);           // J
+               const cantPorcion = parseFloat(r[10]) || 0;     // K
+               const subtotalCosto = parseCOP(r[12]);          // M
+               
+               // N=13, O=14, P=15 (Nivel Ingrediente)
+               const margenIngredientePct = parsePct(r[13]);
+               const pvpSugeridoIngrediente = parseCOP(r[14]);
+               const margenBrutoPesosIng = parseCOP(r[15]);
 
+               // Q=16, R=17, S=18, T=19 (Nivel Plato)
+               const costoMateriaPrimaPlato = parseCOP(r[16]);
+               const margenBrutoPctPromedioPlato = parsePct(r[17]);
+               const pvpSugeridoPlato = parseCOP(r[18]);
+               const margenBrutoPesosPlato = parseCOP(r[19]);
+
+               return {
+                  id: `rec-import-${i}`,
+                  nombre_plato: nombrePlato,
+                  ingrediente_nombre: nombreIng,
+                  cantidad: cantPorcion,
+                  unidad_medida: umCompra,
+                  unidad_compra: umCompra,
+                  proveedor: proveedor,
+                  stock_minimo: stockMin,
+                  presentacion_compra: presCompra,
+                  cantidad_compra: cantidadCompra,
+                  costo_total_compra: costoTotalCompra,
+                  costo_unitario: costoUnitBase,
+                  subtotal_costo: subtotalCosto,
+                  
+                  // Ingrediente metrics
+                  margen_ingrediente_pct: margenIngredientePct,
+                  pvp_sugerido_ing: pvpSugeridoIngrediente,
+                  margen_bruto_pesos_ing: margenBrutoPesosIng,
+
+                  // Plato metrics
+                  costo_por_plato: costoMateriaPrimaPlato,
+                  margen_plato_pct: margenBrutoPctPromedioPlato,
+                  pvp_sugerido_plato: pvpSugeridoPlato,
+                  margen_plato_pesos: margenBrutoPesosPlato
+               };
+            });
+         }
+      }
       // Construir inventario desde las recetas (un insumo = un ítem de inventario)
       const invMap = {};
       recs.forEach(r => {
@@ -5267,17 +5297,6 @@ function ViewMenu({
               }
            `}} />
 
-           {/* Context Banner */}
-           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-start gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0">🕸</div>
-              <div>
-                 <h4 className="text-sm font-bold text-blue-900 mb-1">Activación en Cascada</h4>
-                 <p className="text-xs text-blue-800/80 leading-relaxed max-w-4xl">
-                   Al configurar este módulo alimentas automáticamente a toda la plataforma: <strong>Operaciones</strong> puede abrir mesas, <strong>Delivery</strong> obtiene su carta online, <strong>Inventario</strong> descuenta stock al vender, <strong>Ventas Hoy</strong> clasifica ingresos por categoría, <strong>Finanzas</strong> calcula márgenes y <strong>Brain IA</strong> obtiene datos para analizar.
-                 </p>
-              </div>
-           </div>
-
            {/* Importación Masiva — debajo del banner */}
            <div style={{background:'#0F1117', borderRadius:'var(--border-radius-lg)', padding:'1.5rem', position:'relative', overflow:'hidden'}}>
              <div className="absolute -right-10 -bottom-10 text-slate-800 opacity-20">☁</div>
@@ -5327,7 +5346,12 @@ function ViewMenu({
               </div>
             </div>
 
-            {/* ── ACORDEÓN 1: CATEGORÍAS ── */}
+           {/* CATEGORÍA BASE — Estructura del Menú */}
+           <div className="mb-6 mt-4">
+              <h3 className="text-xl font-bold border-b border-gray-200 pb-2 mb-2 text-slate-800">CATEGORÍA BASE — Estructura del Menú</h3>
+              <p className="text-sm text-gray-500 mb-4">Se configura una vez. Es la base de todo lo demás.</p>
+           </div>
+{/* ── ACORDEÓN 1: CATEGORÍAS ── */}
             <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-indigo-500">
              <div
                 onClick={() => toggleSeccion('categorias')}
@@ -5368,7 +5392,7 @@ function ViewMenu({
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
                 </div>
-              </button>
+              </div>
 
              {seccionesAbiertas.categorias && (
                <div className="border-t border-gray-100">
@@ -5446,7 +5470,7 @@ function ViewMenu({
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
                 </div>
-              </button>
+              </div>
 
              {seccionesAbiertas.platos && (
                <div className="border-t border-gray-100">
@@ -5522,7 +5546,7 @@ function ViewMenu({
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
                 </div>
-              </button>
+              </div>
 
              {seccionesAbiertas.modificadores && (
                <div className="border-t border-gray-100">
@@ -5586,7 +5610,7 @@ function ViewMenu({
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
                 </div>
-              </button>
+              </div>
 
              {seccionesAbiertas.recetas && (
                <div className="border-t border-gray-100">
@@ -5598,6 +5622,154 @@ function ViewMenu({
                </div>
              )}
            </div>
+
+           {/* CATEGORÍA A — Inteligencia Financiera */}
+           <div className="mt-12 mb-6">
+              <h3 className="text-xl font-bold border-b border-gray-200 pb-2 mb-2 text-indigo-900">CATEGORÍA A — Inteligencia Financiera</h3>
+              <p className="text-sm text-gray-500 mb-4">¿Estoy ganando o perdiendo dinero con cada plato?</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-purple-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">✨</div>
+                   <h4 className="text-sm font-black text-slate-800">Simulador de Rentabilidad</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">¿Qué pasa con tu margen si un insumo sube un 10%? ¿A qué precio debes vender para mantener el margen objetivo? Proyecta escenarios antes de que el problema llegue a la caja.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Finanzas</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Recetas e Inventario</span>
+                </div>
+             </div>
+             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-emerald-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">📈</div>
+                   <h4 className="text-sm font-black text-slate-800">Actualización Automática de Costos por Proveedor</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Cuando el precio de un insumo cambia, todos los platos que lo contienen se recalculan en tiempo real. Si el margen cae del objetivo, el sistema alerta de inmediato.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Proveedores</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Recetas e Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Finanzas</span>
+                </div>
+             </div>
+             <div className="bg-white border border-gray-200 text-left rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-blue-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 text-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">⚖️</div>
+                   <h4 className="text-sm font-black text-slate-800">Costo Teórico vs. Costo Real</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Compara lo que debió gastarse según las recetas con lo que realmente se gastó según el inventario físico. La diferencia revela desperdicios, porciones mal servidas o fugas.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Finanzas</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🧠 Brain IA</span>
+                </div>
+             </div>
+             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 text-lg group-hover:bg-orange-600 group-hover:text-white transition-colors">⭐</div>
+                   <h4 className="text-sm font-black text-slate-800">Clasificación BCG del Plato</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Clasifica automáticamente cada plato como Estrella, Caballo de Batalla, Puzle o Perro según su rentabilidad y popularidad. Decide qué promover, reformular o retirar de la carta.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Ventas Hoy</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Finanzas</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🧠 Brain IA</span>
+                </div>
+             </div>
+              </div>
+           </div>
+
+           {/* CATEGORÍA B — Control de Cocina y Producción */}
+           <div className="mt-12 mb-6">
+              <h3 className="text-xl font-bold border-b border-gray-200 pb-2 mb-2 text-emerald-900">CATEGORÍA B — Control de Cocina y Producción</h3>
+              <p className="text-sm text-gray-500 mb-4">¿Estoy cocinando al costo correcto y sin pérdidas ocultas?</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             <div className="bg-white border border-gray-200 text-left rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-yellow-300">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 text-lg group-hover:bg-yellow-500 group-hover:text-white transition-colors">🔪</div>
+                   <h4 className="text-sm font-black text-slate-800">Factor de Rendimiento y Merma</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Registra cuánto del ingrediente que compras realmente terminas usando tras limpieza, cocción o corte. Sin este dato, el costo real de cada plato está subestimado.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Recetas e Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Finanzas</span>
+                </div>
+             </div>
+             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-pink-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600 text-lg group-hover:bg-pink-600 group-hover:text-white transition-colors">🥣</div>
+                   <h4 className="text-sm font-black text-slate-800">Recetas Intermedias o Sub-recetas</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Registra salsas, fondos o masas que se producen en lote y luego se usan como ingrediente en varios platos. Hace visible el costo de producción que ocurre antes del servicio.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Recetas e Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Operaciones</span>
+                </div>
+             </div>
+             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-cyan-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 text-lg group-hover:bg-cyan-600 group-hover:text-white transition-colors">⚖️</div>
+                   <h4 className="text-sm font-black text-slate-800">Conversión de Unidades de Compra vs. Unidades de Receta</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">El sistema traduce automáticamente entre la unidad en que compras (bulto, caja, litro) y la unidad en que cocinas (gramos, mililitros, unidades). El costo unitario siempre será exacto.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Proveedores</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Recetas e Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Inventario</span>
+                </div>
+             </div>
+              </div>
+           </div>
+
+           {/* CATEGORÍA C — Operaciones y Alertas en Tiempo Real */}
+           <div className="mt-12 mb-6">
+              <h3 className="text-xl font-bold border-b border-gray-200 pb-2 mb-2 text-red-900">CATEGORÍA C — Operaciones y Alertas en Tiempo Real</h3>
+              <p className="text-sm text-gray-500 mb-4">¿Algo está fallando ahora mismo?</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-red-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-600 text-lg group-hover:bg-red-600 group-hover:text-white transition-colors">🚨</div>
+                   <h4 className="text-sm font-black text-slate-800">Alerta de Detección de Fugas</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Detecta cuando el consumo real de un ingrediente no coincide con lo que debería haberse usado según las ventas. Señal automática de robo, desperdicio o error en porciones.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Ventas Hoy</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🧠 Brain IA</span>
+                </div>
+             </div>
+             <div className="bg-white border border-gray-200 text-left rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-teal-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 text-lg group-hover:bg-teal-600 group-hover:text-white transition-colors">📦</div>
+                   <h4 className="text-sm font-black text-slate-800">Stock Actual vs. Stock Mínimo por Insumo</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Monitorea en tiempo real cuánto hay de cada ingrediente y dispara una alerta de reorden antes de que se agote. Evita cortar platos en servicio y perder ventas.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Operaciones</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Proveedores</span>
+                </div>
+             </div>
+             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-indigo-200">
+                <div className="flex items-center gap-3 mb-3">
+                   <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">💻</div>
+                   <h4 className="text-sm font-black text-slate-800">Integración con POS</h4>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Cada venta descuenta automáticamente los ingredientes del inventario según la receta del plato vendido. Sin esta integración, el stock siempre estará desactualizado.</p>
+                <div className="flex flex-wrap gap-1.5">
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Ventas Hoy</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Inventario</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Operaciones</span>
+                </div>
+             </div>
+              </div>
+           </div>
+
+
 
 
         </div>
@@ -6165,12 +6337,17 @@ function ViewBilling() {
 // UTILIDADES COMPARTIDAS
 // =========================================================================
 
-function NavItemDark({ icon, label, isActive, onClick, highlight }) {
-  const activeClass = highlight && isActive ? 'nav-item-dark--active bg-[rgba(255,255,255,0.1)] text-white' : isActive ? 'nav-item-dark--active' : '';
+function NavItemDark({ icon, label, isActive, onClick, highlight, collapsed }) {
+  const activeClass = highlight && isActive ? 'nav-item-dark--active bg-[rgba(255,255,255,0.1)] text-white shadow-sm' : isActive ? 'nav-item-dark--active' : '';
+  const collapseClass = collapsed ? 'justify-center mx-auto hover:bg-[rgba(255,255,255,0.05)] text-center !px-0 rounded-lg w-12 h-12 mb-1 flex items-center shrink-0' : 'px-6 mx-2';
+  
   return (
-    <div className={`nav-item-dark ${activeClass}`} onClick={onClick}>
-      <div className="flex items-center justify-center w-5">{icon}</div>
-      <span>{label}</span>
+    <div className={`nav-item-dark ${activeClass} ${collapseClass} relative group transition-all duration-300`} onClick={onClick} title={collapsed ? label : ''}>
+      <div className={`flex items-center justify-center relative min-w-[20px] ${collapsed ? 'text-[22px] w-full h-full' : 'w-5 shrink-0'}`}>
+        <span className={`${collapsed ? 'flex w-full h-full justify-center items-center' : ''}`}>{icon}</span>
+		{collapsed && highlight && isActive && <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-1.5 h-6 bg-emerald-500 rounded-r-full"></div>}
+      </div>
+      {!collapsed && <span className="opacity-100 transition-opacity duration-300 truncate whitespace-nowrap pl-2">{label}</span>}
     </div>
   );
 }
