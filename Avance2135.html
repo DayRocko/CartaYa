@@ -817,6 +817,27 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
     }));
   };
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [tipPercentage, setTipPercentage] = React.useState(10);
+  const [discountPercentage, setDiscountPercentage] = React.useState(0);
+
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'draft': return { label: 'Por enviar', color: 'text-slate-400', emoji: '🕒' };
+      case 'sent': return { label: 'En Cocina', color: 'text-amber-500', emoji: '🍳' };
+      case 'ready': return { label: 'Servido', color: 'text-emerald-500', emoji: '✅' };
+      default: return { label: 'Pendiente', color: 'text-gray-400', emoji: '🕒' };
+    }
+  };
+
+  const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
+  const [isSplitOpen, setIsSplitOpen] = React.useState(false);
+  const [paymentMethod, setPaymentMethod] = React.useState('Efectivo');
+  const [cashReceived, setCashReceived] = React.useState('');
+  const [isEInvoiceActive, setIsEInvoiceActive] = React.useState(false);
+  const [checkoutSuccess, setCheckoutSuccess] = React.useState(false);
+  const [splitMode, setSplitMode] = React.useState('igualitaria'); // 'igualitaria', 'item', 'monto'
+  const [splitCount, setSplitCount] = React.useState(2);
+  const [eInvoiceData, setEInvoiceData] = React.useState({ nit: '', email: '' });
 
   // Construir categorías dinámicamente desde el menú o usar las hardcodeadas
   const menuHasData = platos && platos.length > 0;
@@ -1005,15 +1026,19 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
     });
     return acc + (itemPrice * item.qty);
   }, 0);
-  const impuesto = subtotal * 0.08;
-  const total = subtotal + impuesto;
+
+  const discountAmount = subtotal * (discountPercentage / 100);
+  const subtotalWithDiscount = subtotal - discountAmount;
+  const impuesto = subtotalWithDiscount * 0.08;
+  const tipAmount = subtotalWithDiscount * (tipPercentage / 100);
+  const total = subtotalWithDiscount + impuesto + tipAmount;
 
   const handleAddItem = (prod) => {
     const existing = orderItems.find(i => i.id === prod.id);
     if (existing) {
       setOrderItems(orderItems.map(i => i.id === prod.id ? {...i, qty: i.qty + 1} : i));
     } else {
-      setOrderItems([...orderItems, {...prod, qty: 1}]);
+      setOrderItems([...orderItems, {...prod, qty: 1, status: 'draft', note: ''}]);
     }
   };
 
@@ -1325,80 +1350,481 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                   </div>
                </div>
 
-            {/* ZONA DERECHA: ORDEN ACTIVA (20%) */}
-            <div className="w-[400px] bg-white border-l border-gray-100 flex flex-col shrink-0 shadow-2xl relative z-10">
-               <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                  <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">🛍</div>
-                     <div>
-                        <h4 className="font-black text-slate-900 text-sm">ORDEN ACTIVA</h4>
-                        <p className="text-[10px] text-gray-500 font-bold">Ref: #ORD-2045</p>
-                     </div>
+            {/* ZONA DERECHA: ORDEN ACTIVA (DISEÑO HIGH-FIDELITY) */}
+            <div className="w-[450px] bg-white border-l border-slate-100 flex flex-col h-full overflow-hidden relative shadow-2xl">
+              
+              {/* HEADER */}
+              <header className="px-6 py-5 flex items-center justify-between border-b border-slate-50 bg-white shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#111827] rounded-xl flex items-center justify-center text-white shadow-sm">
+                    <span className="text-xl">🍳</span>
                   </div>
-                  <button onClick={() => setOrderItems([])} className="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Vaciar</button>
-               </div>
+                  <div>
+                    <h1 className="text-[15px] font-extrabold text-[#111827] uppercase tracking-tight leading-none mb-1">Orden Activa</h1>
+                    <p className="text-[11px] font-bold text-indigo-600">Mesero: {selectedMesa?.mesero || 'Daniel Arias'}</p>
+                    <p className="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">Ref: #ORD-2045</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setOrderItems([])}
+                  className="text-[#f14646] text-xs font-bold px-2 py-1 hover:bg-rose-50 rounded-md transition-colors"
+                >
+                  Vaciar
+                </button>
+              </header>
 
-               {/* LISTA DE ITEMS */}
-               <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {/* ÁREA DE PLATOS */}
+              <div className="flex-1 overflow-y-auto bg-white flex flex-col no-scrollbar">
+                <div className="px-6 py-4 space-y-4">
                   {orderItems.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center px-10 opacity-30">
+                    <div className="h-full py-20 flex flex-col items-center justify-center text-center px-10 opacity-30">
                        <span style={{fontSize:'48px'}} className="mb-4">🛒</span>
-                       <p className="text-sm font-black text-slate-800 uppercase tracking-widest">No hay platos seleccionados</p>
-                       <p className="text-xs text-gray-500">Toca un producto de la izquierda para agregarlo a la cuenta.</p>
+                       <p className="text-sm font-black text-slate-800 uppercase tracking-widest">Sin platos</p>
+                       <p className="text-xs text-gray-500">Agrega productos del menú</p>
                     </div>
                   ) : (
-                    orderItems.map(item => (
-                      <div key={item.id} className="bg-gray-50 border border-gray-100 rounded-2xl p-4 animate-in slide-in-from-right-4">
-                         <div className="flex justify-between items-start mb-3">
-                            <h5 className="text-sm font-bold text-slate-800 w-2/3 leading-tight">{item.emoji} {item.name}</h5>
-                            <button onClick={() => handleRemoveItem(item.id)} className="text-gray-400 hover:text-red-500">✕</button>
-                         </div>
-                         <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
-                               <button onClick={() => handleUpdateQty(item.id, -1)} className="w-6 h-6 flex items-center justify-center text-slate-900 hover:bg-gray-100 rounded">−</button>
-                               <span className="text-xs font-black text-slate-900 w-4 text-center">{item.qty}</span>
-                               <button onClick={() => handleUpdateQty(item.id, 1)} className="w-6 h-6 flex items-center justify-center text-slate-900 hover:bg-gray-100 rounded">+</button>
+                    orderItems.map((item) => {
+                      const config = getStatusConfig(item.status || 'draft');
+                      const fullNote = String(item.nota || (itemNotes && itemNotes[item.id]?.text) || item.note || "");
+                      
+                      return (
+                        <div key={item.id} className="bg-white rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-slate-50 relative group animate-in slide-in-from-right-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{item.emoji || '🍝'}</span>
+                              <h3 className="font-bold text-[#111827] text-[14px] leading-tight capitalize">{item.name}</h3>
                             </div>
-                            <span className="text-sm font-black text-slate-900 text-nowrap">{formatCOP(item.price * item.qty)}</span>
-                         </div>
-                      </div>
-                    ))
+                            <button 
+                              onClick={() => handleRemoveItem(item.id)}
+                              className="text-slate-300 hover:text-rose-500 transition-colors"
+                            >
+                              <span className="text-lg">×</span>
+                            </button>
+                          </div>
+
+                          {/* Visualización de Nota: Solo si existe contenido */}
+                          {fullNote && fullNote.trim() !== "" && (
+                            <div className="mb-4 bg-amber-50/50 border border-amber-100/50 rounded-xl px-3 py-2.5 flex gap-2 items-start">
+                              <span className="text-amber-500 mt-0.5 shrink-0 text-xs">💬</span>
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Nota de Cocina</span>
+                                <p className="text-[11px] text-amber-800 font-medium leading-tight">
+                                  "{fullNote}"
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between">
+                            {/* Selector Cantidad */}
+                            <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden px-1 py-1 bg-slate-50">
+                              <button 
+                                onClick={() => handleUpdateQty(item.id, -1)}
+                                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors"
+                              >
+                                <span className="text-lg">−</span>
+                              </button>
+                              <span className="w-8 text-center font-bold text-sm text-[#111827]">{item.qty}</span>
+                              <button 
+                                onClick={() => handleUpdateQty(item.id, 1)}
+                                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors"
+                              >
+                                <span className="text-lg">+</span>
+                              </button>
+                            </div>
+                            
+                            <div className="text-right">
+                              <span className="font-black text-[#111827] text-[15px] italic">${(item.price * item.qty).toLocaleString()}</span>
+                              <div className={`flex items-center justify-end gap-1 mt-1 ${config.color}`}>
+                                 <span className="text-[10px]">{config.emoji}</span>
+                                 <span className="text-[9px] font-bold uppercase tracking-wider">{config.label}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
                   )}
-               </div>
+                </div>
 
-               {/* RESUMEN Y BOTÓN COBRAR */}
-               <div className="p-6 border-t border-gray-100 space-y-4 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
-                  <div className="space-y-2">
-                     <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        <span>Subtotal</span>
-                        <span>{formatCOP(subtotal)}</span>
-                     </div>
-                     <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        <span>Impoconsumo (8%)</span>
-                        <span>{formatCOP(impuesto)}</span>
-                     </div>
-                  </div>
-                  
-                  <div className="py-4 border-t border-gray-100 flex justify-between items-center">
-                     <span className="text-sm font-black text-slate-900">VALOR TOTAL</span>
-                     <span className="text-2xl font-black text-emerald-600 tracking-tighter text-nowrap">{formatCOP(total)}</span>
-                  </div>
-
+                {/* BOTÓN PRECUENTA INTEGRADO */}
+                <div className="px-6 py-4 sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-slate-50">
                   <button 
-                    disabled={orderItems.length === 0}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-100 disabled:text-gray-400 py-4 rounded-2xl text-white font-black text-lg shadow-xl shadow-emerald-600/20 transition-all flex items-center justify-center gap-3 group"
+                    onClick={() => {
+                      setOrderItems(prev => prev.map(item => item.status === 'draft' ? { ...item, status: 'sent' } : item));
+                      alert('Comanda enviada a cocina exitosamente.');
+                    }}
+                    className="w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white py-4 rounded-2xl font-bold text-[13px] flex items-center justify-center gap-3 shadow-lg shadow-indigo-100 transition-all uppercase tracking-wide"
                   >
-                    <span>COBRAR CUENTA</span>
-                    <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    <span>📤</span>
+                    Precuenta (Enviar comanda a Cocina y Caja)
                   </button>
-                  
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <button className="py-2.5 bg-gray-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-gray-200 uppercase">Comanda</button>
-                    <button className="py-2.5 bg-gray-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-gray-200 uppercase">Descuento</button>
+                </div>
+              </div>
+
+              {/* FOOTER: PROPINAS, DESCUENTOS Y TOTALES */}
+              <footer className="px-6 py-6 border-t border-slate-100 bg-slate-50/50 shrink-0">
+                
+                {/* SELECCIÓN DE PROPINA */}
+                <div className="mb-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 text-center italic">Añadir Propina</p>
+                  <div className="flex gap-2">
+                    {[0, 10, 15].map((pct) => (
+                      <button 
+                        key={pct}
+                        onClick={() => setTipPercentage(pct)}
+                        className={`flex-1 py-2 rounded-xl text-[10px] font-bold border-2 transition-all ${tipPercentage === pct ? 'bg-[#111827] text-white border-[#111827]' : 'bg-white text-slate-400 border-slate-100'}`}
+                      >
+                        {pct === 0 ? 'Sin propina' : `${pct}%`}
+                      </button>
+                    ))}
                   </div>
-               </div>
+                </div>
+
+                {/* MÓDULO DE DESCUENTO EDITABLE */}
+                <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100 mb-6 shadow-sm">
+                  <div className="bg-rose-50 p-2 rounded-lg text-rose-500">
+                    <span className="text-sm font-bold">%</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Aplicar Descuento</p>
+                    <div className="flex items-center gap-1">
+                      <input 
+                        type="number" 
+                        value={discountPercentage}
+                        onChange={(e) => setDiscountPercentage(Number(e.target.value))}
+                        className="w-12 font-black text-slate-700 outline-none text-sm bg-transparent"
+                        min="0"
+                        max="100"
+                      />
+                      <span className="text-sm font-bold text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase italic">Ahorro</p>
+                    <p className="text-xs font-black text-rose-500">-${discountAmount.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* DESGLOSE TOTALES */}
+                <div className="space-y-2 mb-6">
+                  <div className="flex justify-between text-[12px]">
+                    <span className="font-bold text-slate-400 uppercase tracking-widest">Subtotal</span>
+                    <span className="font-bold text-slate-600">${subtotal.toLocaleString()}</span>
+                  </div>
+                  {discountPercentage > 0 && (
+                    <div className="flex justify-between text-[12px]">
+                      <span className="font-bold text-rose-400 uppercase tracking-widest italic text-[11px]">Descuento (-{discountPercentage}%)</span>
+                      <span className="font-bold text-rose-400">-${discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-[12px]">
+                    <span className="font-bold text-slate-400 uppercase tracking-widest">Impoconsumo (8%)</span>
+                    <span className="font-bold text-slate-600">${impuesto.toLocaleString()}</span>
+                  </div>
+                  {tipAmount > 0 && (
+                    <div className="flex justify-between text-[12px]">
+                      <span className="font-bold text-indigo-500 uppercase tracking-widest italic">Servicio ({tipPercentage}%)</span>
+                      <span className="font-bold text-slate-600">${tipAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-4">
+                    <span className="font-extrabold text-[#111827] text-[15px] uppercase tracking-tighter italic">Valor Total</span>
+                    <span className="font-black text-[#02a96b] text-3xl italic tracking-tighter">${total.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <button 
+                  disabled={orderItems.length === 0}
+                  onClick={() => {
+                    setCashReceived('');
+                    setCheckoutSuccess(false);
+                    setIsCheckoutOpen(true);
+                  }}
+                  className="w-full bg-[#02a96b] hover:bg-[#028f5a] text-white py-5 rounded-2xl font-black text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-emerald-50 transition-all active:scale-[0.98] uppercase tracking-widest disabled:opacity-50"
+                >
+                  <span>💳</span>
+                  Cobrar Cuenta
+                </button>
+              </footer>
             </div>
           </div>
+        )}
+
+        {/* MODAL: COBRAR CUENTA (DISEÑO LIGHT HIGH-FIDELITY) */}
+        {isCheckoutOpen && (
+           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
+              {!checkoutSuccess ? (
+                 <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-[500px] flex flex-col max-h-[95vh] animate-in zoom-in duration-300 border border-slate-100">
+                    {/* 1. ENCABEZADO */}
+                    <div className="p-8 border-b border-slate-50 flex justify-between items-start shrink-0">
+                       <div>
+                          <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Orden #2045 · Mesa {selectedMesa?.numero || '00'}</h3>
+                          <div className="flex items-center gap-3">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date().toLocaleDateString('es-CO')} · {new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' })}</p>
+                             <div className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Terminal Activa</span>
+                             </div>
+                          </div>
+                       </div>
+                       <button onClick={() => setIsCheckoutOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all">✕</button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto custom-scrollbar no-scrollbar p-8">
+                       {/* TOTAL A COBRAR Y MÉTODOS DE PAGO */}
+                       <div className="flex justify-between items-center mb-8 px-2">
+                          <span className="text-lg font-black text-slate-900 uppercase tracking-tighter italic">Total a Cobrar</span>
+                          <span className="text-4xl font-black text-emerald-600 tracking-tighter italic">${total.toLocaleString()}</span>
+                       </div>
+
+                       {/* 4. MÉTODO DE PAGO */}
+                       <div className="mb-8">
+                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Método de Pago</h4>
+                          <div className="grid grid-cols-3 gap-3">
+                             {['Efectivo', 'Tarjeta', 'Nequi', 'Daviplata', 'Transferencia', 'Cortesía'].map(m => (
+                                <button 
+                                  key={m}
+                                  onClick={() => setPaymentMethod(m)}
+                                  className={`p-4 rounded-[20px] border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === m ? 'bg-blue-50 border-blue-600 text-blue-700' : 'bg-white border-slate-50 text-slate-400 hover:bg-slate-50'}`}
+                                >
+                                   <span className="text-xl">{m === 'Efectivo' ? '💵' : m === 'Tarjeta' ? '💳' : m === 'Cortesía' ? '🎁' : '📱'}</span>
+                                   <span className="text-[9px] font-black uppercase tracking-widest">{m}</span>
+                                </button>
+                             ))}
+                          </div>
+                       </div>
+
+                       {/* 5. PANEL DE EFECTIVO */}
+                       {paymentMethod === 'Efectivo' && (
+                          <div className="mb-8 animate-in slide-in-from-top-2 duration-300">
+                             <div className="bg-slate-900 rounded-[32px] p-6 text-white shadow-xl">
+                                <div className="flex justify-between items-center mb-4">
+                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Efectivo Recibido</p>
+                                   <button onClick={() => setCashReceived(total)} className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Exacto</button>
+                                </div>
+                                <input 
+                                  type="number"
+                                  value={cashReceived}
+                                  onChange={(e) => setCashReceived(e.target.value)}
+                                  placeholder="$ 0.00"
+                                  className="w-full bg-transparent border-none text-3xl font-black text-white outline-none mb-6 placeholder:text-slate-700"
+                                />
+                                <div className="flex gap-2 mb-6">
+                                   {[50000, 100000, 200000].map(v => (
+                                      <button key={v} onClick={() => setCashReceived(v)} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black hover:bg-white/10 transition-colors">${v/1000}k</button>
+                                   ))}
+                                </div>
+                                <div className="pt-6 border-t border-white/5 flex justify-between items-center">
+                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cambio / Devuelta</p>
+                                   <p className={`text-2xl font-black ${Number(cashReceived) - total >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                      ${Math.max(0, Number(cashReceived) - total).toLocaleString()}
+                                   </p>
+                                </div>
+                             </div>
+                          </div>
+                       )}
+
+                       {/* 6. DESCUENTO Y FACTURA ELECTRÓNICA */}
+                       <div className="space-y-4 mb-8">
+                          <div className="flex items-center justify-between p-6 bg-white border border-slate-100 rounded-3xl">
+                             <div className="flex items-center gap-4">
+                                <span className="text-xl">📊</span>
+                                <div>
+                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Factura Electrónica</p>
+                                   <p className="text-[9px] text-slate-300 font-bold">Reportar a la DIAN</p>
+                                </div>
+                             </div>
+                             <button 
+                               onClick={() => setIsEInvoiceActive(!isEInvoiceActive)}
+                               className={`w-12 h-6 rounded-full transition-all relative ${isEInvoiceActive ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                             >
+                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isEInvoiceActive ? 'left-7' : 'left-1'}`}></div>
+                             </button>
+                          </div>
+
+                          {isEInvoiceActive && (
+                             <div className="grid grid-cols-2 gap-3 animate-in slide-in-from-top-2">
+                                <input 
+                                  type="text" 
+                                  placeholder="NIT / Cédula"
+                                  value={eInvoiceData.nit}
+                                  onChange={(e) => setEInvoiceData({...eInvoiceData, nit: e.target.value})}
+                                  className="bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:bg-white focus:border-blue-400 transition-all"
+                                />
+                                <input 
+                                  type="email" 
+                                  placeholder="Correo Electrónico"
+                                  value={eInvoiceData.email}
+                                  onChange={(e) => setEInvoiceData({...eInvoiceData, email: e.target.value})}
+                                  className="bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold outline-none focus:bg-white focus:border-blue-400 transition-all"
+                                />
+                             </div>
+                          )}
+                       </div>
+                    </div>
+
+                    {/* 7. ACCIONES */}
+                    <div className="p-8 border-t border-slate-50 bg-slate-50/30 shrink-0">
+                       <button 
+                         onClick={() => setCheckoutSuccess(true)}
+                         className="w-full bg-[#02a96b] hover:bg-[#028f5a] text-white py-6 rounded-[24px] font-black text-lg shadow-xl shadow-emerald-600/10 transition-all active:scale-[0.98] uppercase tracking-[0.1em] mb-4"
+                       >
+                         Registrar Pago
+                       </button>
+                       <div className="grid grid-cols-2 gap-3">
+                          <button 
+                            onClick={() => setIsSplitOpen(true)}
+                            className="py-4 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all"
+                          >
+                             Dividir Cuenta
+                          </button>
+                          <button className="py-4 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all">
+                             Imprimir Precuenta
+                          </button>
+                       </div>
+                    </div>
+                 </div>
+              ) : (
+                 /* 8. PANTALLA DE CONFIRMACIÓN */
+                 <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-[450px] p-12 text-center animate-in zoom-in duration-500">
+                    <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner">✓</div>
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">¡Pago Exitoso!</h3>
+                    <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-10">La transacción ha sido registrada</p>
+                    
+                    <div className="bg-slate-50 rounded-[32px] p-8 mb-10 space-y-4">
+                       <div className="flex justify-between items-center text-sm">
+                          <span className="font-bold text-slate-400 uppercase tracking-widest text-[9px]">Monto Cobrado</span>
+                          <span className="font-black text-slate-900">${total.toLocaleString()}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-sm">
+                          <span className="font-bold text-slate-400 uppercase tracking-widest text-[9px]">Método de Pago</span>
+                          <span className="font-black text-slate-900">{paymentMethod}</span>
+                       </div>
+                       {paymentMethod === 'Efectivo' && (
+                          <div className="flex justify-between items-center text-sm">
+                             <span className="font-bold text-slate-400 uppercase tracking-widest text-[9px]">Cambio Entregado</span>
+                             <span className="font-black text-emerald-600">${Math.max(0, Number(cashReceived) - total).toLocaleString()}</span>
+                          </div>
+                       )}
+                       <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-sm">
+                          <span className="font-bold text-slate-400 uppercase tracking-widest text-[9px]">Orden Ref.</span>
+                          <span className="font-black text-slate-900">#ORD-2045</span>
+                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       <button 
+                         onClick={() => {
+                            setIsCheckoutOpen(false);
+                            setCheckoutSuccess(false);
+                            setOrderItems([]);
+                            if (selectedMesa) {
+                               setMesas(prev => prev.map(m => m.id === selectedMesa.id ? { ...m, estado: 'libre', total: 0, mesero: '', timer: 0 } : m));
+                               setSelectedMesa(null);
+                               setPosTab('mapa');
+                            }
+                         }}
+                         className="w-full bg-slate-900 text-white py-6 rounded-[24px] font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/10 hover:bg-slate-800 transition-all"
+                       >
+                         Nueva Orden
+                       </button>
+                       <button className="w-full py-4 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:text-slate-900 transition-all">
+                          Imprimir Recibo
+                       </button>
+                    </div>
+                 </div>
+              )}
+
+              {/* MODAL: DIVIDIR CUENTA (CAPA SUPERIOR) */}
+              {isSplitOpen && (
+                 <div className="absolute inset-0 z-[210] flex items-center justify-center bg-white/40 backdrop-blur-md p-6 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-[450px] flex flex-col max-h-[90vh] border border-slate-100">
+                       <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                          <div>
+                             <h4 className="text-xl font-black text-slate-900 tracking-tight">Dividir Cuenta</h4>
+                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Selecciona modalidad de pago</p>
+                          </div>
+                          <button onClick={() => setIsSplitOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center">✕</button>
+                       </div>
+
+                       <div className="p-8 space-y-8 flex-1 overflow-y-auto">
+                          {/* MODALIDADES */}
+                          <div className="grid grid-cols-1 gap-3">
+                             {[
+                                { id: 'igualitaria', title: 'Partes Iguales', icon: '⚖️', desc: 'Dividir el total entre N personas' },
+                                { id: 'item', title: 'Por Ítem / Silla', icon: '🍽️', desc: 'Asignar platos específicos a cada persona' },
+                                { id: 'monto', title: 'Monto Personalizado', icon: '⌨️', desc: 'Definir valores manuales por pago' }
+                             ].map(m => (
+                                <button 
+                                  key={m.id}
+                                  onClick={() => setSplitMode(m.id)}
+                                  className={`flex items-center gap-5 p-6 rounded-3xl border-2 text-left transition-all ${splitMode === m.id ? 'bg-blue-50 border-blue-600' : 'bg-white border-slate-50 hover:bg-slate-50'}`}
+                                >
+                                   <span className="text-3xl">{m.icon}</span>
+                                   <div>
+                                      <p className={`font-black text-sm uppercase tracking-tight ${splitMode === m.id ? 'text-blue-700' : 'text-slate-900'}`}>{m.title}</p>
+                                      <p className="text-[10px] text-slate-400 font-bold mt-0.5">{m.desc}</p>
+                                   </div>
+                                </button>
+                             ))}
+                          </div>
+
+                          {/* CONFIGURACIÓN SEGÚN MODO */}
+                          {splitMode === 'igualitaria' && (
+                             <div className="bg-slate-50 rounded-[32px] p-8 animate-in slide-in-from-bottom-4">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center">Número de Comensales</p>
+                                <div className="flex items-center justify-center gap-8 mb-8">
+                                   <button onClick={() => setSplitCount(Math.max(2, splitCount - 1))} className="w-14 h-14 rounded-full bg-white border border-slate-200 text-2xl font-light flex items-center justify-center hover:bg-white hover:shadow-lg transition-all shadow-sm">−</button>
+                                   <span className="text-5xl font-black text-slate-900 tracking-tighter">{splitCount}</span>
+                                   <button onClick={() => setSplitCount(splitCount + 1)} className="w-14 h-14 rounded-full bg-white border border-slate-200 text-2xl font-light flex items-center justify-center hover:bg-white hover:shadow-lg transition-all shadow-sm">+</button>
+                                </div>
+                                <div className="pt-8 border-t border-slate-100 flex justify-between items-center">
+                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor por Persona</p>
+                                   <p className="text-2xl font-black text-blue-600 tracking-tighter italic">${Math.round(total / splitCount).toLocaleString()}</p>
+                                </div>
+                             </div>
+                          )}
+
+                          {splitMode === 'item' && (
+                             <div className="bg-slate-50 rounded-[32px] p-6 animate-in slide-in-from-bottom-4">
+                                <div className="flex items-center gap-3 mb-4 text-slate-500">
+                                   <span className="text-lg">📢</span>
+                                   <p className="text-[9px] font-bold leading-tight uppercase tracking-widest">Arrastra los ítems a cada silla para generar recibos individuales.</p>
+                                </div>
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 no-scrollbar">
+                                   {orderItems.map(item => (
+                                      <div key={item.id} className="bg-white p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+                                         <span className="text-[11px] font-bold text-slate-700 capitalize">{item.name}</span>
+                                         <select className="bg-slate-50 border-none text-[9px] font-black text-blue-600 rounded-lg p-1">
+                                            <option>Silla 1</option>
+                                            <option>Silla 2</option>
+                                            <option>Compartido</option>
+                                         </select>
+                                      </div>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                       </div>
+
+                       <div className="p-8 border-t border-slate-50 bg-slate-50/30">
+                          <button 
+                            onClick={() => {
+                               alert(`División confirmada: ${splitMode === 'igualitaria' ? `${splitCount} pagos de $${Math.round(total/splitCount).toLocaleString()}` : 'Cuentas individuales generadas'}`);
+                               setIsSplitOpen(false);
+                               setCheckoutSuccess(true);
+                            }}
+                            className="w-full bg-blue-600 text-white py-6 rounded-[24px] font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-600/10 hover:bg-blue-700 transition-all mb-4"
+                          >
+                             Confirmar División
+                          </button>
+                          <button onClick={() => setIsSplitOpen(false)} className="w-full text-[10px] font-black text-slate-300 uppercase tracking-widest">Volver al Cobro Total</button>
+                       </div>
+                    </div>
+                 </div>
+              )}
+           </div>
         )}
 
         {posTab === 'mapa' && (
@@ -2481,21 +2907,20 @@ function ViewOperaciones() {
 }
 
 // =========================================================================
-// 5. INVENTARIO Y COMPRAS
+// 5. INVENTARIO Y COMPRAS (REDISEÑO CON DATOS REALES)
 // =========================================================================
-function ViewInventario() {
-  const criticos = [
-    { item: 'Carne Molida', stock: '2.5 kg', min: '5 kg', prov: 'Carnes XYZ' },
-    { item: 'Tomate Larga Vida', stock: '1.2 kg', min: '3 kg', prov: 'Fruver Central' },
-    { item: 'Pan Brioche', stock: '15 und', min: '30 und', prov: 'Panadería Local' },
-  ];
+function ViewInventario({ inventario = [] }) {
+  const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const criticos = (inventario || []).filter(i => (i.stock_actual || 0) < (i.stock_minimo_alerta || 5));
+  const totalValor = (inventario || []).reduce((acc, i) => acc + ((i.stock_actual || 0) * (i.precio_por_unidad || 0)), 0);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Valor del Inventario" value="$8,540,000" delta="En bodega" isUp vsText="Actualizado hoy" icon={<span style={{fontSize:'15px', lineHeight:1}}>📦</span>} />
-        <StatCard label="Ítems Críticos" value="3" delta="Requieren compra" isDanger vsText="Stock bajo el mínimo" icon={<span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>} />
-        <StatCard label="Órdenes de Compra" value="2" delta="En tránsito" isUp vsText="Esperando recepción" icon={<span style={{fontSize:'15px', lineHeight:1}}>▧</span>} />
+        <StatCard label="Valor del Inventario" value={`$${totalValor.toLocaleString()}`} delta="En bodega" isUp vsText="Actualizado hoy" icon={<span style={{fontSize:'15px', lineHeight:1}}>📦</span>} />
+        <StatCard label="Ítems Críticos" value={criticos.length} delta="Requieren compra" isDanger={criticos.length > 0} vsText="Stock bajo el mínimo" icon={<span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>} />
+        <StatCard label="Total Insumos" value={inventario.length} delta="Registrados" isUp vsText="En base de datos" icon={<span style={{fontSize:'15px', lineHeight:1}}>▧</span>} />
       </div>
 
       <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm border-l-4 border-l-red-500">
@@ -2505,15 +2930,28 @@ function ViewInventario() {
                <tr><th>Ingrediente</th><th>Stock Actual</th><th>Mínimo Requerido</th><th>Proveedor Predeterminado</th><th>Acción</th></tr>
             </thead>
             <tbody>
-               {criticos.map((c, i) => (
-                 <tr key={i}>
-                    <td className="font-bold text-slate-800">{c.item}</td>
-                    <td className="text-red-600 font-black">{c.stock}</td>
-                    <td className="text-gray-500">{c.min}</td>
-                    <td className="text-sm">{c.prov}</td>
-                    <td><button className="text-xs font-bold bg-slate-900 text-white px-3 py-1.5 rounded-lg hover:bg-slate-800">Crear OC</button></td>
-                 </tr>
-               ))}
+                {inventario.length === 0 ? (
+                  <tr><td colSpan="5" className="py-10 text-center text-gray-400">No hay datos de inventario. Sube tu base de datos en "Carta & Menú".</td></tr>
+                ) : (
+                  inventario.map((c, i) => {
+                    const isCritico = (c.stock_actual || 0) < (c.stock_minimo_alerta || 0);
+                    return (
+                      <tr key={i} className={isCritico ? 'bg-red-50/30' : ''}>
+                        <td className="font-bold text-slate-800">{c.nombre}</td>
+                        <td className={`font-black ${isCritico ? 'text-red-600' : 'text-slate-900'}`}>
+                          {c.stock_actual} {c.unidad_compra}
+                        </td>
+                        <td className="text-gray-500">{c.stock_minimo_alerta} {c.unidad_compra}</td>
+                        <td className="text-sm">{c.proveedor || 'No asignado'}</td>
+                        <td>
+                          <button className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${isCritico ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+                            {isCritico ? 'Reponer Ya' : 'Gestionar'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
             </tbody>
          </table>
       </div>
@@ -5144,23 +5582,32 @@ function ViewMenu({
       let cambios = false;
       const safeRecetas = recetas || [];
       const safeInventario = inventario || [];
+      const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
       const nuevosPlatos = platos.map(plato => {
         if (!plato || !plato.nombre) return plato;
+        const pNorm = norm(plato.nombre);
+        
+        // Buscar todas las líneas de receta para este plato
         const ingredientes = safeRecetas.filter(r =>
-          r && r.nombre_plato &&
-          r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim()
+          r && r.nombre_plato && norm(r.nombre_plato) === pNorm
         );
+        
         if (ingredientes.length === 0) return plato;
+
         const nuevoCosto = ingredientes.reduce((acc, ing) => {
+          const ingNorm = norm(ing.ingrediente_nombre);
           const itemInv = safeInventario.find(i =>
-            i && i.nombre && ing.ingrediente_nombre &&
-            i.nombre.toLowerCase().trim() === ing.ingrediente_nombre.toLowerCase().trim()
+            i && i.nombre && norm(i.nombre) === ingNorm
           );
+          
+          // Prioridad: 1. Precio en inventario, 2. Costo unitario en la receta
           const costoUnitario = itemInv ? (itemInv.precio_por_unidad || 0) : (ing.costo_unitario || 0);
           return acc + ((ing.cantidad || 0) * costoUnitario);
         }, 0);
+
         const roundedCosto = Math.round(nuevoCosto);
-        if (plato.costo_produccion !== roundedCosto) {
+        if (Math.abs((plato.costo_produccion || 0) - roundedCosto) > 1) { // Pequeña tolerancia para evitar loops
           cambios = true;
           const nuevoMargen = plato.precio_venta > 0
             ? Number((((plato.precio_venta - roundedCosto) / plato.precio_venta) * 100).toFixed(2)) : 0;
@@ -5168,7 +5615,10 @@ function ViewMenu({
         }
         return plato;
       });
-      if (cambios) setPlatos(nuevosPlatos);
+
+      if (cambios) {
+        setPlatos(nuevosPlatos);
+      }
     } catch(err) { console.warn('Error en cálculo de costos:', err); }
   }, [recetas, inventario]); // Solo depende de cambios en recetas o inventario
 
@@ -5270,287 +5720,221 @@ function ViewMenu({
   }, []);
 
   const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  setImporting(true);
-  setImportError(null);
-  setImportResult(null);
+    const file = e.target.files[0];
+    if (!file) return;
+    setImporting(true);
+    setImportError(null);
+    setImportResult(null);
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onload = (evt) => {
-    try {
-      const data = new Uint8Array(evt.target.result);
-      const wb = window.XLSX.read(data, { type: 'array' });
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const wb = window.XLSX.read(data, { type: 'array' });
 
-      const normalize = (s) =>
-        String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-      const findSheet = (keywords) => {
-        const normKeys = keywords.map(normalize);
-        const match = wb.SheetNames.find(name => {
-          const normName = normalize(name);
-          return normKeys.some(k => normName.includes(k));
-        });
-        return match ? wb.Sheets[match] : null;
-      };
-
-      const readSheetRowsFromIndex = (sheet, headerRowIndex) => {
-        if (!sheet) return [];
-        const raw = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-        if (!raw || raw.length <= headerRowIndex) return [];
-        const headers = (raw[headerRowIndex] || []).map(h => String(h || '').trim().toLowerCase());
-        const dataRows = raw.slice(headerRowIndex + 1).filter(r =>
-          Array.isArray(r) && r.some(c => c !== '' && c !== null && c !== undefined)
-        );
-        return dataRows.map(r =>
-          Object.fromEntries(headers.map((h, i) => [h, r[i] !== undefined ? String(r[i]).trim() : '']))
-        );
-      };
-
-      const readSheetRows = (sheet) => {
-        if (!sheet) return [];
-        const raw = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-        if (!raw || raw.length < 2) return [];
-        const fila0 = raw[0] || [];
-        const noVacios0 = fila0.filter(c => c !== '' && c !== null && c !== undefined);
-        const esTitulo = noVacios0.length <= 2 && String(noVacios0[0] || '').length > 15;
-        const headerRow = esTitulo ? (raw[1] || []) : fila0;
-        const dataStart = esTitulo ? 2 : 1;
-        const headers = headerRow.map(h => String(h || '').trim().toLowerCase());
-        const dataRows = raw.slice(dataStart).filter(r =>
-          Array.isArray(r) && r.some(c => c !== '' && c !== null && c !== undefined)
-        );
-        return dataRows.map(r =>
-          Object.fromEntries(headers.map((h, i) => [h, r[i] !== undefined ? String(r[i]).trim() : '']))
-        );
-      };
-
-      const normEstado = (v) => {
-        const s = String(v || '').toUpperCase().trim();
-        if (s === 'OCULTO' || s === 'INACTIVO') return 'OCULTO';
-        if (s === 'AGOTADO') return 'AGOTADO';
-        if (s === 'TEMPORAL') return 'TEMPORAL';
-        return 'DISPONIBLE';
-      };
-      const normCanal = (v) => {
-        const s = String(v || '').toUpperCase().trim();
-        return (s === 'SALON') ? 'SALON' : (s === 'DELIVERY' ? 'DELIVERY' : 'AMBOS');
-      };
-      const normBool = (v) => String(v || '').toUpperCase().trim() === 'SI';
-
-      // 1. CATEGORÍAS
-      const catSheet = findSheet(['CATEGORIAS', 'CATEGORIA', 'CAT', 'CATEGORIES']);
-      const catRows = readSheetRows(catSheet);
-      const cats = catRows.filter(r => r['nombre']).map((r, i) => {
-        const tiene24h = normBool(r['disponible_24h']);
-        const horario = !tiene24h ? {
-          tipo: 'semanal', inicio: r['hora_inicio'] || '07:00', fin: r['hora_fin'] || '22:00',
-          dias: r['dias_activos'] ? r['dias_activos'].split(',').map(d => d.trim().toUpperCase()) : ['LUN','MAR','MIE','JUE','VIE','SAB','DOM'],
-        } : null;
-        return {
-          id: `cat-import-${i}`, nombre: r['nombre'], canal: normCanal(r['canal']),
-          estado: normBool(r['activa']) ? 'ACTIVA' : 'INACTIVA',
-          color: r['color_hex'] || '#7C3AED', prioridad_pos: parseInt(r['orden']) || (i + 1), horario
+        // --- UTILIDADES DE NORMALIZACIÓN Y MAPEO ---
+        const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        const MAPPING = {
+          cat: {
+            nombre: ['nombre', 'categoria', 'seccion', 'grupo', 'category', 'name', 'nombrecategoria'],
+            orden: ['orden', 'prioridad', 'posicion', 'prioridadpos', 'index'],
+            estado: ['estado', 'activo', 'activa', 'status', 'visibility'],
+            canal: ['canal', 'servicio', 'tipo', 'channel'],
+            destino: ['destino', 'impresion', 'printer', 'cocina', 'barra'],
+            impuesto: ['impuesto', 'iva', 'tax', 'impoconsumo']
+          },
+          plato: {
+            nombre: ['nombre', 'plato', 'producto', 'item', 'descripcion', 'name', 'nombreplato'],
+            precio: ['precio', 'valor', 'venta', 'pvp', 'price', 'precioventa', 'valorventa'],
+            costo: ['costo', 'produccion', 'compra', 'cost', 'costoproduccion'],
+            categoria: ['categoria', 'seccion', 'cat', 'category', 'categorianombre'],
+            descripcion: ['descripcion', 'detalle', 'info', 'description', 'comentario'],
+            estado: ['estado', 'disponibilidad', 'status', 'activo'],
+            canal: ['canal', 'servicio', 'tipo', 'channel']
+          },
+          receta: {
+            plato: ['plato', 'nombreplato', 'recetade', 'dish', 'productonombre'],
+            ingrediente: ['ingrediente', 'insumo', 'materia', 'nombreingrediente', 'item', 'ingredient', 'producto'],
+            cantidad: ['cantidad', 'porcion', 'peso', 'qty', 'amount', 'cantidadporcion'],
+            unidad: ['unidad', 'medida', 'um', 'uom', 'unit', 'unidadmedida'],
+            costo_unit: ['costo', 'valorunitario', 'costounitario', 'preciocompra', 'unitcost', 'valorunit'],
+            proveedor: ['proveedor', 'comercio', 'vendedor', 'supplier'],
+            stock_min: ['minimo', 'alerta', 'stockminimo', 'min'],
+            stock_actual: ['stock', 'actual', 'cantidadcompra', 'existencia', 'stockactual'],
+            subtotal: ['subtotal', 'totalcosto', 'costolinea'],
+            margen_pct: ['margen', 'rentabilidad', 'porcentajemargen', 'margin'],
+            pvp_sug: ['pvpsugerido', 'preciosugerido', 'sugerencia', 'pvpsugeridoplato']
+          }
         };
-      });
 
-      // 2. PLATOS
-      const platosSheet = findSheet(['PLATOS', 'PLATO', 'ITEMS', 'MENU', 'CARTA']);
-      const platosRows = readSheetRows(platosSheet);
-      const pls = platosRows.filter(r => r['nombre']).map((r, i) => {
-        const catObj = cats.find(c => normalize(c.nombre) === normalize(r['categoria_nombre']));
-        const precio = parseFloat(String(r['precio_venta']).replace(/[^0-9.]/g, '')) || 0;
-        return {
-          id: `plato-import-${i}`, nombre: r['nombre'], precio_venta: precio,
-          descripcion: r['descripcion_carta'] || r['descripcion'] || '',
-          categoria_id: catObj ? catObj.id : (cats[0]?.id || ''),
-          categoria_nombre: r['categoria_nombre'] || (cats[0]?.nombre || ''),
-          estado: normEstado(r['estado_inicial'] || r['estado']),
-          es_destacado: normBool(r['es_destacado']),
-          canal: normCanal(r['canal']),
-          iva_pct: 8, foto_url: null
-        };
-      });
-
-      // 3. MODIFICADORES
-      const modSheet = findSheet(['MODIFICADORES', 'MODIFICADOR', 'GRUPOS', '3_MOD', '3MOD', 'MOD']);
-      const modRows = modSheet ? readSheetRowsFromIndex(modSheet, 1) : [];
-      const grupos = modRows.filter(r => r['nombre']).map((r, i) => ({
-        id: `gmod-import-${i}`, nombre: r['nombre'],
-        tipo_seleccion: String(r['tipo_seleccion'] || 'UNICA').toUpperCase().trim(),
-        obligatorio: normBool(r['obligatorio']),
-        min_selecciones: parseInt(r['min_opciones']) || 1,
-        max_selecciones: parseInt(r['max_opciones']) || 1,
-        estado: normBool(r['activo']) ? 'ACTIVO' : 'INACTIVO',
-        _aplica_a_platos: String(r['aplica_a_platos'] || '').trim(),
-        _orden_en_plato: parseInt(r['orden_en_plato']) || (i + 1)
-      }));
-
-      const opSheet = findSheet(['OPCIONES_MOD', 'OPCIONES', '4_OPCIONES', '4OPCIONES']);
-      const opRows = opSheet ? readSheetRowsFromIndex(opSheet, 1) : [];
-      const opciones = opRows.filter(r => r['nombre']).map((r, i) => {
-        const grupoObj = grupos.find(g => normalize(g.nombre) === normalize(r['nombre_grupo']));
-        return {
-          id: `opmod-import-${i}`, grupo_id: grupoObj ? grupoObj.id : '', nombre: r['nombre'],
-          precio_adicional: parseFloat(String(r['precio_adicional'] || '0').replace(/[^0-9.]/g, '')) || 0,
-          estado: 'DISPONIBLE', orden: i + 1
-        };
-      });
-
-      const vinculos = [];
-      grupos.forEach(grupo => {
-        if (!grupo._aplica_a_platos) return;
-        if (normalize(grupo._aplica_a_platos) === 'TODOS') {
-          pls.forEach(p => vinculos.push({ plato_id: p.id, grupo_id: grupo.id, orden_en_plato: grupo._orden_en_plato }));
-        } else {
-          grupo._aplica_a_platos.split(',').forEach(n => {
-            const p = pls.find(pl => normalize(pl.nombre) === normalize(n.trim()));
-            if (p) vinculos.push({ plato_id: p.id, grupo_id: grupo.id, orden_en_plato: grupo._orden_en_plato });
+        const findSheet = (keywords) => {
+          const normKeys = keywords.map(norm);
+          const match = wb.SheetNames.find(name => {
+            const n = norm(name);
+            return normKeys.some(k => n.includes(k));
           });
-        }
-      });
+          return match ? wb.Sheets[match] : null;
+        };
 
-      // 4. RECETAS E INVENTARIO — Mapeo estricto a las nuevas directrices
-      const recSheet = findSheet(['5_RECETAS', 'RECETAS', 'RECETA', 'INGREDIENTES', '5RECETA', '5REC']);
-      
-      const parseCOP = (val) => {
-        if (val === null || val === undefined || val === '') return null;
-        if (typeof val === 'number') return Math.round(val);
-        const sStr = String(val);
-        if (sStr.trim().toLowerCase() === 'none') return null;
-        const s = sStr.replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
-        if (s === '') return null;
-        return Math.round(parseFloat(s));
-      };
+        const readSheetRobust = (sheet, type) => {
+          if (!sheet) return [];
+          const raw = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          if (raw.length === 0) return [];
 
-      const parsePct = (val) => {
-        if (val === null || val === undefined || val === '') return null;
-        if (typeof val === 'number') return Math.round(val * 100);
-        const sStr = String(val);
-        if (sStr.trim().toLowerCase() === 'none') return null;
-        const s = sStr.replace(/[^0-9.-]/g, '');
-        if (s === '') return null;
-        return Math.round(parseFloat(s) * 100);
-      };
+          // Encontrar fila de encabezados
+          let headerIdx = -1;
+          const typeMap = MAPPING[type];
+          const allSynonyms = Object.values(typeMap).flat();
 
-      let recs = [];
-      if (recSheet) {
-         // Leemos datos crudos para acceder por índices
-         const rawRec = window.XLSX.utils.sheet_to_json(recSheet, { header: 1, defval: '' });
-         // Los datos comienzan en la fila 4 (índice 3 en un array base 0)
-         if (rawRec && rawRec.length > 3) {
-            const dataRows = rawRec.slice(3).filter(r => Array.isArray(r) && r[0] && String(r[0]).trim() !== '');
-            recs = dataRows.map((r, i) => {
-               // A = 0, B = 1, C = 2...
-               const nombrePlato = String(r[0] || '').trim();  // A
-               const nombreIng = String(r[1] || '').trim();    // B
-               const proveedor = String(r[2] || '').trim();    // C
-               const stockMin = parseFloat(r[3]) || 0;         // D
-               const presCompra = String(r[4] || '').trim();   // E
-               const cantidadCompra = parseFloat(r[5]) || 0;   // F
-               const umCompra = String(r[6] || 'g').trim();    // G
-               const costoTotalCompra = parseCOP(r[7]);        // H
-               const costoUnitBase = parseCOP(r[9]);           // J
-               const cantPorcion = parseFloat(r[10]) || 0;     // K
-               const subtotalCosto = parseCOP(r[12]);          // M
-               
-               // N=13, O=14, P=15 (Nivel Ingrediente)
-               const margenIngredientePct = parsePct(r[13]);
-               const pvpSugeridoIngrediente = parseCOP(r[14]);
-               const margenBrutoPesosIng = parseCOP(r[15]);
-
-               // Q=16, R=17, S=18, T=19 (Nivel Plato)
-               const costoMateriaPrimaPlato = parseCOP(r[16]);
-               const margenBrutoPctPromedioPlato = parsePct(r[17]);
-               const pvpSugeridoPlato = parseCOP(r[18]);
-               const margenBrutoPesosPlato = parseCOP(r[19]);
-
-               return {
-                  id: `rec-import-${i}`,
-                  nombre_plato: nombrePlato,
-                  ingrediente_nombre: nombreIng,
-                  cantidad: cantPorcion,
-                  unidad_medida: umCompra,
-                  unidad_compra: umCompra,
-                  proveedor: proveedor,
-                  stock_minimo: stockMin,
-                  presentacion_compra: presCompra,
-                  cantidad_compra: cantidadCompra,
-                  costo_total_compra: costoTotalCompra,
-                  costo_unitario: costoUnitBase,
-                  subtotal_costo: subtotalCosto,
-                  
-                  // Ingrediente metrics
-                  margen_ingrediente_pct: margenIngredientePct,
-                  pvp_sugerido_ing: pvpSugeridoIngrediente,
-                  margen_bruto_pesos_ing: margenBrutoPesosIng,
-
-                  // Plato metrics
-                  costo_por_plato: costoMateriaPrimaPlato,
-                  margen_plato_pct: margenBrutoPctPromedioPlato,
-                  pvp_sugerido_plato: pvpSugeridoPlato,
-                  margen_plato_pesos: margenBrutoPesosPlato
-               };
+          for (let i = 0; i < Math.min(raw.length, 15); i++) {
+            const row = raw[i];
+            const matches = row.filter(cell => {
+              const n = norm(cell);
+              return allSynonyms.some(s => n === s || n.includes(s));
             });
-         }
-      }
-      // Construir inventario desde las recetas (un insumo = un ítem de inventario)
-      const invMap = {};
-      recs.forEach(r => {
-        const key = normalize(r.ingrediente_nombre);
-        if (!invMap[key]) {
-          invMap[key] = {
-            id: `inv-${key}`,
-            nombre: r.ingrediente_nombre,
-            proveedor: r.proveedor,
-            unidad_compra: r.unidad_compra || 'g',
-            precio_por_unidad: r.costo_unitario || 0,
-            costo_total_compra: r.costo_total_compra || 0,
-            presentacion_compra: r.presentacion_compra || '',
-            stock_actual: r.cantidad_compra || 0,
-            stock_minimo_alerta: r.stock_minimo || 0,
+            if (matches.length >= 2) { headerIdx = i; break; }
+          }
+
+          if (headerIdx === -1) headerIdx = 0; // Fallback a la primera fila
+
+          const headers = raw[headerIdx].map(h => norm(h));
+          const dataRows = raw.slice(headerIdx + 1).filter(r => r.some(c => c !== ''));
+
+          return dataRows.map(row => {
+            const result = { _raw: row };
+            Object.entries(typeMap).forEach(([field, synonyms]) => {
+              const colIdx = headers.findIndex(h => synonyms.includes(h) || synonyms.some(s => h.includes(s)));
+              if (colIdx !== -1) result[field] = row[colIdx];
+            });
+            return result;
+          });
+        };
+
+        const parseNum = (v) => {
+          if (v === null || v === undefined || v === '') return 0;
+          if (typeof v === 'number') return v;
+          return parseFloat(String(v).replace(/[^0-9.-]/g, '')) || 0;
+        };
+
+        const parseBool = (v) => {
+          const s = String(v || '').toUpperCase();
+          return s === 'SI' || s === 'TRUE' || s === 'ACTIVO' || s === '1' || s === 'ACTIVA';
+        };
+
+        // 1. IMPORTAR CATEGORÍAS
+        const sCat = findSheet(['CATEGORIAS', 'CATEGORIA', 'CAT', '1_']);
+        const rowsCat = readSheetRobust(sCat, 'cat');
+        const cats = rowsCat.filter(r => r.nombre).map((r, i) => ({
+          id: `cat-${Date.now()}-${i}`,
+          nombre: String(r.nombre).trim(),
+          canal: String(r.canal || 'AMBOS').toUpperCase().includes('SALON') ? 'SALON' : (String(r.canal).toUpperCase().includes('DELIVERY') ? 'DELIVERY' : 'AMBOS'),
+          estado: parseBool(r.estado) ? 'ACTIVA' : 'INACTIVA',
+          color: r.color || '#7C3AED',
+          prioridad_pos: parseInt(r.orden) || (i + 1),
+          destino_impresion: r.destino || 'Cocina Principal',
+          impuesto: r.impuesto || '8% Impoconsumo',
+          horario: null
+        }));
+
+        // 2. IMPORTAR PLATOS
+        const sPlato = findSheet(['PLATOS', 'PLATO', 'ITEMS', 'MENU', '2_']);
+        const rowsPlato = readSheetRobust(sPlato, 'plato');
+        const pls = rowsPlato.filter(r => r.nombre).map((r, i) => {
+          const catName = String(r.categoria || '').trim();
+          const catObj = cats.find(c => norm(c.nombre) === norm(catName));
+          return {
+            id: `plato-${Date.now()}-${i}`,
+            nombre: String(r.nombre).trim(),
+            precio_venta: parseNum(r.precio),
+            costo_produccion: parseNum(r.costo),
+            descripcion: r.descripcion || '',
+            categoria_id: catObj ? catObj.id : (cats[0]?.id || 'cat-gen'),
+            categoria_nombre: catName || (cats[0]?.nombre || 'General'),
+            estado: String(r.estado || 'DISPONIBLE').toUpperCase().includes('AGOTADO') ? 'AGOTADO' : 'DISPONIBLE',
+            canal: String(r.canal || 'AMBOS').toUpperCase().includes('SALON') ? 'SALON' : (String(r.canal).toUpperCase().includes('DELIVERY') ? 'DELIVERY' : 'AMBOS'),
+            prioridad_pos: i + 1
           };
+        });
+
+        // 3. IMPORTAR RECETAS E INVENTARIO (CORAZÓN DEL SUBMÓDULO)
+        const sRec = findSheet(['RECETAS', 'RECETA', 'INGREDIENTES', '5_']);
+        let rowsRec = readSheetRobust(sRec, 'receta');
+        
+        // Fallback especial para la plantilla "5_RECETAS" si no detectó encabezados por el diseño de celdas combinadas
+        if (rowsRec.length === 0 && sRec) {
+          const raw = window.XLSX.utils.sheet_to_json(sRec, { header: 1, defval: '' });
+          if (raw.length > 3) {
+            rowsRec = raw.slice(3).filter(r => r[0] || r[1]).map(r => ({
+              plato: r[0], ingrediente: r[1], proveedor: r[2], stock_min: r[3],
+              presentacion: r[4], cantidad_compra: r[5], unidad: r[6],
+              costo_total: r[7], costo_unit: r[9], cantidad: r[10],
+              subtotal: r[12], margen_pct: r[13], pvp_sug: r[18]
+            }));
+          }
         }
-      });
 
-      setCategorias(cats); 
-      setPlatos(pls);
-      if (typeof setGruposMod === 'function') setGruposMod(grupos);
-      if (typeof setOpcionesMod === 'function') setOpcionesMod(opciones);
-      if (typeof setVinculosMod === 'function') setVinculosMod(vinculos);
-      setActiveCatNames(cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre));
-      setCategoriasExpandidas(cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre));
-      setRecetas(recs); setInventario(Object.values(invMap));
+        const recs = rowsRec.filter(r => r.plato || r.ingrediente).map((r, i) => ({
+          id: `rec-${Date.now()}-${i}`,
+          nombre_plato: String(r.plato || '').trim(),
+          ingrediente_nombre: String(r.ingrediente || '').trim(),
+          cantidad: parseNum(r.cantidad),
+          unidad_medida: r.unidad || 'g',
+          costo_unitario: parseNum(r.costo_unit),
+          subtotal_costo: parseNum(r.subtotal),
+          margen_plato_pct: parseNum(r.margen_pct) * (String(r.margen_pct).includes('%') ? 1 : 100),
+          pvp_sugerido_plato: parseNum(r.pvp_sug),
+          proveedor: r.proveedor || '',
+          stock_minimo: parseNum(r.stock_min),
+          stock_actual: parseNum(r.stock_actual) || parseNum(r.cantidad_compra)
+        }));
 
-      localStorage.setItem('cartaya_menu_data', JSON.stringify({
-        categorias: cats, platos: pls, gruposMod: grupos, opcionesMod: opciones,
-        vinculosMod: vinculos, recetas: recs, inventario: Object.values(invMap),
-        activeCatNames: cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre),
-        categoriasExpandidas: cats.filter(c => c.estado === 'ACTIVA').map(c => c.nombre)
-      }));
+        // Generar inventario único
+        const invMap = {};
+        recs.forEach(r => {
+          if (!r.ingrediente_nombre) return;
+          const k = norm(r.ingrediente_nombre);
+          if (!invMap[k]) {
+            invMap[k] = {
+              id: `inv-${k}`,
+              nombre: r.ingrediente_nombre,
+              proveedor: r.proveedor,
+              unidad_compra: r.unidad_medida,
+              precio_por_unidad: r.costo_unitario,
+              stock_actual: r.stock_actual,
+              stock_minimo_alerta: r.stock_minimo
+            };
+          }
+        });
 
-      setImportResult({ 
-        categorias: cats.length, 
-        platos: pls.length, 
-        grupos: grupos.length, 
-        opciones: opciones.length,
-        vinculos: vinculos.length,
-        recetas: recs.length 
-      });
-      console.log('[Import OK] Grupos:', grupos.length, '| Opciones:', opciones.length, '| Vínculos:', vinculos.length);
-      console.log('[Grupos importados]', grupos.map(g => g.nombre));
-      console.log('[Opciones importadas]', opciones.map(o => o.nombre));
-      setImporting(false);
-    } catch (err) {
-      console.error('Error importando Excel:', err);
-      setImportError('Error al leer el archivo: ' + err.message);
-      setImporting(false);
-    }
-    if (e.target) e.target.value = '';
+        // --- ACTUALIZAR ESTADO ---
+        if (cats.length > 0) setCategorias(cats);
+        if (pls.length > 0) setPlatos(pls);
+        if (recs.length > 0) setRecetas(recs);
+        const newInv = Object.values(invMap);
+        if (newInv.length > 0) setInventario(newInv);
+
+        setImportResult({
+          categorias: cats.length,
+          platos: pls.length,
+          recetas: recs.length,
+          insumos: newInv.length
+        });
+        
+        setFechaCarga(new Date().toLocaleString());
+        setImporting(false);
+        alert(`✅ ¡Importación Exitosa!\n\nSe cargaron:\n- ${cats.length} Categorías\n- ${pls.length} Platos\n- ${recs.length} Líneas de Receta\n- ${newInv.length} Insumos de Inventario`);
+
+      } catch (err) {
+        console.error('Error Crítico Importación:', err);
+        setImportError('Error al procesar el archivo. Asegúrate de que el formato sea correcto.');
+        setImporting(false);
+        alert('❌ Error al importar: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
   };
-  reader.readAsArrayBuffer(file);
-};
 
   if (activeSubmodule === 'simulador') {
     return <SimuladorRentabilidad onClose={() => setActiveSubmodule(null)} platos={platos} inventario={inventario} recetas={recetas} />;
