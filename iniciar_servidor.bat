@@ -1,5 +1,5 @@
 @echo off
-cd /d "c:\Users\dayro\OneDrive - MSFT\JOB\Emprendimiento\Project # 3 Startup AI\RestPro AI\cartaya"
+cd /d "c:\Users\dayro\Desktop\Project # 3 Startup AI\RestPro AI\cartaya"
 echo Iniciando servidor en http://localhost:8000
 echo Presiona Ctrl+C para detener
 echo.

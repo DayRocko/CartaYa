@@ -173,13 +173,18 @@ const DesignSystemStyles = () => (
     body { font-family: var(--f-ui); background: var(--bg-app-2); color: var(--ink); margin: 0; overflow: hidden; }
     
     /* SIDEBAR COMPONENT */
-    .sidebar-dark { width: 280px; background: var(--navy-950); display: flex; flex-direction: column; z-index: 10; height: 100vh; color: #94A3B8; }
-    .sidebar-brand-dark { display: flex; align-items: center; justify-content: space-between; padding: 24px 20px; }
-    .nav-group-label-dark { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 24px 24px 8px; }
-    .nav-item-dark { display: flex; align-items: center; gap: 12px; padding: 10px 24px; cursor: pointer; font-size: 14px; font-weight: 500; color: #94A3B8; transition: all var(--dur) var(--ease); }
-    .nav-item-dark:hover:not(.nav-item-dark--active) { color: #F1F5F9; }
+    .sidebar-dark { width: 280px; background: var(--navy-950); display: flex; flex-direction: column; z-index: 10; height: 100vh; color: #94A3B8; position: relative; }
+    .sidebar-brand-dark { display: flex; align-items: center; justify-content: space-between; padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .nav-group-label-dark { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 24px 24px 8px; transition: opacity 0.25s; }
+    .nav-item-dark { display: flex; align-items: center; gap: 12px; padding: 10px 24px; cursor: pointer; font-size: 14px; font-weight: 500; color: #94A3B8; transition: all 250ms ease-in-out; position: relative; }
+    .nav-item-dark:hover:not(.nav-item-dark--active) { color: #F1F5F9; background: rgba(255,255,255,0.03); }
     .nav-highlight-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-md); margin: 0 16px; padding: 4px 0; }
     .nav-item-dark--active { background: rgba(16, 185, 129, 0.1); color: #10B981; font-weight: 600; border-radius: var(--r-sm); margin: 0 8px; padding: 10px 16px; }
+
+    /* TOOLTIP */
+    .sidebar-tooltip { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 12px; background: #1E293B; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transition: all 0.2s; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .nav-item-dark:hover .sidebar-tooltip { opacity: 1; transform: translateY(-50%) translateX(4px); }
+    .sidebar-tooltip::before { content: ''; position: absolute; left: -4px; top: 50%; transform: translateY(-50%) rotate(45deg); width: 8px; height: 8px; background: #1E293B; }
 
     /* STAT CARDS */
     .stat-card { background: var(--surface); border-radius: var(--r-xl); padding: 24px; box-shadow: var(--shadow-card); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; gap: 16px; height: 100%;}
@@ -553,68 +558,136 @@ function App() {
       <div className="flex h-screen w-full">
         
         {/* SIDEBAR */}
-        <aside className={`sidebar-dark shrink-0 flex flex-col transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
-          <div className={`p-6 flex items-center h-[88px] ${sidebarCollapsed ? 'justify-center flex-col gap-3 px-2 pt-8' : 'justify-between'}`}>
-            {!sidebarCollapsed && <h1 className="text-2xl font-black text-white tracking-tight">CartaYa</h1>}
-            <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'flex-col mx-auto' : ''}`}>
-               <div className={`w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0 ${sidebarCollapsed ? 'absolute top-5 left-1/2 min-w-8 -translate-x-1/2' : ''}`}>
-                 <span style={{fontSize:'15px', lineHeight:1}}>🧠</span>
+        <aside className={`sidebar-dark shrink-0 flex flex-col transition-all duration-[300ms] ease-in-out ${sidebarCollapsed ? 'w-[64px]' : 'w-64'}`}>
+          <style dangerouslySetInnerHTML={{__html: `
+            .custom-scrollbar::-webkit-scrollbar { width: 0px; }
+            .sidebar-dark { box-shadow: 4px 0 24px rgba(0,0,0,0.15); border-right: 1px solid rgba(255,255,255,0.05); }
+            .nav-item-dark .icon-svg { transition: transform 0.2s; }
+            .nav-item-dark:hover .icon-svg { transform: scale(1.1); }
+          `}} />
+          
+          {/* Header */}
+          <div className={`px-4 flex items-center h-[88px] relative transition-all duration-300 ${sidebarCollapsed ? 'justify-start' : 'justify-between'}`}>
+            <div className={`flex items-center gap-3 transition-all duration-300 ${sidebarCollapsed ? 'pl-1' : ''}`}>
+               <div className={`w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20 shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.1)] transition-transform duration-300 ${sidebarCollapsed ? 'scale-110' : ''}`}>
+                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                </div>
-               <button 
-                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
-                 className={`text-gray-400 hover:text-white transition-colors bg-slate-800 rounded-md flex items-center justify-center ${sidebarCollapsed ? 'absolute top-[60px] left-1/2 -translate-x-1/2 w-8 h-8 mt-1' : 'w-7 h-7'}`}
-                 title={sidebarCollapsed ? "Expandir Menú" : "Contraer Menú"}
-               >
-                 <span className="text-[12px] opacity-70">
-                   {sidebarCollapsed ? '››' : '‹‹'}
-                 </span>
-               </button>
+               {!sidebarCollapsed && (
+                 <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
+                   <h1 className="text-xl font-black text-white tracking-tighter leading-none">CartaYa</h1>
+                   <span className="text-[10px] text-emerald-500 font-bold tracking-widest uppercase mt-1">Intelligence</span>
+                 </div>
+               )}
             </div>
+            
+            <button 
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
+              className={`text-slate-400 hover:text-white transition-all duration-200 bg-slate-800/40 hover:bg-slate-700/60 rounded-lg flex items-center justify-center w-8 h-8 border border-slate-700/30 ${sidebarCollapsed ? 'absolute right-2 top-6 z-30' : ''}`}
+              title={sidebarCollapsed ? "Expandir Menú" : "Contraer Menú"}
+            >
+              <span className="text-[12px] font-black">
+                {sidebarCollapsed ? '››' : '‹‹'}
+              </span>
+            </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto pb-6 w-full" style={{ scrollbarWidth: 'none' }}>
-            <div className={`py-4 space-y-1 ${sidebarCollapsed ? 'px-2 pb-0 mt-6' : 'px-4'}`}>
-              <NavItemDark icon={<span>🏠</span>} label="Dashboard" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>🧠</span>} label="Brain IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} collapsed={sidebarCollapsed} />
+          <div className="flex-1 overflow-y-auto pb-6 w-full custom-scrollbar" style={{ scrollbarWidth: 'none' }}>
+            <div className={`py-4 space-y-2 transition-all duration-250 ${sidebarCollapsed ? 'px-2' : 'px-4'}`}>
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>} 
+                label="Dashboard" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8.66 5v10L12 23l-8.66-5V8z"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v8M3.34 8l5.2 3M15.46 13l5.2 3M3.34 16l5.2-3M15.46 11l5.2-3"/></svg>} 
+                label="Brain IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} collapsed={sidebarCollapsed} 
+              />
             </div>
 
-            <div className={`py-2 pt-0 ${sidebarCollapsed ? 'px-2 flex flex-col gap-1 items-center justify-center' : 'px-6 mt-2'}`}>
-              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Gestión Operativa</div>}
-              {sidebarCollapsed && <div className="w-8 border-b border-slate-700/50 my-2 mx-auto"></div>}
-              <NavItemDark icon={<span>▧</span>} label="POS / Pedidos" isActive={activeTab === 'pos'} onClick={() => setActiveTab('pos')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>📈</span>} label="Ventas" isActive={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>🥧</span>} label="Finanzas" isActive={activeTab === 'finanzas'} onClick={() => setActiveTab('finanzas')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>▦</span>} label="Operaciones" isActive={activeTab === "operaciones"} onClick={() => setActiveTab("operaciones")} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>▤</span>} label="Inventario & Compras" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>🛵</span>} label="Delivery & Domicilios" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} collapsed={sidebarCollapsed} />
+            <div className={`py-2 transition-all duration-250 ${sidebarCollapsed ? 'px-2' : 'px-4 mt-2'}`}>
+              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] text-slate-600 font-extrabold mb-3 px-3">Gestión Operativa</div>}
+              {sidebarCollapsed && <div className="w-8 border-b border-slate-800/50 my-4 ml-4"></div>}
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M17 13c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" strokeWidth="1.5"/><path d="M15 11l2 2-2 2" strokeWidth="1.5"/></svg>} 
+                label="POS / Pedidos" isActive={activeTab === 'pos'} onClick={() => setActiveTab('pos')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 7L13.5 15.5L8.5 10.5L2 17"/><circle cx="2" cy="17" r="2" fill="currentColor" stroke="none"/><path d="M16 7h6v6"/></svg>} 
+                label="Ventas" isActive={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M18 9h.01M18 15h.01"/></svg>} 
+                label="Finanzas" isActive={activeTab === 'finanzas'} onClick={() => setActiveTab('finanzas')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="5"/><circle cx="12" cy="16" r="3"/><path d="M12 3v1M12 12v1M17 8h1M6 8h1M15.5 4.5l-.7.7M9.2 10.8l-.7.7"/><circle cx="18" cy="15" r="4"/><path d="M18 11v1M18 19v1M22 15h-1M14 15h-1"/></svg>} 
+                label="Operaciones" isActive={activeTab === "operaciones"} onClick={() => setActiveTab("operaciones")} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-4-9 4v8l9 4 9-4V8z"/><path d="M3 8l9 4 9-4M12 12v10"/><path d="M17 4.5V2l-5 2-5-2v2.5"/></svg>} 
+                label="Inventario & Compras" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 18V9c0-2-1-3-3-3H4"/><path d="M16 18h2a2 2 0 0 0 2-2v-5h-3l-2-3h-3"/></svg>} 
+                label="Delivery & Domicilios" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} collapsed={sidebarCollapsed} 
+              />
             </div>
 
-            <div className={`py-2 mt-2 ${sidebarCollapsed ? 'px-2 flex flex-col gap-1 items-center justify-center' : 'px-6 mt-2'}`}>
-              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Crecimiento & Clientes</div>}
-              {sidebarCollapsed && <div className="w-8 border-b border-slate-700/50 my-2 mx-auto"></div>}
-              <NavItemDark icon={<span>👥</span>} label="Reservas & CRM" isActive={activeTab === 'reservas'} onClick={() => setActiveTab('reservas')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>📢</span>} label="Marketing" isActive={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>🎁</span>} label="Fidelización" isActive={activeTab === 'fidelizacion'} onClick={() => setActiveTab('fidelizacion')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>🍷</span>} label="Eventos & Catering" isActive={activeTab === 'eventos'} onClick={() => setActiveTab('eventos')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>👥</span>} label="Talento (RRHH)" isActive={activeTab === 'rrhh'} onClick={() => setActiveTab('rrhh')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>📊</span>} label="Data & Insights" isActive={activeTab === 'data'} onClick={() => setActiveTab('data')} collapsed={sidebarCollapsed} />
+            <div className={`py-2 transition-all duration-250 ${sidebarCollapsed ? 'px-2' : 'px-4 mt-2'}`}>
+              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] text-slate-600 font-extrabold mb-3 px-3">Crecimiento & Clientes</div>}
+              {sidebarCollapsed && <div className="w-8 border-b border-slate-800/50 my-4 ml-4"></div>}
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><rect x="15" y="14" width="7" height="6" rx="1"/></svg>} 
+                label="Reservas & CRM" isActive={activeTab === 'reservas'} onClick={() => setActiveTab('reservas')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>} 
+                label="Marketing" isActive={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8V3m0 0a3 3 0 1 0-3 3 3 3 0 1 0 6 0 3 3 0 1 0-3-3zM3 8h18"/></svg>} 
+                label="Fidelización" isActive={activeTab === 'fidelizacion'} onClick={() => setActiveTab('fidelizacion')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 22h8M12 11v11M7 3c0 4.42 2.24 8 5 8s5-3.58 5-8H7z"/><path d="M12 11a5 5 0 0 1-5-5h10a5 5 0 0 1-5 5z"/></svg>} 
+                label="Eventos & Catering" isActive={activeTab === 'eventos'} onClick={() => setActiveTab('eventos')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M20 12h.01"/></svg>} 
+                label="Talento (RRHH)" isActive={activeTab === 'rrhh'} onClick={() => setActiveTab('rrhh')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10"/><path d="M12 8v4l3 3"/><path d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/></svg>} 
+                label="Data & Insights" isActive={activeTab === 'data'} onClick={() => setActiveTab('data')} collapsed={sidebarCollapsed} 
+              />
             </div>
 
-            <div className={`py-2 mt-2 ${sidebarCollapsed ? 'px-2 flex flex-col gap-1 items-center justify-center' : 'px-6 mt-2'}`}>
-              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Ajustes del Negocio</div>}
-              {sidebarCollapsed && <div className="w-8 border-b border-slate-700/50 my-2 mx-auto"></div>}
-              <NavItemDark icon={<span>🏪</span>} label="Mi Restaurante" isActive={activeTab === 'restaurante'} onClick={() => setActiveTab('restaurante')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>📖</span>} label="Carta & Menú" isActive={activeTab === 'menu'} onClick={() => setActiveTab('menu')} highlight={activeTab === 'menu'} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>🔌</span>} label="Integraciones" isActive={activeTab === 'conectores'} onClick={() => setActiveTab('conectores')} collapsed={sidebarCollapsed} />
-              <NavItemDark icon={<span>💳</span>} label="Plan & Facturación" isActive={activeTab === 'billing'} onClick={() => setActiveTab('billing')} collapsed={sidebarCollapsed} />
+            <div className={`py-2 transition-all duration-250 ${sidebarCollapsed ? 'px-2' : 'px-4 mt-2'}`}>
+              {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] text-slate-600 font-extrabold mb-3 px-3">Ajustes del Negocio</div>}
+              {sidebarCollapsed && <div className="w-8 border-b border-slate-800/50 my-4 ml-4"></div>}
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/><path d="M18 2h2v4h-2z"/></svg>} 
+                label="Mi Restaurante" isActive={activeTab === 'restaurante'} onClick={() => setActiveTab('restaurante')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M12 6v10"/><path d="M4 19.5v-15"/></svg>} 
+                label="Carta & Menú" isActive={activeTab === 'menu'} onClick={() => setActiveTab('menu')} highlight={activeTab === 'menu'} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="7"/><line x1="15" y1="3" x2="15" y2="7"/></svg>} 
+                label="Integraciones" isActive={activeTab === 'conectores'} onClick={() => setActiveTab('conectores')} collapsed={sidebarCollapsed} 
+              />
+              <NavItemDark 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>} 
+                label="Plan & Facturación" isActive={activeTab === 'billing'} onClick={() => setActiveTab('billing')} collapsed={sidebarCollapsed} 
+              />
             </div>
           </div>
           
-          <div className={`border-t border-slate-800/50 bg-[#121A2B] shrink-0 ${sidebarCollapsed ? 'p-2 flex justify-center pb-4' : 'p-4'}`}>
-            <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'flex-col mx-auto px-0' : 'mb-2 px-2'}`}>
-               <div className={`rounded-full bg-slate-700 flex shrink-0 items-center justify-center text-white text-sm font-bold border border-slate-600 ${sidebarCollapsed ? 'w-10 h-10 mx-auto' : 'w-10 h-10'}`}>DA</div>
+          <div className={`border-t border-slate-800/50 bg-[#121A2B] shrink-0 transition-all duration-250 ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
+            <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'justify-center py-2' : 'mb-2 px-2'}`}>
+               <div className={`rounded-full bg-slate-700 flex shrink-0 items-center justify-center text-white text-sm font-bold border border-slate-600 w-10 h-10 transition-all duration-300 ${sidebarCollapsed ? 'scale-90' : ''}`}>DA</div>
                {!sidebarCollapsed && (
-                 <div className="flex-1 min-w-0 transition-opacity duration-200">
+                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <p className="text-sm font-bold text-white truncate">Daniel Arias</p>
                     <p className="text-[10px] text-slate-400 truncate tracking-tight">{restaurante.nombre}</p>
                  </div>
@@ -812,6 +885,39 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
     'ceviche': 'https://images.unsplash.com/photo-1626700051175-6518a4993f47?auto=format&fit=crop&q=80&w=300',
     'coca': 'https://images.unsplash.com/photo-1622483767028-3f66f34a507c?auto=format&fit=crop&q=80&w=300',
     'gaseosa': 'https://images.unsplash.com/photo-1622483767028-3f66f34a507c?auto=format&fit=crop&q=80&w=300',
+  };
+
+  const MODIFIER_GROUPS = {
+    'coccion': {
+      title: 'Término de Cocción',
+      options: ['Azul', 'Término Medio', 'Tres Cuartos', 'Bien Cocido']
+    },
+    'sin': {
+      title: 'Quitar Ingredientes',
+      options: ['Sin Cebolla', 'Sin Ajo', 'Sin Sal', 'Sin Picante', 'Sin Cilantro']
+    },
+    'bebida_hielo': {
+      title: 'Preferencias de Hielo',
+      options: ['Con Hielo', 'Sin Hielo', 'Poco Hielo', 'Frapé']
+    },
+    'postre_acompañamiento': {
+      title: 'Acompañamiento',
+      options: ['Con Helado', 'Con Crema', 'Sencillo']
+    },
+    'ensalada_aderezo': {
+      title: 'Aderezo',
+      options: ['Vinagreta', 'César', 'Mostaza Miel', 'Sin Aderezo']
+    }
+  };
+
+  const getGroupsForType = (tipo) => {
+    switch(tipo) {
+      case 'proteina': return ['coccion', 'sin'];
+      case 'bebida': return ['bebida_hielo'];
+      case 'postre': return ['postre_acompañamiento'];
+      case 'ensalada': return ['ensalada_aderezo'];
+      default: return ['sin'];
+    }
   };
 
   const getImagenPlato = (nombre) => {
@@ -1082,78 +1188,115 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                       </div>
                    </div>
                </div>
-               {/* GRID DE PRODUCTOS (3 COLUMNAS) */}
-               <div className="flex-1 overflow-y-auto p-8 relative">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1400px] mx-auto pb-20">
-                    {filteredProducts.map(p => {
-                      const cartItem = orderItems.find(i => i.id === p.id);
-                      const qty = cartItem ? cartItem.qty : 0;
-                      const hasNote = cartItem && cartItem.nota;
+                {/* GRID DE PRODUCTOS (REDISEÑO MÁS COMPACTO Y UNIFORME) */}
+                <div className="flex-1 overflow-y-auto p-6 relative no-scrollbar">
+                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 max-w-[1500px] mx-auto pb-20">
+                     {filteredProducts.map(p => {
+                       const cartItem = orderItems.find(i => i.id === p.id);
+                       const qty = cartItem ? cartItem.qty : 0;
+                       const hasNote = cartItem && (cartItem.nota || (itemNotes[p.id] && (itemNotes[p.id].text || Object.keys(itemNotes[p.id]?.options || {}).length > 0)));
 
-                      return (
-                        <div 
-                          key={p.id}
-                          className={`bg-white rounded-[24px] p-4 border transition-all duration-300 flex flex-col justify-between shadow-sm hover:shadow-xl group relative ${qty > 0 ? 'border-blue-400 ring-1 ring-blue-100' : 'border-gray-100'}`}
-                        >
-                           {/* SECCIÓN SUPERIOR: IMAGEN + INFO */}
-                           <div className="flex gap-4 mb-5">
-                              <img 
-                                src={p.img || 'https://via.placeholder.com/72'} 
-                                alt={p.name}
-                                className="w-[72px] h-[72px] rounded-2xl object-cover shrink-0 shadow-sm transition-transform group-hover:scale-105"
-                              />
-                              <div className="flex-1 min-w-0">
-                                 <h3 className="text-[15px] font-bold text-slate-900 leading-tight mb-1 truncate capitalize">{p.name}</h3>
-                                 <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed mb-2">
-                                   {p.desc || 'Preparación artesanal con ingredientes frescos de temporada.'}
-                                 </p>
-                                 <button 
-                                   onClick={(e) => {
-                                     const rect = e.currentTarget.getBoundingClientRect();
-                                     setActiveNotePos({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
-                                     setActiveNotePlatoId(p.id);
-                                   }}
-                                   className={`text-[11px] font-bold flex items-center gap-1 transition-colors ${hasNote ? 'text-emerald-600' : 'text-blue-600 hover:text-blue-700 underline decoration-dotted'}`}
-                                 >
-                                   {hasNote ? 'Nota ✓' : 'Nota'}
-                                 </button>
-                              </div>
+                       return (
+                         <div
+                           key={p.id}
+                           onClick={(e) => {
+                             if (e.target.closest('button')) return;
+                             qty === 0 ? handleAddItem(p) : handleUpdateQty(p.id, 1);
+                           }}
+                           className={`
+                             bg-white rounded-[28px] p-3 border-2 transition-all duration-200 ease-out
+                             flex flex-col gap-3 shadow-sm relative cursor-pointer group
+                             ${qty > 0
+                               ? 'border-emerald-400 shadow-[0_8px_20px_rgba(16,185,129,0.12)]'
+                               : 'border-gray-100 hover:border-blue-400 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]'}
+                           `}
+                         >
+                           {/* QTY BADGE */}
+                           {qty > 0 && (
+                             <div className="absolute top-2 right-2 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-lg border-2 border-white z-10">
+                               {qty}
+                             </div>
+                           )}
+
+                           {/* IMAGEN DEL PLATO (PROTAGONISTA) */}
+                           <div className="w-full aspect-square rounded-[20px] shrink-0 shadow-sm overflow-hidden bg-gray-50 flex items-center justify-center relative">
+                             {p.img && (
+                               <img
+                                 src={p.img}
+                                 alt={p.name}
+                                 onError={(e) => { e.target.style.display='none'; e.target.parentNode.querySelector('.img-fallback').style.display='flex'; }}
+                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 absolute inset-0"
+                               />
+                             )}
+                             <div className={`img-fallback w-full h-full items-center justify-center text-3xl text-gray-400 bg-gray-50 ${p.img ? 'hidden' : 'flex'}`}>🍽</div>
+                             
+                             {/* OVERLAY INDICADOR DE SELECCIÓN */}
+                             {qty > 0 && (
+                               <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center">
+                                  <span className="bg-emerald-500 text-white p-1.5 rounded-full shadow-lg scale-110">✓</span>
+                               </div>
+                             )}
                            </div>
 
-                           {/* SECCIÓN INFERIOR: PRECIO + CONTROLES */}
-                           <div className="flex justify-between items-center bg-gray-50/50 -mx-4 -mb-4 p-4 rounded-b-[24px] border-t border-gray-100">
-                              <div className="flex flex-col">
-                                 <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">$</span>
-                                 <span className="text-[19px] font-black text-slate-900 tracking-tighter">
-                                   {p.price.toLocaleString('es-CO')}
-                                 </span>
-                              </div>
-
-                              <div className="flex items-center bg-white p-1 rounded-full shadow-sm border border-gray-100">
-                                 <button 
-                                   onClick={() => handleUpdateQty(p.id, -1)}
-                                   disabled={qty === 0}
-                                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${qty > 0 ? 'bg-blue-600 text-white shadow-md' : 'border border-gray-200 text-gray-300'}`}
-                                 >
-                                   <span className="text-lg font-bold">−</span>
-                                 </button>
-                                 
-                                 <span className={`text-[13px] font-black min-w-[30px] text-center ${qty > 0 ? 'text-slate-900' : 'text-slate-300'}`}>
-                                   {qty}
-                                 </span>
-
-                                 <button 
-                                   onClick={() => qty === 0 ? handleAddItem(p) : handleUpdateQty(p.id, 1)}
-                                   className="w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700 active:scale-90 transition-all font-bold"
-                                 >
-                                   +
-                                 </button>
-                              </div>
+                           {/* INFO DEL PLATO */}
+                           <div className="flex-1 min-w-0 px-1">
+                             <div className="flex justify-between items-start gap-1 mb-1">
+                                <h3 className="text-[13px] font-black text-slate-900 leading-tight truncate capitalize">{p.name}</h3>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveNotePlatoId(p.id);
+                                  }}
+                                  className={`p-1.5 rounded-lg transition-all border ${
+                                    hasNote
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-slate-50 text-slate-400 border-transparent hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100'
+                                  }`}
+                                  title="Agregar nota"
+                                >
+                                  <span className="text-xs">✏️</span>
+                                </button>
+                             </div>
+                             <p className="text-[10px] text-slate-400 line-clamp-1 leading-tight mb-2">
+                               {p.desc || 'Receta artesanal.'}
+                             </p>
                            </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+
+                           {/* PRECIO + CONTROLES */}
+                           <div className="flex justify-between items-center bg-gray-50/80 p-2 rounded-2xl border border-gray-100 mt-auto">
+                             <div className="flex flex-col">
+                               <span className="text-[15px] font-black text-slate-900 tracking-tighter">
+                                 ${p.price.toLocaleString('es-CO')}
+                               </span>
+                             </div>
+
+                             <div className="flex items-center gap-2">
+                               {qty > 0 && (
+                                 <button
+                                   onClick={(e) => { e.stopPropagation(); handleUpdateQty(p.id, -1); }}
+                                   className="w-6 h-6 rounded-full bg-white border border-gray-200 text-slate-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
+                                 >
+                                   <span className="text-sm font-bold">−</span>
+                                 </button>
+                               )}
+
+                               {qty > 0 && <span className="text-[11px] font-black text-slate-700 min-w-[12px] text-center">{qty}</span>}
+
+                               <button
+                                 onClick={(e) => { e.stopPropagation(); qty === 0 ? handleAddItem(p) : handleUpdateQty(p.id, 1); }}
+                                 className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700 active:scale-90 transition-all"
+                               >
+                                 <span className="text-sm font-bold">+</span>
+                               </button>
+                             </div>
+                           </div>
+                         </div>
+                       );
+                     })}
+                   </div>
+                </div>
+
+
 
                   {/* POPULAR / BANNER DINÁMICO (OPCIONAL) */}
                   <div className="hidden xl:block absolute bottom-10 right-10">
@@ -1163,7 +1306,6 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                     </div>
                   </div>
                </div>
-            </div>
 
             {/* ZONA DERECHA: ORDEN ACTIVA (20%) */}
             <div className="w-[400px] bg-white border-l border-gray-100 flex flex-col shrink-0 shadow-2xl relative z-10">
@@ -1390,95 +1532,69 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
 
       {/* BURBUJA CONTEXTUAL DE NOTA (POPOVER) */}
       {activeNotePlatoId && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/5 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setActiveNotePlatoId(null)}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm p-4">
           <div 
-            className="bg-white rounded-[24px] shadow-2xl w-[340px] max-h-[85vh] overflow-y-auto p-6 animate-in zoom-in duration-200 border border-gray-100"
+            className="bg-white rounded-[32px] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] w-[360px] max-h-[85vh] overflow-y-auto p-8 animate-in zoom-in duration-200 border border-gray-100"
             onClick={(e) => e.stopPropagation()}
-            style={{ 
-              position: 'fixed', 
-              top: Math.min(activeNotePos.top, window.innerHeight - 500), 
-              left: Math.min(activeNotePos.left, window.innerWidth - 360) 
-            }}
           >
-             <div className="flex justify-between items-center mb-5">
-                <h4 className="text-[14px] font-black text-slate-900 uppercase tracking-tight">Personalizar pedido</h4>
-                <button onClick={() => setActiveNotePlatoId(null)} className="text-slate-400 hover:text-red-500 transition-colors text-xl">✕</button>
+             <div className="flex justify-between items-center mb-6">
+                <div>
+                   <h4 className="text-[15px] font-black text-slate-900 uppercase tracking-tight">Personalizar</h4>
+                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{posProducts.find(p => p.id === activeNotePlatoId)?.name}</p>
+                </div>
+                <button onClick={() => setActiveNotePlatoId(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">✕</button>
              </div>
 
              <div className="space-y-6">
-{(() => {
-                   const platoId = posProducts.find(p => p.id === activeNotePlatoId)?.id || activeNotePlatoId;
-                   const vinculados = (vinculosMod || []).filter(v => parseInt(v.plato_id) === parseInt(platoId) || String(v.plato_id) === String(platoId)).sort((a,b) => a.orden_en_plato - b.orden_en_plato);
-                   if (vinculados.length === 0) return <p className="text-sm text-gray-500 italic pb-4">No hay modificadores vinculados a este plato en la configuración del Menú.</p>;
-                   return vinculados.map((v, idx) => {
-                     const group = (gruposMod || []).find(g => parseInt(g.id) === parseInt(v.grupo_id) || String(g.id) === String(v.grupo_id));
-                     if (!group || group.estado !== 'ACTIVO') return null;
-                     const currentSelections = itemNotes[activeNotePlatoId]?.options?.[group.id] || [];
-                     const groupOptions = (opcionesMod || []).filter(o => parseInt(o.grupo_id) === parseInt(group.id) || String(o.grupo_id) === String(group.id)).filter(o => o.estado === 'DISPONIBLE').sort((a,b) => a.orden - b.orden);
-                     if (groupOptions.length === 0) return null;
-                     return (
-                       <div key={group.id} className={idx > 0 ? 'pt-5 border-t border-gray-100' : ''}>
-                         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">{group.nombre}</p>
-                         <div className="flex flex-wrap gap-2">
-                           {groupOptions.map(opt => {
-                             const isSel = currentSelections.includes(opt.id) || currentSelections.includes(String(opt.id));
-                             return (
-                               <button 
-                                 key={opt.id}
-                                 onClick={() => handleToggleNoteOption(activeNotePlatoId, group.id, opt.id, group.tipo_seleccion)}
-                                 className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-colors flex items-center justify-between gap-3 flex-1 min-w-[120px] ${isSel ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm ring-1 ring-blue-500' : 'bg-white border-gray-200 text-slate-600 hover:border-gray-300'}`}
-                               >
-                                 <span>{opt.nombre}</span>
-                                 {opt.precio_adicional > 0 && <span className={`text-[9px] ${isSel ? 'text-blue-600' : 'text-gray-400'}`}>+${(opt.precio_adicional || 0).toLocaleString('es-CO')}</span>}
-                                 {!opt.precio_adicional && isSel && <span className="text-[10px]">✓</span>}
-                               </button>
-                             );
-                           })}
-                         </div>
-                       </div>
-                     );
-                   });
-                 })()}
-                {getGroupsForType(posProducts.find(p => p.id === activeNotePlatoId)?.tipo_plato).map((groupId, idx) => {
-                   const group = MODIFIER_GROUPS[groupId];
-                   const currentSelections = itemNotes[activeNotePlatoId]?.options?.[groupId] || [];
+                {/* MODIFICADORES COHERENTES SEGÚN TIPO */}
+                {(() => {
+                   const plato = posProducts.find(p => p.id === activeNotePlatoId);
+                   if (!plato) return null;
                    
-                   return (
-                     <div key={groupId} className={idx > 0 ? 'pt-5 border-t border-gray-100' : ''}>
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">{group.title}</p>
-                        <div className="flex flex-wrap gap-2">
-                           {group.options.map(opt => {
-                             const isSel = currentSelections.includes(opt);
-                             return (
-                               <button 
-                                 key={opt}
-                                 onClick={() => {
-                                   const isMulti = groupId === 'sin' || groupId === 'pizza_add';
-                                   let newSels = isSel 
-                                      ? currentSelections.filter(s => s !== opt)
-                                      : (isMulti ? [...currentSelections, opt] : [opt]);
-                                   
-                                   setItemNotes(prev => ({
-                                      ...prev,
-                                      [activeNotePlatoId]: {
-                                        ...prev[activeNotePlatoId],
-                                        options: { ...(prev[activeNotePlatoId]?.options || {}), [groupId]: newSels }
-                                      }
-                                   }));
-                                 }}
-                                 className={`px-3 py-1.5 rounded-full text-[12px] transition-all border ${isSel ? 'bg-blue-50 border-blue-600 text-blue-600 font-bold' : 'bg-gray-50 border-gray-100 text-slate-600 hover:border-gray-300'}`}
-                               >
-                                 {opt}
-                               </button>
-                             );
-                           })}
-                        </div>
-                     </div>
-                   );
-                })}
+                   const groups = getGroupsForType(plato.tipo_plato);
+                   
+                   return groups.map((gId, idx) => {
+                      const group = MODIFIER_GROUPS[gId];
+                      const currentSel = itemNotes[activeNotePlatoId]?.options?.[gId] || [];
+                      
+                      return (
+                         <div key={gId} className={idx > 0 ? 'pt-6 border-t border-gray-100' : ''}>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{group.title}</p>
+                            <div className="grid grid-cols-2 gap-2">
+                               {group.options.map(opt => {
+                                  const isSel = currentSel.includes(opt);
+                                  return (
+                                     <button
+                                        key={opt}
+                                        onClick={() => {
+                                           const isMulti = gId === 'sin';
+                                           let newSels = isSel 
+                                              ? currentSel.filter(s => s !== opt)
+                                              : (isMulti ? [...currentSel, opt] : [opt]);
+                                           
+                                           setItemNotes(prev => ({
+                                              ...prev,
+                                              [activeNotePlatoId]: {
+                                                 ...prev[activeNotePlatoId],
+                                                 options: { ...(prev[activeNotePlatoId]?.options || {}), [gId]: newSels }
+                                              }
+                                           }));
+                                        }}
+                                        className={`px-3 py-2 rounded-xl text-[11px] font-bold border transition-all ${
+                                           isSel 
+                                              ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100' 
+                                              : 'bg-white border-gray-100 text-slate-600 hover:border-blue-200 hover:bg-blue-50/30'
+                                        }`}
+                                     >
+                                        {opt}
+                                     </button>
+                                  );
+                               })}
+                            </div>
+                         </div>
+                      );
+                   });
+                })()}
 
                 {/* CAMPO DESCRIBIR */}
                 <div className="pt-5 border-t border-gray-100">
@@ -4770,10 +4886,11 @@ function ViewMenu({
   const [viewModeMod, setViewModeMod] = React.useState('biblioteca'); // 'biblioteca' | 'por_plato'
   const [activeTabRecetas, setActiveTabRecetas] = React.useState('platos');
   const [showGroupModalMod, setShowGroupModalMod] = React.useState(false); // 'platos' | 'inventario'
+  const [activeSubmodule, setActiveSubmodule] = React.useState(null); // null | 'simulador'
   
   const restauranteActivoId = 'default';
 
-  // LOGICA DE AUTO-GUARDADO Y TOAST
+
   const autoSaveTimeoutRef = React.useRef(null);
   const isFirstRender = React.useRef(true);
 
@@ -5244,6 +5361,14 @@ function ViewMenu({
   reader.readAsArrayBuffer(file);
 };
 
+  if (activeSubmodule === 'simulador') {
+    return <SimuladorRentabilidad onClose={() => setActiveSubmodule(null)} platos={platos} inventario={inventario} recetas={recetas} />;
+  }
+
+  if (activeSubmodule === 'costos_proveedor') {
+    return <ActualizacionCostosProveedor onClose={() => setActiveSubmodule(null)} platos={platos} inventario={inventario} recetas={recetas} />;
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       
@@ -5629,7 +5754,10 @@ function ViewMenu({
               <p className="text-sm text-gray-500 mb-4">¿Estoy ganando o perdiendo dinero con cada plato?</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-purple-200">
+              <div 
+                onClick={() => setActiveSubmodule('simulador')}
+                className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-purple-200 cursor-pointer"
+              >
                 <div className="flex items-center gap-3 mb-3">
                    <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">✨</div>
                    <h4 className="text-sm font-black text-slate-800">Simulador de Rentabilidad</h4>
@@ -5640,16 +5768,16 @@ function ViewMenu({
                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Recetas e Inventario</span>
                 </div>
              </div>
-             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-emerald-200">
+             <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-emerald-200 cursor-pointer" onClick={() => setActiveSubmodule('costos_proveedor')}>
                 <div className="flex items-center gap-3 mb-3">
                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">📈</div>
                    <h4 className="text-sm font-black text-slate-800">Actualización Automática de Costos por Proveedor</h4>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed mb-4">Cuando el precio de un insumo cambia, todos los platos que lo contienen se recalculan en tiempo real. Si el margen cae del objetivo, el sistema alerta de inmediato.</p>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">Recálculo instantáneo en toda la carta ante cambios de proveedores, alertas de margen en riesgo y sugerencias automáticas de nuevo precio de venta.</p>
                 <div className="flex flex-wrap gap-1.5">
-                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Proveedores</span>
-                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Recetas e Inventario</span>
-                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🔄 Finanzas</span>
+                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 border border-emerald-100">Sincroniza con: Proveedores · Recetas e Inventario · Finanzas</span>
+                   
+                   
                 </div>
              </div>
              <div className="bg-white border border-gray-200 text-left rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-blue-200">
@@ -6338,16 +6466,22 @@ function ViewBilling() {
 // =========================================================================
 
 function NavItemDark({ icon, label, isActive, onClick, highlight, collapsed }) {
-  const activeClass = highlight && isActive ? 'nav-item-dark--active bg-[rgba(255,255,255,0.1)] text-white shadow-sm' : isActive ? 'nav-item-dark--active' : '';
-  const collapseClass = collapsed ? 'justify-center mx-auto hover:bg-[rgba(255,255,255,0.05)] text-center !px-0 rounded-lg w-12 h-12 mb-1 flex items-center shrink-0' : 'px-6 mx-2';
+  const activeClass = isActive ? 'nav-item-dark--active' : '';
+  const collapseClass = collapsed ? 'justify-start hover:bg-[rgba(255,255,255,0.05)] !px-3 rounded-xl w-12 h-12 flex items-center shrink-0 ml-1' : 'px-4 mx-2 rounded-lg';
   
   return (
-    <div className={`nav-item-dark ${activeClass} ${collapseClass} relative group transition-all duration-300`} onClick={onClick} title={collapsed ? label : ''}>
-      <div className={`flex items-center justify-center relative min-w-[20px] ${collapsed ? 'text-[22px] w-full h-full' : 'w-5 shrink-0'}`}>
-        <span className={`${collapsed ? 'flex w-full h-full justify-center items-center' : ''}`}>{icon}</span>
-		{collapsed && highlight && isActive && <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-1.5 h-6 bg-emerald-500 rounded-r-full"></div>}
+    <div className={`nav-item-dark ${activeClass} ${collapseClass} relative group transition-all duration-300`} onClick={onClick}>
+      <div className={`flex items-center justify-center relative transition-all duration-300 ${collapsed ? 'text-[26px] w-full h-full' : 'w-6 shrink-0'}`}>
+        <span className="flex items-center justify-center">{icon}</span>
+        {collapsed && isActive && <div className="absolute top-1/2 -left-3 -translate-y-1/2 w-1.5 h-7 bg-emerald-500 rounded-r-full shadow-[0_0_12px_rgba(16,185,129,0.6)]"></div>}
       </div>
-      {!collapsed && <span className="opacity-100 transition-opacity duration-300 truncate whitespace-nowrap pl-2">{label}</span>}
+      {!collapsed && <span className="opacity-100 transition-opacity duration-300 truncate whitespace-nowrap pl-3 flex-1">{label}</span>}
+      
+      {collapsed && (
+        <div className="sidebar-tooltip">
+          {label}
+        </div>
+      )}
     </div>
   );
 }
@@ -6435,6 +6569,479 @@ function getTabTitle(tab) {
             '</div>';
         }
       }, 150);
+
+  // --- COMPONENTE: SIMULADOR DE RENTABILIDAD ---
+function SimuladorRentabilidad({ onClose, platos = [], inventario = [], recetas = [] }) {
+  const [selectedPlato, setSelectedPlato] = React.useState(platos[0] || null);
+  const [simulation, setSimulation] = React.useState({
+    costoInsumo: selectedPlato?.costo_produccion || 0,
+    precioVenta: selectedPlato?.precio_venta || 0,
+    margenObjetivo: selectedPlato?.margen_bruto || 30,
+    volumenMensual: 100
+  });
+
+  const [activeTab, setActiveTab] = React.useState('individual'); // 'individual' | 'global' | 'comparador'
+
+  // Motor de Recálculo en tiempo real
+  const handleUpdate = (field, value) => {
+    const val = parseFloat(value) || 0;
+    setSimulation(prev => {
+      const next = { ...prev, [field]: val };
+      if (field === 'costoInsumo' || field === 'precioVenta') {
+        next.margenObjetivo = next.precioVenta > 0 ? ((next.precioVenta - next.costoInsumo) / next.precioVenta * 100) : 0;
+      } else if (field === 'margenObjetivo') {
+        next.precioVenta = next.costoInsumo / (1 - (val / 100));
+      }
+      return next;
+    });
+  };
+
+  const currentMargin = simulation.precioVenta > 0 ? ((simulation.precioVenta - simulation.costoInsumo) / simulation.precioVenta * 100) : 0;
+  const originalMargin = selectedPlato?.margen_bruto || 0;
+  const marginDiff = currentMargin - originalMargin;
+  const impactoPesos = marginDiff * simulation.precioVenta * simulation.volumenMensual / 100;
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-800 flex items-center gap-2 text-sm font-bold mb-2 transition-colors">
+            ← Volver a Carta & Menú
+          </button>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Simulador de Rentabilidad</h2>
+          <p className="text-slate-500 text-sm">Laboratorio de experimentación financiera para la optimización de márgenes.</p>
+        </div>
+        <div className="flex gap-3">
+          <button className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-50 transition-all">Exportar PDF</button>
+          <button className="bg-indigo-600 text-white px-6 py-2 rounded-xl text-sm font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">Guardar Escenario</button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* PANEL IZQUIERDO: SELECCIÓN Y PALANCAS */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">1. Selección del Plato</h4>
+            <select 
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              value={selectedPlato?.id || ''}
+              onChange={(e) => {
+                const p = platos.find(x => x.id === e.target.value);
+                setSelectedPlato(p);
+                setSimulation({
+                  costoInsumo: p.costo_produccion,
+                  precioVenta: p.precio_venta,
+                  margenObjetivo: p.margen_bruto,
+                  volumenMensual: 100
+                });
+              }}
+            >
+              {platos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+            </select>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">2. Motor de Simulación</h4>
+              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase">Tiempo Real</span>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-slate-600">Costo de Insumo</label>
+                  <input 
+                    type="number" 
+                    value={simulation.costoInsumo} 
+                    onChange={(e) => handleUpdate('costoInsumo', e.target.value)}
+                    className="w-24 bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 text-right text-xs font-black"
+                  />
+                </div>
+                <input 
+                  type="range" min="0" max={simulation.costoInsumo * 2} step="100"
+                  value={simulation.costoInsumo} 
+                  onChange={(e) => handleUpdate('costoInsumo', e.target.value)}
+                  className="w-full accent-indigo-600 h-1.5 rounded-lg appearance-none bg-slate-100 cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-slate-600">Precio de Venta</label>
+                  <input 
+                    type="number" 
+                    value={simulation.precioVenta} 
+                    onChange={(e) => handleUpdate('precioVenta', e.target.value)}
+                    className="w-24 bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 text-right text-xs font-black"
+                  />
+                </div>
+                <input 
+                  type="range" min="0" max={simulation.precioVenta * 2} step="500"
+                  value={simulation.precioVenta} 
+                  onChange={(e) => handleUpdate('precioVenta', e.target.value)}
+                  className="w-full accent-emerald-600 h-1.5 rounded-lg appearance-none bg-slate-100 cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-slate-600">Margen Objetivo (%)</label>
+                  <input 
+                    type="number" 
+                    value={simulation.margenObjetivo.toFixed(1)} 
+                    onChange={(e) => handleUpdate('margenObjetivo', e.target.value)}
+                    className="w-24 bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 text-right text-xs font-black"
+                  />
+                </div>
+                <input 
+                  type="range" min="0" max="100" step="0.5"
+                  value={simulation.margenObjetivo} 
+                  onChange={(e) => handleUpdate('margenObjetivo', e.target.value)}
+                  className="w-full accent-amber-600 h-1.5 rounded-lg appearance-none bg-slate-100 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-indigo-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+            <div className="absolute right-0 top-0 opacity-10 text-4xl p-4">⚖️</div>
+            <h4 className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-4">Impacto Mensual Estimado</h4>
+            <div className="flex items-end gap-2 mb-1">
+              <span className={`text-3xl font-black ${impactoPesos >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {impactoPesos >= 0 ? '+' : ''}${Math.round(impactoPesos).toLocaleString()}
+              </span>
+              <span className="text-indigo-300 text-xs font-bold mb-1">COP / mes</span>
+            </div>
+            <p className="text-xs text-indigo-200">Basado en un volumen de {simulation.volumenMensual} platos vendidos al mes.</p>
+            <input 
+              type="range" min="0" max="1000" step="10"
+              value={simulation.volumenMensual} 
+              onChange={(e) => handleUpdate('volumenMensual', e.target.value)}
+              className="w-full accent-white h-1.5 rounded-lg appearance-none bg-white/20 mt-4 cursor-pointer"
+            />
+          </div>
+        </div>
+
+        {/* PANEL DERECHO: COMPARADOR Y IMPACTO GLOBAL */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl w-fit mb-4">
+            <button 
+              onClick={() => setActiveTab('individual')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${activeTab === 'individual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+            >Análisis Individual</button>
+            <button 
+              onClick={() => setActiveTab('comparador')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${activeTab === 'comparador' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+            >Comparador de Escenarios</button>
+            <button 
+              onClick={() => setActiveTab('global')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${activeTab === 'global' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+            >Impacto Global en Carta</button>
+          </div>
+
+          {activeTab === 'individual' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Estado Actual</h4>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 border-b border-slate-50">
+                    <span className="text-sm text-slate-500">Costo Producción</span>
+                    <span className="text-sm font-bold text-slate-800">${selectedPlato?.costo_produccion?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-slate-50">
+                    <span className="text-sm text-slate-500">Precio Venta</span>
+                    <span className="text-sm font-bold text-slate-800">${selectedPlato?.precio_venta?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3">
+                    <span className="text-sm text-slate-500">Margen Bruto</span>
+                    <span className={`text-sm font-black ${originalMargin < 25 ? 'text-red-500' : 'text-emerald-500'}`}>{originalMargin.toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-slate-50 border border-indigo-100 rounded-3xl p-6 shadow-sm">
+                <h4 className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-6">Escenario Simulado</h4>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 border-b border-white">
+                    <span className="text-sm text-slate-500">Nuevo Costo</span>
+                    <span className="text-sm font-bold text-indigo-600">${Math.round(simulation.costoInsumo).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-white">
+                    <span className="text-sm text-slate-500">Nuevo Precio</span>
+                    <span className="text-sm font-bold text-indigo-600">${Math.round(simulation.precioVenta).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3">
+                    <span className="text-sm text-slate-500">Nuevo Margen</span>
+                    <span className={`text-sm font-black ${currentMargin < 25 ? 'text-red-500' : 'text-emerald-500'}`}>{currentMargin.toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'comparador' && (
+            <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm animate-in fade-in duration-300">
+               <div className="grid grid-cols-2 gap-12 relative">
+                  <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-slate-100"></div>
+                  <div>
+                    <h5 className="text-sm font-black text-slate-800 mb-2">Escenario A: Subir Precio</h5>
+                    <p className="text-xs text-slate-500 mb-6">Mantener el margen deseado ajustando el PVP.</p>
+                    <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Precio Sugerido</p>
+                      <p className="text-xl font-black text-emerald-700">${Math.round(simulation.costoInsumo / (1 - (originalMargin / 100))).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-black text-slate-800 mb-2">Escenario B: Absorber Costo</h5>
+                    <p className="text-xs text-slate-500 mb-6">Mantener el PVP actual a pesar del alza.</p>
+                    <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                      <p className="text-[10px] font-bold text-red-600 uppercase mb-1">Margen Resultante</p>
+                      <p className="text-xl font-black text-red-700">{((selectedPlato?.precio_venta - simulation.costoInsumo) / selectedPlato?.precio_venta * 100).toFixed(1)}%</p>
+                    </div>
+                  </div>
+               </div>
+               <div className="mt-12 p-6 bg-slate-900 rounded-2xl text-white">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-xl">💡</span>
+                    <h6 className="text-sm font-bold">Recomendación IA</h6>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Dado que este plato es un <strong>Estrella</strong>, subir el precio un 5% tiene un impacto menor en la demanda. Se recomienda el Escenario A para proteger un margen de al menos 30%.
+                  </p>
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'global' && (
+            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm animate-in fade-in duration-300">
+               <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Platos Afectados por este Insumo</h4>
+                  <span className="text-xs font-bold text-slate-500">Si subes el costo de producción globalmente</span>
+               </div>
+               <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <th className="px-6 py-4">Plato</th>
+                      <th className="px-6 py-4">Margen Actual</th>
+                      <th className="px-6 py-4">Nuevo Margen</th>
+                      <th className="px-6 py-4">Cambio BCG</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {platos.slice(0, 5).map(p => (
+                      <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4 text-sm font-bold text-slate-700">{p.nombre}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-slate-500">{p.margen_bruto.toFixed(1)}%</td>
+                        <td className="px-6 py-4 text-sm font-black text-red-500">{(p.margen_bruto * 0.85).toFixed(1)}%</td>
+                        <td className="px-6 py-4">
+                           <span className="text-[10px] font-bold px-2 py-1 rounded bg-amber-50 text-amber-600 border border-amber-100">Estrella → Caballo</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+               </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- COMPONENTE: ACTUALIZACIÓN AUTOMÁTICA DE COSTOS POR PROVEEDOR ---
+function ActualizacionCostosProveedor({ onClose, platos = [], inventario = [], recetas = [] }) {
+  const [selectedInsumo, setSelectedInsumo] = React.useState(inventario[0] || { nombre: 'Proteína Pollo', costo_unitario: 12500, proveedor: 'Distribuidora AVES' });
+  const [newPrice, setNewPrice] = React.useState(selectedInsumo.costo_unitario);
+  const [history, setHistory] = React.useState([
+    { fecha: '2026-03-15', precio: 11000, proveedor: 'Distribuidora AVES' },
+    { fecha: '2026-02-10', precio: 10500, proveedor: 'Distribuidora AVES' },
+    { fecha: '2026-01-05', precio: 10200, proveedor: 'Carnes S.A.' }
+  ]);
+
+  const affectedDishes = platos.filter(p => {
+    const recipe = recetas.filter(r => r.nombre_plato === p.nombre);
+    return recipe.some(r => r.ingrediente_nombre === selectedInsumo.nombre);
+  });
+
+  const priceVariation = ((newPrice - selectedInsumo.costo_unitario) / selectedInsumo.costo_unitario) * 100;
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-800 flex items-center gap-2 text-sm font-bold mb-2 transition-colors">
+            ← Volver a Carta & Menú
+          </button>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Gestión de Costos por Proveedor</h2>
+          <p className="text-slate-500 text-sm">Monitoreo dinámico de variaciones en insumos y su impacto en la carta.</p>
+        </div>
+        <div className="flex gap-3">
+          <div className="bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-2xl flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Sincronización Activa</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* PANEL IZQUIERDO: CAMBIO DE PRECIO */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">1. Seleccionar Insumo</h4>
+            <select 
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none"
+              onChange={(e) => {
+                const ins = inventario.find(i => i.nombre === e.target.value);
+                setSelectedInsumo(ins);
+                setNewPrice(ins.costo_unitario);
+              }}
+            >
+              {inventario.map(i => <option key={i.id} value={i.nombre}>{i.nombre}</option>)}
+            </select>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">2. Actualizar Precio</h4>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${priceVariation > 0 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                {priceVariation > 0 ? '+' : ''}{priceVariation.toFixed(1)}%
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">Costo Actual (Base)</label>
+                <div className="text-xl font-black text-slate-400 line-through">${selectedInsumo.costo_unitario?.toLocaleString()}</div>
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-indigo-600 uppercase mb-2 block">Nuevo Costo Proveedor</label>
+                <input 
+                  type="number"
+                  value={newPrice}
+                  onChange={(e) => setNewPrice(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-slate-50 border-2 border-indigo-100 rounded-2xl px-4 py-4 text-2xl font-black text-slate-900 focus:border-indigo-500 focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+            
+            <button className="w-full mt-6 bg-slate-900 text-white py-4 rounded-2xl font-black text-sm shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+              🚀 Aplicar a toda la Carta
+            </button>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">3. Historial de Variaciones</h4>
+            <div className="space-y-4">
+              {history.map((h, idx) => (
+                <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">${h.precio.toLocaleString()}</p>
+                    <p className="text-[10px] text-slate-400">{h.proveedor}</p>
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-500">{h.fecha}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* PANEL DERECHO: IMPACTO Y SUGERENCIAS */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+               <div>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Impacto en Platos e IA</h4>
+                  <p className="text-[10px] text-slate-500 font-bold mt-1">Recálculo dinámico basado en recetas vinculadas</p>
+               </div>
+               <div className="flex gap-4">
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-red-500 uppercase">Alertas</p>
+                    <p className="text-lg font-black text-slate-900">{affectedDishes.length}</p>
+                  </div>
+               </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <th className="px-6 py-4">Plato Afectado</th>
+                    <th className="px-6 py-4">Margen Actual</th>
+                    <th className="px-6 py-4">Margen Proyectado</th>
+                    <th className="px-6 py-4">PVP Sugerido (Mantener %)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {affectedDishes.length > 0 ? affectedDishes.map(p => {
+                    const currentMargen = p.margen_bruto || 30;
+                    const projectedMargen = currentMargen - (priceVariation * 0.2); // Simulación
+                    const suggestedPVP = (p.costo_produccion * (1 + (priceVariation/100))) / (1 - (currentMargen/100));
+                    
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-bold text-slate-800">{p.nombre}</p>
+                          <p className="text-[10px] text-slate-400">{p.categoria_nombre}</p>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-slate-500">{currentMargen.toFixed(1)}%</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                             <span className={`text-sm font-black ${projectedMargen < 25 ? 'text-red-500' : 'text-amber-500'}`}>{projectedMargen.toFixed(1)}%</span>
+                             {projectedMargen < 25 && <span className="animate-pulse text-xs">⚠️</span>}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                           <div className="flex items-center gap-3">
+                              <span className="text-sm font-black text-emerald-600">${Math.round(suggestedPVP).toLocaleString()}</span>
+                              <button className="text-[10px] font-black bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md border border-emerald-100 hover:bg-emerald-100 transition-all">Actualizar PVP</button>
+                           </div>
+                        </td>
+                      </tr>
+                    );
+                  }) : (
+                    <tr>
+                      <td colSpan="4" className="px-6 py-12 text-center">
+                        <p className="text-sm text-slate-400 italic">Selecciona un insumo para ver los platos afectados.</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Comparación entre Proveedores</h4>
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 relative">
+                   <div className="absolute right-4 top-4 text-emerald-500">🏆</div>
+                   <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Mejor Opción Actual</p>
+                   <p className="text-sm font-bold text-slate-900">Distribuidora AVES</p>
+                   <p className="text-lg font-black text-emerald-700">${selectedInsumo.costo_unitario?.toLocaleString()}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                   <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Alternativa Registrada</p>
+                   <p className="text-sm font-bold text-slate-900">Carnes S.A.</p>
+                   <p className="text-lg font-black text-slate-600">${(selectedInsumo.costo_unitario * 1.08).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-indigo-900 rounded-3xl p-8 text-white relative overflow-hidden flex flex-col justify-center">
+               <div className="absolute -right-4 -bottom-4 text-8xl opacity-10">📉</div>
+               <h4 className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-2">Resumen de Impacto</h4>
+               <p className="text-2xl font-black mb-4">Margen Promedio: <span className="text-red-400">-{ (priceVariation * 0.15).toFixed(1) }%</span></p>
+               <p className="text-xs text-indigo-200 leading-relaxed">
+                 Si aplicas este cambio, tu Food Cost promedio subirá un {(priceVariation * 0.08).toFixed(1)}%. Se recomienda revisar los precios de venta de los platos en rojo.
+               </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
     </script>
 </body>
 </html>
