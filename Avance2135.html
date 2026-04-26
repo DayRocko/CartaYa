@@ -173,13 +173,28 @@ const DesignSystemStyles = () => (
     body { font-family: var(--f-ui); background: var(--bg-app-2); color: var(--ink); margin: 0; overflow: hidden; }
     
     /* SIDEBAR COMPONENT */
-    .sidebar-dark { background: var(--navy-950); display: flex; flex-direction: column; z-index: 10; height: 100vh; color: #94A3B8; position: relative; overflow: hidden; transition: width 0.25s ease; }
-    .sidebar-brand-dark { display: flex; align-items: center; justify-content: space-between; padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .nav-group-label-dark { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 24px 24px 8px; transition: opacity 0.25s; }
-    .nav-item-dark { display: flex; align-items: center; gap: 12px; padding: 10px 24px; cursor: pointer; font-size: 14px; font-weight: 500; color: #94A3B8; transition: all 250ms ease-in-out; position: relative; }
-    .nav-item-dark:hover:not(.nav-item-dark--active) { color: #F1F5F9; background: rgba(255,255,255,0.03); }
-    .nav-highlight-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-md); margin: 0 16px; padding: 4px 0; }
-    .nav-item-dark--active { background: rgba(16, 185, 129, 0.1); color: #10B981; font-weight: 600; border-radius: var(--r-sm); margin: 0 8px; padding: 10px 16px; }
+    /* SIDEBAR COMPONENT - NUEVO SISTEMA COLAPSABLE */
+    .sidebar-dark { background: var(--navy-950); display: flex; flex-direction: column; z-index: 10; height: 100vh; color: #94A3B8; position: relative; overflow: hidden; transition: width 0.3s ease; }
+    
+    .sidebar-top-row { display: flex; align-items: center; justify-content: space-between; padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-icon-main { width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); color: #10B981; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(16, 185, 129, 0.2); }
+    
+    .sidebar-toggle-btn { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .sidebar-toggle-btn:hover { background: rgba(255,255,255,0.08); }
+    
+    .toggle-arrows { font-size: 14px; color: #64748b; transition: transform 0.3s ease; display: inline-block; font-weight: 900; }
+    .sidebar-expanded .toggle-arrows { transform: rotate(180deg); }
+
+    .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; white-space: nowrap; transition: all 0.2s; position: relative; }
+    .sidebar-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+    .sidebar-item--active { background: rgba(16, 185, 129, 0.1); color: #10B981; font-weight: 700; border-left: 3px solid #10B981; }
+    
+    .sidebar-label { font-size: 13px; color: #94a3b8; font-weight: 600; transition: opacity 0.3s ease, transform 0.3s ease; }
+    .sidebar-collapsed .sidebar-label { opacity: 0; transform: translateX(-10px); pointer-events: none; width: 0; overflow: hidden; }
+    .sidebar-expanded .sidebar-label { opacity: 1; transform: translateX(0); }
+
+    .nav-group-label-dark { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 24px 20px 8px; transition: opacity 0.25s; }
+    .sidebar-collapsed .nav-group-label-dark { opacity: 0; }
 
     /* TOOLTIP */
     .sidebar-tooltip { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 12px; background: #1E293B; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transition: all 0.2s; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -609,53 +624,32 @@ function App() {
       <div className="flex h-screen w-full">
         
         {/* SIDEBAR */}
-        <aside style={{width: sidebarCollapsed ? 64 : 260, minWidth: sidebarCollapsed ? 64 : 260}} className="sidebar-dark shrink-0 flex flex-col">
-          <style dangerouslySetInnerHTML={{__html: `
-            .custom-scrollbar::-webkit-scrollbar { width: 0px; }
-            .sidebar-dark { box-shadow: 4px 0 24px rgba(0,0,0,0.15); border-right: 1px solid rgba(255,255,255,0.05); }
-            .nav-item-dark .icon-svg { transition: transform 0.2s; }
-            .nav-item-dark:hover .icon-svg { transform: scale(1.1); }
-            .sidebar-tab-btn { position: absolute; right: -16px; top: 50%; transform: translateY(-50%); width: 16px; height: 40px; background: #0F172A; border-radius: 0 8px 8px 0; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 50; border: none; box-shadow: 4px 0 8px rgba(0,0,0,0.25); transition: background 0.2s; }
-            .sidebar-tab-btn:hover { background: #1e2d45; }
-            .sidebar-tab-btn svg { pointer-events: none; }
-            .nav-tooltip-fixed { position: fixed; left: 72px; background: #0F172A; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateX(-6px); transition: opacity 0.15s ease, transform 0.15s ease; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
-            .nav-tooltip-fixed::before { content: ''; position: absolute; left: -5px; top: 50%; transform: translateY(-50%) rotate(45deg); width: 8px; height: 8px; background: #0F172A; }
-            .nav-item-collapsed-wrap:hover .nav-tooltip-fixed { opacity: 1; transform: translateX(0); }
-          `}} />
-          
+        <aside 
+          className={`sidebar-dark shrink-0 flex flex-col ${sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded'}`} 
+          style={{ width: sidebarCollapsed ? 64 : 260 }}
+        >
           {/* Header */}
-          <div className="px-3 flex items-center justify-between border-b border-slate-800/50 shrink-0" style={{height:72}}>
-            <div className="flex items-center gap-3 min-w-0 overflow-hidden">
-               <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20 shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+          <div className="sidebar-top-row">
+            <div className="flex items-center gap-3 overflow-hidden">
+               <div className="sidebar-icon-main">
                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                </div>
-               <div style={{overflow:'hidden', maxWidth: sidebarCollapsed ? 0 : 160, opacity: sidebarCollapsed ? 0 : 1, transition:'max-width 0.25s ease, opacity 0.2s ease', whiteSpace:'nowrap'}}>
-                 <h1 className="text-lg font-black text-white tracking-tighter leading-none">CartaYa</h1>
-                 <span className="text-[10px] text-emerald-500 font-bold tracking-widest uppercase mt-0.5 block">Intelligence</span>
-               </div>
+               {!sidebarCollapsed && (
+                 <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                    <h1 className="text-lg font-black text-white tracking-tighter leading-none">CartaYa</h1>
+                    <span className="text-[10px] text-emerald-500 font-bold tracking-widest uppercase mt-0.5 block">Intelligence</span>
+                 </div>
+               )}
             </div>
-            {!sidebarCollapsed && (
-              <button
-                onClick={() => setSidebarCollapsed(true)}
-                className="text-slate-400 hover:text-white transition-colors duration-200 bg-slate-800/60 hover:bg-slate-700/80 rounded-lg flex items-center justify-center border border-slate-700/50 shrink-0"
-                style={{width:28,height:28}}
-                title="Contraer Menú"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
-              </button>
-            )}
+            <button 
+              className="sidebar-toggle-btn"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            >
+              <span className="toggle-arrows">«</span>
+            </button>
           </div>
 
-          {/* Floating expand tab — only shown when sidebar is collapsed, never overlaps icons */}
-          {sidebarCollapsed && (
-            <button
-              className="sidebar-tab-btn"
-              onClick={() => setSidebarCollapsed(false)}
-              title="Expandir Menú"
-            >
-              <svg width="10" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-          )}
+
 
           <div className="flex-1 overflow-y-auto pb-6 w-full custom-scrollbar" style={{ scrollbarWidth: 'none' }}>
             <div className={`py-4 space-y-2 transition-all duration-250 ${sidebarCollapsed ? 'px-2' : 'px-4'}`}>
@@ -1815,7 +1809,58 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
               </div>
 
               {/* GRILLA DE TARJETAS (CARD-BASED SYSTEM) */}
-              <div className="flex-1 overflow-y-auto no-scrollbar pb-24">
+              <div className="flex-1 overflow-y-auto no-scrollbar pb-24 px-10 pt-6">
+                 
+                 {/* BARRA MÉTRICAS MESAS */}
+                 <div style={{display:'flex', gap:10, margin:'0 0 20px 0'}}>
+
+                   <div style={{flex:1, background:'#edfaf4', border:'1px solid #b2e8cf', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:12}}>
+                     <div style={{width:36, height:36, borderRadius:9, background:'#d4f5e6', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a8f57" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                     </div>
+                     <div>
+                       <div style={{fontSize:9, color:'#1a8f57', textTransform:'uppercase', letterSpacing:0.7, fontWeight:600}}>Disponibles</div>
+                       <div style={{fontSize:22, fontWeight:800, color:'#1a8f57', lineHeight:1.1}}>{mesas.filter(m => m.estado === 'libre').length}</div>
+                     </div>
+                   </div>
+
+                   <div style={{flex:1, background:'#fdf0ef', border:'1px solid #f5c0bb', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:12}}>
+                     <div style={{width:36, height:36, borderRadius:9, background:'#fde0dc', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c0392b" strokeWidth="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+                     </div>
+                     <div>
+                       <div style={{fontSize:9, color:'#c0392b', textTransform:'uppercase', letterSpacing:0.7, fontWeight:600}}>Ocupadas</div>
+                       <div style={{fontSize:22, fontWeight:800, color:'#c0392b', lineHeight:1.1}}>{mesas.filter(m => m.estado === 'ocupada' || m.estado === 'cuenta').length}</div>
+                     </div>
+                   </div>
+
+                   <div style={{flex:1, background:'#eff4fd', border:'1px solid #bdd0f5', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:12}}>
+                     <div style={{width:36, height:36, borderRadius:9, background:'#ddeafd', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                     </div>
+                     <div>
+                       <div style={{fontSize:9, color:'#2563eb', textTransform:'uppercase', letterSpacing:0.7, fontWeight:600}}>Reservadas</div>
+                       <div style={{fontSize:22, fontWeight:800, color:'#2563eb', lineHeight:1.1}}>{mesas.filter(m => m.estado === 'reservada').length}</div>
+                     </div>
+                   </div>
+
+                   <div style={{flex:2, background:'#1a1a2e', border:'1px solid #2e2f52', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:12}}>
+                     <div style={{width:36, height:36, borderRadius:9, background:'rgba(0,214,143,0.15)', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00d68f" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                     </div>
+                     <div>
+                       <div style={{fontSize:9, color:'#6b6d8a', textTransform:'uppercase', letterSpacing:0.7, fontWeight:600}}>Consumo del día</div>
+                       <div style={{fontSize:22, fontWeight:800, color:'#00d68f', lineHeight:1.1}}>${mesas.reduce((acc, m) => acc + (m.total || 0), 0).toLocaleString()}</div>
+                     </div>
+                     <div style={{marginLeft:'auto', textAlign:'right'}}>
+                       <div style={{fontSize:9, color:'#6b6d8a'}}>COP</div>
+                       <div style={{fontSize:10, color:'#6b6d8a', marginTop:2}}>↑ 12% vs ayer</div>
+                     </div>
+                   </div>
+
+                 </div>
+                 {/* /BARRA MÉTRICAS MESAS */}
+
                  <div className="mesas-grid">
                     {mesas.filter(m => m.zona === activeZone).map(mesa => {
                        const isOccupied = mesa.estado === 'ocupada';
@@ -2024,50 +2069,101 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                     </button>
                  </div>
 
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 {/* GRID MESEROS HORIZONTAL */}
+                 <div style={{display:'flex', flexDirection:'column', gap:12, marginTop:24}}>
                     {waiters.map(waiter => (
-                       <div key={waiter.id} className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all group relative">
-                          <div className="flex justify-between items-start mb-6">
-                             <div className="w-16 h-16 rounded-3xl bg-slate-900 text-white flex items-center justify-center text-3xl font-black">
-                                {waiter.name.charAt(0)}
-                             </div>
-                             <div className="flex gap-2">
-                                <button onClick={() => {
-                                   if(confirm(`¿Eliminar a ${waiter.name}?`)) setWaiters(waiters.filter(w => w.id !== waiter.id));
-                                }} className="p-2 text-gray-300 hover:text-red-500 transition-colors">✕</button>
-                             </div>
-                          </div>
+                       <div key={waiter.id} style={{background:'#fff', border:'1px solid #e8e8f0', borderRadius:16, padding:'16px 20px', display:'flex', alignItems:'center', gap:20, position:'relative'}}>
                           
-                          <h3 className="text-lg font-black text-slate-900 mb-1">{waiter.name}</h3>
-                          <div className="flex gap-2 mb-6">
-                             <span className="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded-full border border-blue-100 uppercase">{waiter.role}</span>
-                             <span className="bg-gray-100 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded-full border border-gray-200 uppercase">{waiter.shift}</span>
+                          {/* X eliminar */}
+                           <button 
+                             onClick={() => {
+                                if(confirm(`¿Eliminar a ${waiter.name}?`)) setWaiters(waiters.filter(w => w.id !== waiter.id));
+                             }}
+                             style={{position:'absolute', top:12, right:14, background:'none', border:'none', color:'#bbb', fontSize:14, cursor:'pointer'}}
+                           >
+                             ✕
+                           </button>
+
+                          {/* Avatar */}
+                          <div style={{width:52, height:52, borderRadius:14, background:'#1a1a2e', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:700, color:'#fff', flexShrink:0}}>
+                             {waiter.name.charAt(0)}
                           </div>
 
-                          <div className="space-y-4 pt-6 border-t border-gray-50">
-                             <div className="flex justify-between items-center text-xs font-bold">
-                                <span className="text-gray-400 uppercase tracking-widest text-[9px]">Turno Actual</span>
-                                <select 
-                                  value={waiter.shift}
-                                  onChange={(e) => setWaiters(waiters.map(w => w.id === waiter.id ? { ...w, shift: e.target.value } : w))}
-                                  className="bg-gray-50 border-none text-slate-700 text-xs font-bold rounded-lg p-1 outline-none"
-                                >
-                                   <option>Mañana</option>
-                                   <option>Tarde</option>
-                                   <option>Noche</option>
-                                   <option>Descanso</option>
-                                </select>
-                             </div>
-                             <div className="flex justify-between items-center text-xs font-bold">
-                                <span className="text-gray-400 uppercase tracking-widest text-[9px]">Estado</span>
-                                <button 
-                                  onClick={() => setWaiters(waiters.map(w => w.id === waiter.id ? { ...w, active: !w.active } : w))}
-                                  className={`px-3 py-1 rounded-full text-[9px] font-black transition-all ${waiter.active ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}
-                                >
-                                   {waiter.active ? 'ACTIVO' : 'INACTIVO'}
-                                </button>
+                          {/* Nombre + rol */}
+                          <div style={{minWidth:140}}>
+                             <div style={{fontSize:15, fontWeight:700, color:'#1a1a1a'}}>{waiter.name}</div>
+                             <div style={{display:'flex', gap:6, marginTop:5}}>
+                               <span style={{fontSize:10, background:'#e8f5e9', color:'#1a8f57', borderRadius:20, padding:'3px 9px', fontWeight:600}}>{waiter.role.toUpperCase()}</span>
+                               <span style={{fontSize:10, background:'#f0f0f0', color:'#666', borderRadius:20, padding:'3px 9px', fontWeight:600}}>{waiter.shift.toUpperCase()}</span>
                              </div>
                           </div>
+
+                          {/* Divisor */}
+                          <div style={{width:1, height:44, background:'#f0f0f0', flexShrink:0}}></div>
+
+                          {/* Turno */}
+                          <div style={{minWidth:110}}>
+                             <div style={{fontSize:9, color:'#aaa', textTransform:'uppercase', letterSpacing:0.7, marginBottom:4}}>Turno actual</div>
+                             <select 
+                               value={waiter.shift}
+                               onChange={(e) => setWaiters(waiters.map(w => w.id === waiter.id ? { ...w, shift: e.target.value } : w))}
+                               style={{fontSize:12, fontWeight:600, color:'#1a1a1a', border:'1px solid #e0e0e0', borderRadius:8, padding:'5px 8px', background:'#fff', cursor:'pointer', width: '100%'}}
+                             >
+                               <option>Mañana</option>
+                               <option>Tarde</option>
+                               <option>Noche</option>
+                               <option>Descanso</option>
+                             </select>
+                          </div>
+
+                          {/* Divisor */}
+                          <div style={{width:1, height:44, background:'#f0f0f0', flexShrink:0}}></div>
+
+                          {/* Estado */}
+                          <div style={{minWidth:80}}>
+                             <div style={{fontSize:9, color:'#aaa', textTransform:'uppercase', letterSpacing:0.7, marginBottom:4}}>Estado</div>
+                             <button 
+                               onClick={() => setWaiters(waiters.map(w => w.id === waiter.id ? { ...w, active: !w.active } : w))}
+                               style={{fontSize:11, fontWeight:700, background: waiter.active ? '#d4f5e6' : '#fde0dc', color: waiter.active ? '#1a8f57' : '#c0392b', padding:'4px 12px', borderRadius:20, border: 'none', cursor: 'pointer'}}
+                             >
+                                {waiter.active ? 'ACTIVO' : 'INACTIVO'}
+                             </button>
+                          </div>
+
+                          {/* Divisor */}
+                          <div style={{width:1, height:44, background:'#f0f0f0', flexShrink:0}}></div>
+
+                          {/* Mesas atendidas */}
+                          <div style={{minWidth:80, textAlign:'center'}}>
+                             <div style={{fontSize:9, color:'#aaa', textTransform:'uppercase', letterSpacing:0.7, marginBottom:4}}>Mesas atendidas</div>
+                             <div style={{fontSize:22, fontWeight:800, color:'#1a1a1a', lineHeight:1}}>{waiter.orders || 0}</div>
+                             <div style={{fontSize:9, color:'#aaa'}}>este turno</div>
+                          </div>
+
+                          {/* Divisor */}
+                          <div style={{width:1, height:44, background:'#f0f0f0', flexShrink:0}}></div>
+
+                          {/* Mesas activas ahora */}
+                          <div style={{minWidth:80, textAlign:'center'}}>
+                             <div style={{fontSize:9, color:'#aaa', textTransform:'uppercase', letterSpacing:0.7, marginBottom:4}}>Mesas activas</div>
+                             <div style={{fontSize:22, fontWeight:800, color:'#2563eb', lineHeight:1}}>
+                                {mesas.filter(m => m.mesero && m.mesero.includes(waiter.name.split(' ')[0])).length}
+                             </div>
+                             <div style={{fontSize:9, color:'#aaa'}}>en este momento</div>
+                          </div>
+
+                          {/* Divisor */}
+                          <div style={{width:1, height:44, background:'#f0f0f0', flexShrink:0}}></div>
+
+                          {/* Acumulado ventas */}
+                          <div style={{minWidth:100, textAlign:'right', marginLeft:'auto'}}>
+                             <div style={{fontSize:9, color:'#aaa', textTransform:'uppercase', letterSpacing:0.7, marginBottom:4}}>Acumulado ventas</div>
+                             <div style={{fontSize:18, fontWeight:800, color:'#1a8f57', lineHeight:1}}>
+                                ${(mesas.filter(m => m.mesero && m.mesero.includes(waiter.name.split(' ')[0])).reduce((acc, m) => acc + (m.total || 0), 0)).toLocaleString()}
+                             </div>
+                             <div style={{fontSize:9, color:'#aaa'}}>COP este turno</div>
+                          </div>
+
                        </div>
                     ))}
                  </div>
@@ -7012,77 +7108,16 @@ function ViewBilling() {
 // =========================================================================
 
 function NavItemDark({ icon, label, isActive, onClick, highlight, collapsed }) {
-  const [tooltipY, setTooltipY] = React.useState(0);
-
-  // Expanded state: use existing nav-item-dark--active class (green bg)
-  // Collapsed state: override with white bg + green icon for active, else transparent
-  const expandedStyle = {};
-  const collapsedStyle = isActive
-    ? { background: '#FFFFFF', borderRadius: 10, position: 'relative' }
-    : { borderRadius: 10 };
-
-  const iconColor = collapsed && isActive ? '#1DB88A' : undefined;
-
-  if (collapsed) {
-    return (
-      <div
-        className="nav-item-collapsed-wrap relative"
-        style={{ display:'flex', justifyContent:'center', width:'100%', padding:'2px 0' }}
-        onMouseEnter={e => setTooltipY(e.currentTarget.getBoundingClientRect().top + e.currentTarget.getBoundingClientRect().height / 2)}
-      >
-        {/* Active "ear" tab pointing right — visually connects to white page */}
-        {isActive && (
-          <div style={{
-            position: 'absolute', right: -6, top: '50%', transform: 'translateY(-50%)',
-            width: 8, height: 28, background: '#FFFFFF',
-            borderRadius: '4px 0 0 4px', zIndex: 2,
-          }} />
-        )}
-
-        <div
-          onClick={onClick}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 44, height: 44, cursor: 'pointer',
-            ...collapsedStyle,
-            transition: 'background 0.15s ease',
-          }}
-          onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-          onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
-        >
-          <span style={{ color: iconColor, display:'flex', alignItems:'center', justifyContent:'center' }}>{icon}</span>
-        </div>
-
-        {/* Fixed-position tooltip so it's never clipped */}
-        <div
-          className="nav-tooltip-fixed"
-          style={{ top: tooltipY, transform: `translateY(-50%) translateX(0)` }}
-        >
-          {label}
-        </div>
-      </div>
-    );
-  }
-
-  // Expanded state
-  const activeClass = isActive ? 'nav-item-dark--active' : '';
   return (
-    <div
-      className={`nav-item-dark ${activeClass} relative group`}
-      style={{
-        display: 'flex', alignItems: 'center',
-        margin: '2px 8px', borderRadius: 10,
-        padding: '8px 12px', transition: 'all 0.25s ease',
-      }}
+    <div 
+      className={`sidebar-item ${isActive ? 'sidebar-item--active' : ''}`}
       onClick={onClick}
     >
-      <div className="flex items-center justify-center shrink-0" style={{width:20, height:20}}>
-        <span className="flex items-center justify-center">{icon}</span>
+      <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 24, height: 24 }}>
+        {React.cloneElement(icon, { width: 20, height: 20, strokeWidth: 2.5 })}
       </div>
-      <span
-        className="truncate whitespace-nowrap pl-3"
-        style={{ flex: 1 }}
-      >{label}</span>
+      <span className="sidebar-label">{label}</span>
+      {collapsed && <div className="sidebar-tooltip">{label}</div>}
     </div>
   );
 }
