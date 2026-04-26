@@ -889,7 +889,13 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
   const IMAGEN_MAP = {}; 
 
   // --- MODIFICADORES MOCK (Simplificado para optimización Babel) ---
-  const MODIFIER_GROUPS = {}; 
+    const MODIFIER_GROUPS = {
+    'coccion': { title: 'Término de Cocción', options: ['Azul', '1/2', '3/4', 'Bien Cocido'] },
+    'sin': { title: 'Quitar Ingredientes', options: ['Sin Cebolla', 'Sin Tomate', 'Sin Pepinillos', 'Sin Salsa'] },
+    'bebida_hielo': { title: 'Hielo', options: ['Con Hielo', 'Sin Hielo', 'Hielo Aparte'] },
+    'postre_acompañamiento': { title: 'Acompañamiento', options: ['Con Helado', 'Salsa Chocolate', 'Sin Crema'] },
+    'ensalada_aderezo': { title: 'Aderezo', options: ['Vinagreta', 'César', 'Mostaza Miel', 'Sin Aderezo'] }
+  }; 
 
   const getGroupsForType = (tipo) => {
     switch(tipo) {
@@ -2066,7 +2072,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                    
                    const groups = getGroupsForType(plato.tipo_plato);
                    
-                   return groups.map((gId, idx) => {
+                   return groups.filter(gId => MODIFIER_GROUPS[gId]).map((gId, idx) => {
                       const group = MODIFIER_GROUPS[gId];
                       const currentSel = itemNotes[activeNotePlatoId]?.options?.[gId] || [];
                       
