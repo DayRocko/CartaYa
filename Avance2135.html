@@ -564,6 +564,12 @@ function App() {
             .sidebar-dark { box-shadow: 4px 0 24px rgba(0,0,0,0.15); border-right: 1px solid rgba(255,255,255,0.05); }
             .nav-item-dark .icon-svg { transition: transform 0.2s; }
             .nav-item-dark:hover .icon-svg { transform: scale(1.1); }
+            .sidebar-tab-btn { position: absolute; right: -16px; top: 50%; transform: translateY(-50%); width: 16px; height: 40px; background: #0F172A; border-radius: 0 8px 8px 0; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 50; border: none; box-shadow: 4px 0 8px rgba(0,0,0,0.25); transition: background 0.2s; }
+            .sidebar-tab-btn:hover { background: #1e2d45; }
+            .sidebar-tab-btn svg { pointer-events: none; }
+            .nav-tooltip-fixed { position: fixed; left: 72px; background: #0F172A; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateX(-6px); transition: opacity 0.15s ease, transform 0.15s ease; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+            .nav-tooltip-fixed::before { content: ''; position: absolute; left: -5px; top: 50%; transform: translateY(-50%) rotate(45deg); width: 8px; height: 8px; background: #0F172A; }
+            .nav-item-collapsed-wrap:hover .nav-tooltip-fixed { opacity: 1; transform: translateX(0); }
           `}} />
           
           {/* Header */}
@@ -577,18 +583,28 @@ function App() {
                  <span className="text-[10px] text-emerald-500 font-bold tracking-widest uppercase mt-0.5 block">Intelligence</span>
                </div>
             </div>
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-slate-400 hover:text-white transition-colors duration-200 bg-slate-800/60 hover:bg-slate-700/80 rounded-lg flex items-center justify-center border border-slate-700/50 shrink-0"
-              style={{width:28,height:28}}
-              title={sidebarCollapsed ? "Expandir Menú" : "Contraer Menú"}
-            >
-              {sidebarCollapsed
-                ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-                : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
-              }
-            </button>
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="text-slate-400 hover:text-white transition-colors duration-200 bg-slate-800/60 hover:bg-slate-700/80 rounded-lg flex items-center justify-center border border-slate-700/50 shrink-0"
+                style={{width:28,height:28}}
+                title="Contraer Menú"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+              </button>
+            )}
           </div>
+
+          {/* Floating expand tab — only shown when sidebar is collapsed, never overlaps icons */}
+          {sidebarCollapsed && (
+            <button
+              className="sidebar-tab-btn"
+              onClick={() => setSidebarCollapsed(false)}
+              title="Expandir Menú"
+            >
+              <svg width="10" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          )}
 
           <div className="flex-1 overflow-y-auto pb-6 w-full custom-scrollbar" style={{ scrollbarWidth: 'none' }}>
             <div className={`py-4 space-y-2 transition-all duration-250 ${sidebarCollapsed ? 'px-2' : 'px-4'}`}>
@@ -6990,33 +7006,77 @@ function ViewBilling() {
 // =========================================================================
 
 function NavItemDark({ icon, label, isActive, onClick, highlight, collapsed }) {
+  const [tooltipY, setTooltipY] = React.useState(0);
+
+  // Expanded state: use existing nav-item-dark--active class (green bg)
+  // Collapsed state: override with white bg + green icon for active, else transparent
+  const expandedStyle = {};
+  const collapsedStyle = isActive
+    ? { background: '#FFFFFF', borderRadius: 10, position: 'relative' }
+    : { borderRadius: 10 };
+
+  const iconColor = collapsed && isActive ? '#1DB88A' : undefined;
+
+  if (collapsed) {
+    return (
+      <div
+        className="nav-item-collapsed-wrap relative"
+        style={{ display:'flex', justifyContent:'center', width:'100%', padding:'2px 0' }}
+        onMouseEnter={e => setTooltipY(e.currentTarget.getBoundingClientRect().top + e.currentTarget.getBoundingClientRect().height / 2)}
+      >
+        {/* Active "ear" tab pointing right — visually connects to white page */}
+        {isActive && (
+          <div style={{
+            position: 'absolute', right: -6, top: '50%', transform: 'translateY(-50%)',
+            width: 8, height: 28, background: '#FFFFFF',
+            borderRadius: '4px 0 0 4px', zIndex: 2,
+          }} />
+        )}
+
+        <div
+          onClick={onClick}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 44, height: 44, cursor: 'pointer',
+            ...collapsedStyle,
+            transition: 'background 0.15s ease',
+          }}
+          onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+          onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+        >
+          <span style={{ color: iconColor, display:'flex', alignItems:'center', justifyContent:'center' }}>{icon}</span>
+        </div>
+
+        {/* Fixed-position tooltip so it's never clipped */}
+        <div
+          className="nav-tooltip-fixed"
+          style={{ top: tooltipY, transform: `translateY(-50%) translateX(0)` }}
+        >
+          {label}
+        </div>
+      </div>
+    );
+  }
+
+  // Expanded state
   const activeClass = isActive ? 'nav-item-dark--active' : '';
   return (
     <div
       className={`nav-item-dark ${activeClass} relative group`}
       style={{
-        display:'flex', alignItems:'center',
-        margin: collapsed ? '2px auto' : '2px 8px',
-        borderRadius: 10,
-        padding: collapsed ? 0 : '8px 12px',
-        width: collapsed ? 44 : 'auto',
-        height: collapsed ? 44 : 'auto',
-        justifyContent: collapsed ? 'center' : 'flex-start',
-        transition: 'all 0.25s ease',
+        display: 'flex', alignItems: 'center',
+        margin: '2px 8px', borderRadius: 10,
+        padding: '8px 12px', transition: 'all 0.25s ease',
       }}
       onClick={onClick}
     >
-      {collapsed && isActive && (
-        <div style={{position:'absolute',left:-3,top:'50%',transform:'translateY(-50%)',width:3,height:24,background:'#10B981',borderRadius:'0 4px 4px 0',boxShadow:'0 0 10px rgba(16,185,129,0.7)'}} />
-      )}
-      <div className="flex items-center justify-center shrink-0" style={{width: collapsed ? '100%' : 20, height: collapsed ? '100%' : 20}}>
+      <div className="flex items-center justify-center shrink-0" style={{width:20, height:20}}>
         <span className="flex items-center justify-center">{icon}</span>
       </div>
       <span
         className="truncate whitespace-nowrap pl-3"
-        style={{overflow:'hidden', maxWidth: collapsed ? 0 : 160, opacity: collapsed ? 0 : 1, transition:'max-width 0.25s ease, opacity 0.15s ease', pointerEvents: collapsed ? 'none' : 'auto', flex:1}}
+        style={{ flex: 1 }}
       >{label}</span>
-      {collapsed && <div className="sidebar-tooltip">{label}</div>}
     </div>
   );
 }
