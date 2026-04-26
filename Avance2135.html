@@ -248,6 +248,57 @@ const DesignSystemStyles = () => (
     .pricing-table-container { background: var(--surface); border-radius: var(--r-2xl); border: 1px solid var(--border); box-shadow: var(--shadow-card); overflow: hidden; }
     .pt-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; background: var(--surface-subtle); border-bottom: 1px solid var(--border); }
     .pt-header-cell { padding: 20px 24px; text-align: center; border-right: 1px solid var(--border); }
+    
+    /* MAPA DE MESAS - NUEVO SISTEMA */
+    .mesas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; padding: 16px; }
+    .mesa-card { border-radius: 14px; padding: 12px 14px; position: relative; border: 1px solid rgba(0,0,0,0.07); transition: box-shadow 0.2s, transform 0.2s; cursor: pointer; }
+    .mesa-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .mesa-card.disponible { background-color: #edfaf4; border-color: #b2e8cf; }
+    .mesa-card.ocupada { background-color: #fdf0ef; border-color: #f5c0bb; }
+    .mesa-card.reservada { background-color: #eff4fd; border-color: #bdd0f5; }
+    .mesa-card.cuenta { background-color: #fefce8; border-color: #fef08a; }
+
+    .mesa-badge { position: absolute; top: 12px; left: 12px; width: 28px; height: 28px; border-radius: 6px; background: #1a1a2e; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; z-index: 5; }
+    .mesa-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding-left: 38px; margin-bottom: 12px; }
+    .mesa-info { display: flex; flex-direction: column; min-width: 0; }
+    .mesa-nombre { font-size: 12px; font-weight: 800; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+    .mesa-label { font-size: 8px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .mesa-consumo { text-align: right; display: flex; flex-direction: column; }
+    .mesa-precio { font-size: 13px; font-weight: 800; color: #00b869; line-height: 1.2; }
+
+    .mesa-footer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+    .mesa-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .field-select { font-size: 10px; padding: 4px 2px; border-radius: 6px; border: 1px solid #eee; background: #fff; color: #333; outline: none; font-weight: 600; text-align: center; }
+    
+    .estado-badge { font-size: 9px; font-weight: 800; padding: 4px 2px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; text-align: center; min-height: 24px; }
+    .estado-badge.ocupada  { background: #fee2e2; color: #ef4444; }
+    .estado-badge.activa   { background: #dcfce7; color: #16a34a; }
+    .estado-badge.reservada{ background: #dbeafe; color: #2563eb; }
+    .estado-badge.cuenta   { background: #fef9c3; color: #ca8a04; }
+
+    .btn-ver-orden { font-size: 9px; font-weight: 800; padding: 4px 2px; border-radius: 6px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; min-height: 24px; display: flex; align-items: center; justify-content: center; }
+    .btn-ver-orden:hover { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
+
+    .mesa-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #eee; }
+    .btn-action-mesa { font-size: 9px; font-weight: 700; padding: 6px 4px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; }
+    .btn-action-fe { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+    .btn-action-fe:hover { background: #dbeafe; }
+    .btn-action-print { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+    .btn-action-print:hover { background: #dcfce7; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+    .menu-bubble { position: relative; background: #fff; border-radius: 20px; padding: 24px; width: 400px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.2); animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); top: auto; left: auto; margin-top: 0; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    .bubble-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f8fafc; padding-bottom: 12px; }
+    .bubble-title { font-size: 14px; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; }
+    .bubble-close { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 10px; font-size: 16px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .bubble-close:hover { background: #e2e8f0; color: #1e293b; }
+    .bubble-items { list-style: none; padding: 0; margin: 0 0 20px 0; display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+    .bubble-items li { display: flex; justify-content: space-between; font-size: 13px; color: #334155; padding: 10px 0; border-bottom: 1px solid #f1f5f9; gap: 12px; }
+    .bubble-items li span:first-child { font-weight: 600; flex: 1; }
+    .bubble-total { display: flex; justify-content: space-between; font-size: 16px; font-weight: 900; color: #0f172a; padding-top: 15px; border-top: 2px solid #f1f5f9; }
+
     .pt-header-cell:last-child { border-right: none; }
     .pt-header-cell.feature-col { text-align: left; display: flex; align-items: center; }
     .pt-category { background: var(--navy-950); color: white; font-size: var(--t-xs); font-weight: var(--fw-bold); letter-spacing: 0.1em; text-transform: uppercase; padding: 12px 24px; grid-column: 1 / -1; }
@@ -810,7 +861,8 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
   ]);
   const [isOpeningMesaId, setIsOpeningMesaId] = React.useState(null);
   const [unifyMode, setUnifyMode] = React.useState(false);
-  const [unifySelected, setUnifySelected] = React.useState([]);
+    const [unifySelected, setUnifySelected] = React.useState([]);
+  const [activeBubbleMesaId, setActiveBubbleMesaId] = React.useState(null);
 
 
   React.useEffect(() => {
@@ -1732,10 +1784,10 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
         {posTab === 'mapa' && (
            <div className="flex-1 flex flex-col bg-[#F8FAFC] animate-in fade-in duration-500 overflow-hidden">
               {/* CABECERA DEL MÓDULO */}
-              <div className="bg-white px-10 py-8 flex justify-between items-center shrink-0 border-b border-slate-100 z-10 shadow-sm">
+              <div className="bg-white px-10 py-6 flex justify-between items-center shrink-0 border-b border-slate-100 z-10 shadow-sm">
                  <div>
-                    <h2 className="text-2xl font-bold text-[#1E293B] tracking-tight font-sans">MAPA DE MESAS</h2>
-                    <p className="text-[10px] text-slate-400 mt-1.5 font-bold tracking-wider uppercase">CONFIGURACIÓN OPERATIVA DEL PLANO DE MESAS Y TIEMPOS DE SERVICIO</p>
+                    <h2 className="text-xl font-black text-[#1E293B] tracking-tight">MAPA DE MESAS</h2>
+                    <p className="text-[9px] text-slate-400 mt-1 font-bold tracking-wider uppercase">GESTIÓN OPERATIVA DEL PLANO Y ESTADO DE SERVICIO</p>
                  </div>
 
                  <div className="flex items-center gap-6">
@@ -1744,7 +1796,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                           <button 
                             key={z} 
                             onClick={() => setActiveZone(z)}
-                            className={`px-6 py-2 rounded-lg text-[10px] font-black transition-all uppercase tracking-widest ${activeZone === z ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`px-5 py-2 rounded-lg text-[10px] font-black transition-all uppercase tracking-widest ${activeZone === z ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
                           >
                              {z}
                           </button>
@@ -1755,7 +1807,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                          const num = prompt('Número de la mesa:');
                          if(num) setMesas([...mesas, { id: Date.now(), zona: activeZone, numero: num, cap: 4, estado: 'libre', timer: 0, total: 0 }]);
                       }}
-                      className="px-6 py-3 bg-[#1E293B] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10"
+                      className="px-6 py-2.5 bg-[#1E293B] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-lg"
                     >
                        + AGREGAR MESA
                     </button>
@@ -1763,8 +1815,8 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
               </div>
 
               {/* GRILLA DE TARJETAS (CARD-BASED SYSTEM) */}
-              <div className="flex-1 p-10 overflow-y-auto custom-scrollbar no-scrollbar">
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-[1700px] mx-auto pb-24">
+              <div className="flex-1 overflow-y-auto no-scrollbar pb-24">
+                 <div className="mesas-grid">
                     {mesas.filter(m => m.zona === activeZone).map(mesa => {
                        const isOccupied = mesa.estado === 'ocupada';
                        const isBilled = mesa.estado === 'cuenta';
@@ -1772,130 +1824,80 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                        return (
                           <div 
                             key={mesa.id}
-                            className={`
-                              bg-white rounded-[28px] border border-slate-100 shadow-xl shadow-slate-200/40 transition-all flex flex-col overflow-hidden relative group
-                              hover:-translate-y-2 hover:shadow-2xl hover:shadow-slate-300/50
-                            `}
+                            className={`mesa-card ${mesa.estado === 'libre' ? 'disponible' : mesa.estado}`}
+                            onClick={() => {
+                               if (mesa.estado === 'libre') {
+                                  setIsOpeningMesaId(mesa.id);
+                               } else {
+                                  setSelectedMesa(mesa);
+                                  setPosTab('caja');
+                               }
+                            }}
                           >
-                             {/* BOTÓN CERRAR (X) */}
+                             <div className="mesa-badge">{mesa.numero}</div>
+                             
+                             <div className="mesa-header">
+                                <div className="mesa-info">
+                                   <span className="mesa-nombre">{mesa.estado === 'ocupada' || mesa.estado === 'cuenta' ? (mesa.mesero || 'SIN ASIGNAR') : `MESA ${mesa.numero}`}</span>
+                                   <span className="mesa-label">Responsable</span>
+                                </div>
+                                <div className="mesa-consumo">
+                                   <span className="mesa-precio">${(mesa.total || 0).toLocaleString()}</span>
+                                   <span className="mesa-label">Consumo</span>
+                                </div>
+                             </div>
+
+                             <div className="mesa-footer">
+                                <div className="mesa-field">
+                                   <span className="mesa-label">Ubicación</span>
+                                   <select 
+                                     value={mesa.zona}
+                                     onClick={(e) => e.stopPropagation()}
+                                     onChange={(e) => {
+                                        const newZ = e.target.value;
+                                        setMesas(prev => prev.map(m => m.id === mesa.id ? { ...m, zona: newZ } : m));
+                                     }}
+                                     className="field-select"
+                                   >
+                                      <option value="Salón Principal">Salón</option>
+                                      <option value="Terraza">Terraza</option>
+                                      <option value="VIP">VIP</option>
+                                   </select>
+                                </div>
+                                <div className="mesa-field">
+                                   <span className="mesa-label">Estado</span>
+                                   <div className={`estado-badge ${mesa.estado === 'libre' ? 'activa' : mesa.estado}`}>
+                                      ● {mesa.estado === 'libre' ? 'ACTIVA' : mesa.estado.toUpperCase()}
+                                   </div>
+                                </div>
+                                <div className="mesa-field">
+                                   <span className="mesa-label">Orden</span>
+                                   <button 
+                                     className="btn-ver-orden"
+                                     onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (mesa.estado !== 'libre') setActiveBubbleMesaId(mesa.id);
+                                     }}
+                                   >
+                                      Ver Orden
+                                   </button>
+                                </div>
+                             </div>
+
+                             <div className="mesa-actions">
+                                <button className="btn-action-mesa btn-action-fe" onClick={(e) => { e.stopPropagation(); alert('Facturación Electrónica...'); }}>Facturación Electrónica</button>
+                                <button className="btn-action-mesa btn-action-print" onClick={(e) => { e.stopPropagation(); alert('Imprimiendo Factura...'); }}>Imprimir Factura</button>
+                             </div>
+
                              <button 
                                onClick={(e) => {
                                   e.stopPropagation();
                                   if(confirm(`¿Eliminar la mesa ${mesa.numero}?`)) setMesas(mesas.filter(x => x.id !== mesa.id));
                                }}
-                               className="absolute top-4 right-4 w-6 h-6 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center text-sm font-bold opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all z-20"
+                               className="absolute top-2 right-2 w-5 h-5 rounded-full bg-black/5 text-slate-400 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all z-10"
                              >
                                 ×
                              </button>
-
-                             {/* SECCIÓN SUPERIOR: ID Y CONSUMO */}
-                             <div className="p-6 pb-4 flex justify-between items-center border-b border-slate-50">
-                                <div className="flex items-center gap-3">
-                                   <div className="w-10 h-10 rounded-full bg-[#1E293B] text-white flex items-center justify-center text-xs font-black shadow-lg">
-                                      {mesa.numero}
-                                   </div>
-                                   <div>
-                                      <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-none">
-                                         {isOccupied ? (mesa.mesero || 'Sin Asignar') : `Mesa ${mesa.numero}`}
-                                      </p>
-                                      <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Responsable</p>
-                                   </div>
-                                </div>
-                                <div className="text-right">
-                                   <p className="text-sm font-black text-emerald-600 tracking-tight">
-                                      ${(mesa.total || 0).toLocaleString()}
-                                   </p>
-                                   <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Consumo</p>
-                                </div>
-                             </div>
-
-                             {/* ETIQUETAS DE INFORMACIÓN RÁPIDA (TAGS) */}
-                             <div className="px-6 py-3 flex gap-2">
-                                <span className="bg-sky-50 text-sky-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{mesa.cap} PAX</span>
-                                <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{mesa.zona.split(' ')[0]}</span>
-                             </div>
-
-                             {/* ÁREA CENTRAL: LOGO O ESTADO */}
-                             <div 
-                               onClick={() => {
-                                  if (mesa.estado === 'libre') {
-                                     setIsOpeningMesaId(mesa.id);
-                                  } else {
-                                     setSelectedMesa(mesa);
-                                     setPosTab('caja');
-                                  }
-                               }}
-                               className="flex-1 flex flex-col items-center justify-center py-8 cursor-pointer group/inner hover:bg-slate-50/50 transition-colors"
-                             >
-                                {isOccupied || isBilled ? (
-                                   <div className="text-slate-200 transition-transform group-hover/inner:scale-110">
-                                      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                                         <circle cx="12" cy="12" r="9"/><path d="M12 8v8M16 12H8"/>
-                                         <path d="M7 12L12 7l5 5"/>
-                                      </svg>
-                                   </div>
-                                ) : (
-                                   <div className="text-center">
-                                      <span className="text-2xl font-black text-emerald-500/30 uppercase tracking-[0.2em] block mb-1">DISPONIBLE</span>
-                                      <span className="text-[10px] font-bold text-emerald-500/40 uppercase tracking-widest">LISTA PARA SERVICIO</span>
-                                   </div>
-                                )}
-                             </div>
-
-                             {/* SELECTORES DE CONTROL (DROPDOWNS) */}
-                             <div className="px-6 py-4 grid grid-cols-2 gap-3 border-t border-slate-50">
-                                <div>
-                                   <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1.5 ml-1">Ubicación</p>
-                                   <select 
-                                     value={mesa.zona}
-                                     onChange={(e) => {
-                                        const newZ = e.target.value;
-                                        setMesas(prev => prev.map(m => m.id === mesa.id ? { ...m, zona: newZ } : m));
-                                     }}
-                                     className="w-full bg-slate-50 border-none text-[9px] font-black text-slate-500 rounded-lg py-2 focus:ring-1 focus:ring-slate-200"
-                                   >
-                                      <option value="Salón Principal">Salón</option>
-                                      <option value="Terraza">Terraza</option>
-                                      <option value="VIP">Zona VIP</option>
-                                   </select>
-                                </div>
-                                <div>
-                                   <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1.5 ml-1">Estado</p>
-                                   <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${mesa.estado === 'libre' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                      <span className={`w-1.5 h-1.5 rounded-full ${mesa.estado === 'libre' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                                      <span className="text-[9px] font-black uppercase tracking-widest">{mesa.estado === 'libre' ? 'ACTIVA' : 'OCUPADA'}</span>
-                                   </div>
-                                </div>
-                             </div>
-
-                             {/* CONTROL DE TIEMPOS Y CATEGORÍAS (SOLO OCUPADAS) */}
-                             {isOccupied && (
-                                <div className="bg-slate-900 px-6 py-5 flex justify-between items-center text-white">
-                                   <div className="text-center">
-                                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Entrada</p>
-                                      <div className="flex items-center gap-1.5 justify-center">
-                                         <span className="text-[11px] font-black">12 min</span>
-                                         <span className="text-emerald-400 text-[10px]">⏱</span>
-                                      </div>
-                                   </div>
-                                   <div className="w-[1px] h-6 bg-slate-800"></div>
-                                   <div className="text-center">
-                                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Fuerte</p>
-                                      <div className="flex items-center gap-1.5 justify-center">
-                                         <span className="text-[11px] font-black text-amber-400">05 min</span>
-                                         <span className="text-amber-400 text-[10px]">⏱</span>
-                                      </div>
-                                   </div>
-                                   <div className="w-[1px] h-6 bg-slate-800"></div>
-                                   <div className="text-center">
-                                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Postre</p>
-                                      <div className="flex items-center gap-1.5 justify-center">
-                                         <span className="text-[11px] font-black text-slate-600">--</span>
-                                         <span className="text-slate-600 text-[10px]">⏱</span>
-                                      </div>
-                                   </div>
-                                </div>
-                             )}
                           </div>
                        );
                     })}
@@ -1962,8 +1964,42 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                     </div>
                  </div>
               )}
-           </div>
-        )}
+               {/* MODAL VER ORDEN (CENTERED) */}
+               {activeBubbleMesaId && (() => {
+                  const mesa = mesas.find(m => m.id === activeBubbleMesaId);
+                  if(!mesa) return null;
+                  const tableOrders = ordersByTable[mesa.id] || [];
+                  return (
+                     <div className="modal-overlay" onClick={() => setActiveBubbleMesaId(null)}>
+                        <div className="menu-bubble" onClick={(e) => e.stopPropagation()}>
+                           <div className="bubble-header">
+                              <span className="bubble-title">🍽 MESA {mesa.numero} — {mesa.mesero || 'ORDEN'}</span>
+                              <button onClick={() => setActiveBubbleMesaId(null)} className="bubble-close">✕</button>
+                           </div>
+                           <ul className="bubble-items">
+                              {tableOrders.length > 0 ? tableOrders.map((item, idx) => (
+                                 <li key={idx}>
+                                    <span>{item.name} (x{item.qty})</span>
+                                    <span>${(item.price * item.qty).toLocaleString()}</span>
+                                 </li>
+                              )) : (
+                                 <li className="text-gray-400 italic text-center py-10">No hay platos registrados en esta orden</li>
+                              )}
+                           </ul>
+                           <div className="bubble-total">
+                              <span>TOTAL A PAGAR</span>
+                              <span>${(mesa.total || 0).toLocaleString()}</span>
+                           </div>
+                           <div className="mt-6 grid grid-cols-2 gap-4">
+                              <button className="py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all">Pagar Ahora</button>
+                              <button onClick={() => { setSelectedMesa(mesa); setPosTab('caja'); setActiveBubbleMesaId(null); }} className="py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-50 transition-all">Editar Orden</button>
+                           </div>
+                        </div>
+                     </div>
+                  );
+               })()}
+            </div>
+         )}
 
         {/* MODULO GESTION DE TURNOS Y MESEROS */}
 
