@@ -38,16 +38,16 @@ const replace1 = `  // 4. Variables para Drag & Drop
   const handleScenarioClick = (escenario) => {
     setActiveScenario(escenario);
     if (escenario === 'Lunes normal') {
-      activeSetCategorias(activeCategorias.map(c => ({...c, estado: 'ACTIVA'})));
+      setCategorias(categorias.map(c => ({...c, estado: 'ACTIVA'})));
     } else if (escenario === 'Mediodía ejecutivo') {
-      activeSetCategorias(activeCategorias.map(c => {
+      setCategorias(categorias.map(c => {
         if (c.nombre.toLowerCase().includes('ejecutivo') || c.nombre.toLowerCase().includes('mediodía')) {
           return {...c, estado: 'ACTIVA'};
         }
         return c;
       }));
     } else if (escenario === 'Fin de semana') {
-      activeSetCategorias(activeCategorias.map(c => {
+      setCategorias(categorias.map(c => {
         if (c.horario && !c.horario.dias.includes('SABADO') && !c.horario.dias.includes('DOMINGO')) {
           return {...c, estado: 'INACTIVA'};
         }
@@ -92,7 +92,7 @@ const search3 = `      <div className="flex flex-col sm:flex-row items-start sm:
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {activeCategorias.sort((a, b) => a.orden - b.orden).map((cat, index) => (
+        {categorias.sort((a, b) => a.orden - b.orden).map((cat, index) => (
           <div 
             key={cat.id}
             draggable
@@ -148,7 +148,7 @@ const replace3 = `      <div className="flex flex-col sm:flex-row items-start sm
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {activeCategorias.sort((a, b) => a.orden - b.orden).map((cat, index) => {
+        {categorias.sort((a, b) => a.orden - b.orden).map((cat, index) => {
           const isScheduleActive = checkSchedule(cat.horario);
           const isManualActive = cat.estado === 'ACTIVA';
           const isEffectivelyActive = isManualActive && isScheduleActive;

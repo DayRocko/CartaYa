@@ -864,84 +864,17 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
 
   const getCategoryIcon = (cat, isActive) => {
     const color = isActive ? 'currentColor' : '#6B7280';
-    const icons = {
-      'Todos': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>,
-      'Platos fuertes': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h18M3 12a9 9 0 0 1 18 0M3 12c0 5 4 9 9 9s9-4 9-9M12 7v5"></path></svg>,
-      'Parrilla': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 10h14M8 15v4M16 15v4M7 5l1 5M16 5l-1 5M12 10v11"></path></svg>,
-      'Desayunos': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2"></path></svg>,
-      'Entradas': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 21 2c-2.5 4-3 5.5-4.1 11.2A7 7 0 0 1 11 20z"></path></svg>,
-      'Bebidas': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2l2 16h8l2-16H6zM10 2v5M14 2v5"></path></svg>,
-      'Postres': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c-3.3 0-6 2.7-6 6 0 2.2 1.2 4.1 3 5.2V22h6V13.2c1.8-1.1 3-3 3-5.2 0-3.3-2.7-6-6-6z"></path></svg>,
-      'Vinos': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8M12 15v7M8 22h8M7 2c0 7 2.5 13 5 13s5-6 5-13H7z"></path></svg>,
-      'Sopas': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11c0 5 4 9 9 9s9-4 9-9H3zM12 2v3M8 3v2M16 3v2"></path></svg>,
-      'Ensaladas': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 21 2c-2.5 4-3 5.5-4.1 11.2A7 7 0 0 1 11 20z"></path></svg>,
-      'Adiciones': <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>,
-    };
-    return icons[cat] || icons['Todos'];
+    return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8"></path></svg>;
   };
   const [activeNotePlatoId, setActiveNotePlatoId] = React.useState(null);
   const [activeNotePos, setActiveNotePos] = React.useState({ top: 0, left: 0 });
   const [itemNotes, setItemNotes] = React.useState({}); // { [platoId]: { type: '...', options: {...}, desc: '' } }
 
-  // --- MAPA DE IMÁGENES POR NOMBRE DE PLATO ---
-  const IMAGEN_MAP = {
-    'fettuccine': 'https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&q=80&w=300',
-    'lasagna': 'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?auto=format&fit=crop&q=80&w=300',
-    'spaghetti': 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?auto=format&fit=crop&q=80&w=300',
-    'carbonara': 'https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&q=80&w=300',
-    'penne': 'https://images.unsplash.com/photo-1567608285969-48e4bbe0d399?auto=format&fit=crop&q=80&w=300',
-    'pasta': 'https://images.unsplash.com/photo-1567608285969-48e4bbe0d399?auto=format&fit=crop&q=80&w=300',
-    'tagliatelle': 'https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&q=80&w=300',
-    'pizza': 'https://images.unsplash.com/photo-1574071318508-1cdbad80ad38?auto=format&fit=crop&q=80&w=300',
-    'margherita': 'https://images.unsplash.com/photo-1574071318508-1cdbad80ad38?auto=format&fit=crop&q=80&w=300',
-    'lomo': 'https://images.unsplash.com/photo-1558030006-45ef67dee93d?auto=format&fit=crop&q=80&w=300',
-    'churrasco': 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=300',
-    'pollo': 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=300',
-    'bandeja': 'https://images.unsplash.com/photo-1626700051175-6518a4993f47?auto=format&fit=crop&q=80&w=300',
-    'carne': 'https://images.unsplash.com/photo-1558030006-45ef67dee93d?auto=format&fit=crop&q=80&w=300',
-    'ensalada': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300',
-    'cesar': 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&q=80&w=300',
-    'bruschetta': 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?auto=format&fit=crop&q=80&w=300',
-    'burrata': 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&q=80&w=300',
-    'sopa': 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=300',
-    'crema': 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=300',
-    'tiramisu': 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&q=80&w=300',
-    'postre': 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&q=80&w=300',
-    'vino': 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&q=80&w=300',
-    'cerveza': 'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&q=80&w=300',
-    'limonada': 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&q=80&w=300',
-    'jugo': 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&q=80&w=300',
-    'agua': 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&q=80&w=300',
-    'cafe': 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=300',
-    'hamburguesa': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=300',
-    'salmon': 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=300',
-    'ceviche': 'https://images.unsplash.com/photo-1626700051175-6518a4993f47?auto=format&fit=crop&q=80&w=300',
-    'coca': 'https://images.unsplash.com/photo-1622483767028-3f66f34a507c?auto=format&fit=crop&q=80&w=300',
-    'gaseosa': 'https://images.unsplash.com/photo-1622483767028-3f66f34a507c?auto=format&fit=crop&q=80&w=300',
-  };
+  // --- MAPA DE IMÁGENES (Simplificado para optimización Babel) ---
+  const IMAGEN_MAP = {}; 
 
-  const MODIFIER_GROUPS = {
-    'coccion': {
-      title: 'Término de Cocción',
-      options: ['Azul', 'Término Medio', 'Tres Cuartos', 'Bien Cocido']
-    },
-    'sin': {
-      title: 'Quitar Ingredientes',
-      options: ['Sin Cebolla', 'Sin Ajo', 'Sin Sal', 'Sin Picante', 'Sin Cilantro']
-    },
-    'bebida_hielo': {
-      title: 'Preferencias de Hielo',
-      options: ['Con Hielo', 'Sin Hielo', 'Poco Hielo', 'Frapé']
-    },
-    'postre_acompañamiento': {
-      title: 'Acompañamiento',
-      options: ['Con Helado', 'Con Crema', 'Sencillo']
-    },
-    'ensalada_aderezo': {
-      title: 'Aderezo',
-      options: ['Vinagreta', 'César', 'Mostaza Miel', 'Sin Aderezo']
-    }
-  };
+  // --- MODIFICADORES MOCK (Simplificado para optimización Babel) ---
+  const MODIFIER_GROUPS = {}; 
 
   const getGroupsForType = (tipo) => {
     switch(tipo) {
@@ -953,28 +886,12 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
     }
   };
 
-  const getImagenPlato = (nombre) => {
-    if (!nombre) return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300';
-    const n = nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    for (const [kw, url] of Object.entries(IMAGEN_MAP)) { if (n.includes(kw)) return url; }
-    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300';
-  };
+  const getImagenPlato = (nombre) => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300';
 
   const getEmojiPlato = (nombre, cat) => {
     const n = ((nombre || '') + ' ' + (cat || '')).toLowerCase();
-    if (n.includes('pizza')) return '🍕';
-    if (n.includes('pasta') || n.includes('spaghetti') || n.includes('fettuccine') || n.includes('penne') || n.includes('lasagna') || n.includes('carbonara')) return '🍝';
-    if (n.includes('ensalada')) return '🥗';
-    if (n.includes('sopa') || n.includes('crema') || n.includes('caldo')) return '🍲';
-    if (n.includes('pollo')) return '🍗';
-    if (n.includes('carne') || n.includes('lomo') || n.includes('churrasco')) return '🥩';
-    if (n.includes('hambur') || n.includes('burger')) return '🍔';
-    if (n.includes('postre') || n.includes('tiramisu') || n.includes('panna') || n.includes('tarta')) return '🍰';
-    if (n.includes('vino') || n.includes('copa') || n.includes('chianti')) return '🍷';
-    if (n.includes('cerveza')) return '🍺';
-    if (n.includes('cafe') || n.includes('café')) return '☕';
-    if (n.includes('agua') || n.includes('jugo') || n.includes('limonada') || n.includes('gaseosa')) return '🥤';
-    if (n.includes('salmon') || n.includes('ceviche') || n.includes('camarones')) return '🐟';
+    const ems = { pizza:'🍕', pasta:'🍝', spaghetti:'🍝', fettuccine:'🍝', lasagna:'🍝', ensalada:'🥗', sopa:'🍲', crema:'🍲', pollo:'🍗', carne:'🥩', lomo:'🥩', burger:'🍔', postre:'🍰', vino:'🍷', cerveza:'🍺', cafe:'☕', jugo:'🥤', agua:'🥤', salmon:'🐟' };
+    for (const [k, v] of Object.entries(ems)) { if (n.includes(k)) return v; }
     return '🍽';
   };
 
@@ -4918,82 +4835,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
 
 // --- COMPONENTE MÓDULO 4: RECETAS E INVENTARIO ---
 function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
-  // activeTab elevated to parent
-
-  // ─── MOCK COSTOS (Auditoría Financiera) ─────────────────────────────────────
-  const MOCK_COSTOS = {
-    'Fettuccine al Funghi':     { costo: 8500  },
-    'Lasagna della Nonna':      { costo: 11500 },
-    'Spaghetti Carbonara':      { costo: null  },
-    'Pizza Diavola':            { costo: null  },
-    'Pizza Margherita':         { costo: 12000 },
-    'Calzone di Napoli':        { costo: 8500  },
-    'Pizza Quattro Formaggi':   { costo: 18000 },
-    'Pizza Funghi e Tartufo':   { costo: 15000 },
-    'Bruschettas al Pomodoro':  { costo: 15000 },
-    'Burrata di Puglia':        { costo: 12000 },
-    'Tiramisú della Casa':      { costo: 5500  },
-    'Copa de Chianti Classico': { costo: 5500  },
-  };
-
-  const MOCK_FUGAS = {
-    'Lasagna della Nonna':      { tipo: 'fuga',          msg: '3 unds. faltantes · Posible Fuga' },
-    'Tiramisú della Casa':      { tipo: 'no_registrado', msg: 'Consumo no registrado' },
-    'Copa de Chianti Classico': { tipo: 'no_registrado', msg: 'Consumo no registrado · Alerta' },
-  };
-
-  // ─── MOCK LÍNEAS DE RECETA POR PLATO ────────────────────────────────────────
-  const MOCK_LINEAS = {
-    'Fettuccine al Funghi': [
-      { id: 1, ingrediente: 'Pasta Fettuccine',  costo_unitario: 13000,  unidad_compra: 'kg', cantidad: 150, unidad_receta: 'g',  factor: 1.0  },
-      { id: 2, ingrediente: 'Champiñones París', costo_unitario: 28000,  unidad_compra: 'kg', cantidad: 100, unidad_receta: 'g',  factor: 0.85 },
-      { id: 3, ingrediente: 'Crema de Leche',    costo_unitario: 27500,  unidad_compra: 'l',  cantidad: 80,  unidad_receta: 'ml', factor: 0.95 },
-      { id: 4, ingrediente: 'Queso Parmesano',   costo_unitario: 120000, unidad_compra: 'kg', cantidad: 20,  unidad_receta: 'g',  factor: 1.0  },
-      { id: 5, ingrediente: 'Mantequilla',       costo_unitario: 36000,  unidad_compra: 'kg', cantidad: 15,  unidad_receta: 'g',  factor: 1.0  },
-      { id: 6, ingrediente: 'Vino Blanco',       costo_unitario: 46666,  unidad_compra: 'l',  cantidad: 30,  unidad_receta: 'ml', factor: 1.0  },
-      { id: 7, ingrediente: 'Ajo y Cebolla',     costo_unitario: 4000,   unidad_compra: 'kg', cantidad: 30,  unidad_receta: 'g',  factor: 0.70 },
-    ],
-    'Lasagna della Nonna': [
-      { id: 1, ingrediente: 'Láminas de Lasagna', costo_unitario: 9000,  unidad_compra: 'kg', cantidad: 200, unidad_receta: 'g', factor: 1.0  },
-      { id: 2, ingrediente: 'Carne Molida',       costo_unitario: 26000, unidad_compra: 'kg', cantidad: 180, unidad_receta: 'g', factor: 0.90 },
-      { id: 3, ingrediente: 'Salsa de Tomate',    costo_unitario: 12000, unidad_compra: 'kg', cantidad: 150, unidad_receta: 'g', factor: 1.0  },
-    ],
-    'Pizza Margherita': [
-      { id: 1, ingrediente: 'Masa de Pizza',       costo_unitario: 8000,  unidad_compra: 'kg', cantidad: 250, unidad_receta: 'g', factor: 1.0  },
-      { id: 2, ingrediente: 'Mozzarella di Bufala',costo_unitario: 55000, unidad_compra: 'kg', cantidad: 150, unidad_receta: 'g', factor: 1.0  },
-      { id: 3, ingrediente: 'Tomate San Marzano',  costo_unitario: 14000, unidad_compra: 'kg', cantidad: 120, unidad_receta: 'g', factor: 0.85 },
-    ],
-    'Calzone di Napoli': [
-      { id: 1, ingrediente: 'Masa de Pizza',   costo_unitario: 8000,  unidad_compra: 'kg', cantidad: 280, unidad_receta: 'g', factor: 1.0  },
-      { id: 2, ingrediente: 'Ricotta Fresca',  costo_unitario: 42000, unidad_compra: 'kg', cantidad: 120, unidad_receta: 'g', factor: 1.0  },
-      { id: 3, ingrediente: 'Jamón de Parma',  costo_unitario: 75000, unidad_compra: 'kg', cantidad: 60,  unidad_receta: 'g', factor: 1.0  },
-    ],
-    'Pizza Quattro Formaggi': [
-      { id: 1, ingrediente: 'Masa de Pizza',   costo_unitario: 8000,   unidad_compra: 'kg', cantidad: 250, unidad_receta: 'g', factor: 1.0 },
-      { id: 2, ingrediente: 'Gorgonzola',      costo_unitario: 85000,  unidad_compra: 'kg', cantidad: 80,  unidad_receta: 'g', factor: 1.0 },
-      { id: 3, ingrediente: 'Fontina',         costo_unitario: 70000,  unidad_compra: 'kg', cantidad: 80,  unidad_receta: 'g', factor: 1.0 },
-    ],
-    'Pizza Funghi e Tartufo': [
-      { id: 1, ingrediente: 'Masa de Pizza',       costo_unitario: 8000,   unidad_compra: 'kg', cantidad: 250, unidad_receta: 'g',  factor: 1.0 },
-      { id: 2, ingrediente: 'Champiñones París',   costo_unitario: 28000,  unidad_compra: 'kg', cantidad: 180, unidad_receta: 'g',  factor: 0.85},
-      { id: 3, ingrediente: 'Aceite de Trufa',     costo_unitario: 180000, unidad_compra: 'l',  cantidad: 15,  unidad_receta: 'ml', factor: 1.0 },
-    ],
-    'Bruschettas al Pomodoro': [
-      { id: 1, ingrediente: 'Pan Artesanal',  costo_unitario: 12000, unidad_compra: 'kg', cantidad: 200, unidad_receta: 'g', factor: 1.0  },
-      { id: 2, ingrediente: 'Tomate Fresco', costo_unitario: 6000,  unidad_compra: 'kg', cantidad: 250, unidad_receta: 'g', factor: 0.80 },
-    ],
-    'Burrata di Puglia': [
-      { id: 1, ingrediente: 'Burrata Import.', costo_unitario: 95000, unidad_compra: 'kg', cantidad: 125, unidad_receta: 'g', factor: 1.0 },
-      { id: 2, ingrediente: 'Rúcula Fresca',   costo_unitario: 22000, unidad_compra: 'kg', cantidad: 40,  unidad_receta: 'g', factor: 0.85},
-    ],
-    'Tiramisú della Casa': [
-      { id: 1, ingrediente: 'Mascarpone',     costo_unitario: 48000, unidad_compra: 'kg', cantidad: 80, unidad_receta: 'g',  factor: 1.0 },
-      { id: 2, ingrediente: 'Café Expreso',   costo_unitario: 65000, unidad_compra: 'kg', cantidad: 30, unidad_receta: 'g',  factor: 1.0 },
-    ],
-    'Copa de Chianti Classico': [
-      { id: 1, ingrediente: 'Chianti Classico DOCG', costo_unitario: 85000, unidad_compra: 'l', cantidad: 150, unidad_receta: 'ml', factor: 1.0 },
-    ],
-  };
+  const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
   // ─── STATE ───────────────────────────────────────────────────────────────────
   // Panel open state: stores plato.id | null
@@ -5057,9 +4899,9 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
     setPlatosLineas(prev => {
       if (prev[plato.id]) return prev; // already loaded
       // Primero intenta cargar desde recetas importadas del Excel
+      const pNorm = norm(plato.nombre);
       const recetasDelPlato = (recetas || []).filter(r =>
-        r.nombre_plato && plato.nombre &&
-        r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim()
+        r.nombre_plato && norm(r.nombre_plato) === pNorm
       );
       
       let lineasIniciales = [];
@@ -5079,8 +4921,8 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
         }));
       } else {
         // Fallback a datos mock hardcodeados
-        lineasIniciales = MOCK_LINEAS[plato.nombre]
-          ? MOCK_LINEAS[plato.nombre].map(l => ({ ...l }))
+        lineasIniciales = null
+          ? null.map(l => ({ ...l }))
           : [];
       }
       return { ...prev, [plato.id]: lineasIniciales };
@@ -5110,48 +4952,37 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
     }));
   };
 
-  // ─── ENRICH PLATOS ────────────────────────────────────────────────────────────
-  const MOCK_RECETA_ACTIVA = new Set([
-    'Fettuccine al Funghi', 'Lasagna della Nonna', 'Pizza Margherita',
-    'Calzone di Napoli', 'Pizza Quattro Formaggi', 'Pizza Funghi e Tartufo',
-    'Bruschettas al Pomodoro', 'Burrata di Puglia', 'Tiramisú della Casa',
-    'Copa de Chianti Classico',
-  ]);
+  // ─── FORMATO DE MONEDA Y PORCENTAJE ─────────────────────────────────────────────────────────────
+  const formatCOP = (val) => {
+    const n = parseFloat(val);
+    if (isNaN(n) || val === null || val === undefined) return '—';
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n);
+  };
 
+  const formatPct = (val) => {
+    const n = parseFloat(val);
+    if (isNaN(n) || val === null || val === undefined) return '—';
+    // El valor del Excel ya viene como decimal (0.78 = 78%)
+    return (n * 100).toFixed(1) + '%';
+  };
+
+  // ─── ENRICH PLATOS ─────────────────────────────────────────────────────────────
+  // Lee directamente los campos enriquecidos que vienen del parser de 5_RECETAS
   const platosEnriquecidos = (platos || []).map(plato => {
-    // Buscar la PRIEMRA receta que coincida con el nombre del plato y tenga los valores calculados
-    const unaReceta = (recetas || []).find(r => 
-      r.nombre_plato &&
-      r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim() &&
-      r.costo_por_plato !== null
-    );
-    
-    // Check if it has any recipe rows (to determine state)
-    const tieneCualquierReceta = MOCK_RECETA_ACTIVA.has(plato.nombre) || (recetas || []).some(r => r.nombre_plato && r.nombre_plato.toLowerCase().trim() === plato.nombre.toLowerCase().trim());
-    
-    // Extraer campos del formato 5_RECETAS o usar fallbacks si es null
-    const costoMP = unaReceta && unaReceta.costo_por_plato !== null ? unaReceta.costo_por_plato : null;
-    const margenPctProm = unaReceta && unaReceta.margen_plato_pct !== null ? unaReceta.margen_plato_pct : null;
-    const pvpSugerido = unaReceta && unaReceta.pvp_sugerido_plato !== null ? unaReceta.pvp_sugerido_plato : null;
-    const margenBrutoPesos = unaReceta && unaReceta.margen_plato_pesos !== null ? unaReceta.margen_plato_pesos : null;
+    const pNorm = norm(plato.nombre);
+    const tieneReceta = plato.tiene_receta || (recetas || []).some(r => r.nombre_plato && norm(r.nombre_plato) === pNorm);
 
-    const fuga = MOCK_FUGAS[plato.nombre] || null;
-    let alertaState = 'sync';
-    if (!tieneCualquierReceta) alertaState = 'no_registrado';
-    else if (fuga && fuga.tipo === 'fuga') alertaState = 'fuga';
-    else if (fuga && fuga.tipo === 'no_registrado') alertaState = 'no_registrado';
-    
-    return { 
-      ...plato, 
-      tieneReceta: tieneCualquierReceta, 
-      costoMP, 
-      margenPctProm, 
-      pvpSugerido, 
-      margenBrutoPesos,
-      alertaState, 
-      fugaMsg: fuga ? fuga.msg : null 
+    return {
+      ...plato,
+      tieneReceta,
+      costoMP: (plato.costo_materia_prima !== null && plato.costo_materia_prima !== undefined) ? plato.costo_materia_prima : null,
+      margenPctProm: (plato.margen_bruto_pct_promedio !== null && plato.margen_bruto_pct_promedio !== undefined) ? plato.margen_bruto_pct_promedio : null,
+      pvpSugerido: (plato.precio_venta_sugerido !== null && plato.precio_venta_sugerido !== undefined) ? plato.precio_venta_sugerido : null,
+      margenBrutoPesos: (plato.margen_bruto_pesos !== null && plato.margen_bruto_pesos !== undefined) ? plato.margen_bruto_pesos : null,
+      alertaState: tieneReceta ? 'sync' : 'no_registrado',
+      fugaMsg: tieneReceta ? '' : 'Sin receta en 5_RECETAS'
     };
-  });
+  });;
 
   // ─── ESCANDALLO PANEL ─────────────────────────────────────────────────────────
   const EscandalloPanel = ({ plato }) => {
@@ -5376,7 +5207,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
               {platosEnriquecidos.map((plato, idx) => {
                 const isExpanded = expandedPlato === plato.id;
                 const rowBg = idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)';
-                const ms = margenStyle(plato.margenPctProm);
+                const ms = margenStyle(plato.margenPctProm !== null ? plato.margenPctProm * 100 : null);
                 return (
                   <React.Fragment key={plato.id || idx}>
                     <tr
@@ -5389,25 +5220,31 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                       </td>
                       {/* COSTO MATERIA PRIMA */}
                       <td className="px-4 py-3">
-                        {plato.costoMP > 0 
-                          ? <span className="font-bold text-slate-700 text-sm">${plato.costoMP.toLocaleString('es-CO')}</span>
+                        {plato.costoMP !== null
+                          ? <span className="font-bold text-slate-700 text-sm">{formatCOP(plato.costoMP)}</span>
                           : <span style={{color:'#D1D5DB',fontWeight:700}}>—</span>
                         }
                       </td>
                       {/* MARGEN % PROMEDIO */}
                       <td className="px-4 py-3 text-center">
-                        {plato.margenPctProm > 0
-                          ? <span className="font-black text-sm px-3 py-1 rounded-lg" style={{background: ms.bg, color: ms.color, border:`1px solid ${ms.border}`}}>{plato.margenPctProm}%</span>
+                        {plato.margenPctProm !== null
+                          ? <span className="font-black text-sm px-3 py-1 rounded-lg" style={{background: ms.bg, color: ms.color, border:`1px solid ${ms.border}`}}>{formatPct(plato.margenPctProm)}</span>
                           : <span style={{color:'#D1D5DB',fontWeight:700}}>—</span>
                         }
                       </td>
                       {/* PRECIO VENTA SUGERIDO */}
                       <td className="px-4 py-3 text-right">
-                        <span className="font-black text-slate-900 text-sm">${(plato.pvpSugerido||0).toLocaleString('es-CO')}</span>
+                        {plato.pvpSugerido !== null
+                          ? <span className="font-black text-slate-900 text-sm">{formatCOP(plato.pvpSugerido)}</span>
+                          : <span style={{color:'#D1D5DB',fontWeight:700}}>—</span>
+                        }
                       </td>
                       {/* MARGEN PESOS */}
                       <td className="px-4 py-3 text-right">
-                        <span className="font-bold text-slate-700 text-sm">${(plato.margenBrutoPesos||0).toLocaleString('es-CO')}</span>
+                        {plato.margenBrutoPesos !== null
+                          ? <span className="font-bold text-slate-700 text-sm">{formatCOP(plato.margenBrutoPesos)}</span>
+                          : <span style={{color:'#D1D5DB',fontWeight:700}}>—</span>
+                        }
                       </td>
                       {/* ALERTA FUGAS */}
                       <td className="px-4 py-3 text-center">
@@ -5540,7 +5377,8 @@ function ViewMenu({
 
   const guardarEnLocalStorage = () => {
     localStorage.setItem('cartaya_menu_data', JSON.stringify({
-      categorias, platos, recetas, inventario, activeCatNames, categoriasExpandidas
+      categorias, platos, recetas, inventario, activeCatNames, categoriasExpandidas,
+      gruposMod, opcionesMod, vinculosMod
     }));
   };
 
@@ -5555,7 +5393,7 @@ function ViewMenu({
       setShowToast(true);
     }, 1500);
     return () => clearTimeout(autoSaveTimeoutRef.current);
-  }, [categorias, platos, recetas, inventario]);
+  }, [categorias, platos, recetas, inventario, gruposMod, opcionesMod, vinculosMod]);
 
   React.useEffect(() => {
     if (showToast) {
@@ -5634,6 +5472,9 @@ function ViewMenu({
     setPlatos([]);
     setRecetas([]);
     setInventario([]);
+    setGruposMod([]);
+    setOpcionesMod([]);
+    setVinculosMod([]);
     setActiveCatNames([]);
     setCategoriasExpandidas([]);
     localStorage.removeItem('cartaya_menu_data');
@@ -5764,8 +5605,25 @@ function ViewMenu({
             stock_min: ['minimo', 'alerta', 'stockminimo', 'min'],
             stock_actual: ['stock', 'actual', 'cantidadcompra', 'existencia', 'stockactual'],
             subtotal: ['subtotal', 'totalcosto', 'costolinea'],
-            margen_pct: ['margen', 'rentabilidad', 'porcentajemargen', 'margin'],
-            pvp_sug: ['pvpsugerido', 'preciosugerido', 'sugerencia', 'pvpsugeridoplato']
+            margen_pct: ['margen', 'rentabilidad', 'porcentajemargen', 'margin', 'margenbruto%'],
+            pvp_sug: ['pvpsugerido', 'preciosugerido', 'sugerencia', 'pvpsugeridoplato', 'pvpsugerido(siniva)'],
+            costo_plato: ['costoplato', 'costomateriaprima', 'costototalplato', 'costomateriaprimaplato'],
+            margen_pesos: ['margenpesos', 'margenbruto', 'ganancia', 'margenbrutopesosplato']
+          },
+          mod_grupo: {
+            nombre: ['nombre', 'grupo', 'modificador', 'grupomodificador', 'nombregrupo'],
+            tipo: ['tipo', 'seleccion', 'tiposeleccion'],
+            obligatorio: ['obligatorio', 'requerido'],
+            min: ['min', 'minimo', 'minopciones'],
+            max: ['max', 'maximo', 'maxopciones'],
+            estado: ['estado', 'activo', 'status'],
+            aplica: ['aplica', 'platos', 'vinculo', 'aplicaplato', 'aplica_a_platos'],
+            orden: ['orden', 'posicion', 'orden_en_plato']
+          },
+          mod_opcion: {
+            nombre: ['nombre', 'opcion', 'item', 'nombreopcion'],
+            grupo: ['grupo', 'nombregrupo', 'grupomodificador'],
+            precio: ['precio', 'adicional', 'valor', 'recargo', 'precio_adicional']
           }
         };
 
@@ -5859,36 +5717,119 @@ function ViewMenu({
         });
 
         // 3. IMPORTAR RECETAS E INVENTARIO (CORAZÓN DEL SUBMÓDULO)
-        const sRec = findSheet(['RECETAS', 'RECETA', 'INGREDIENTES', '5_']);
-        let rowsRec = readSheetRobust(sRec, 'receta');
-        
-        // Fallback especial para la plantilla "5_RECETAS" si no detectó encabezados por el diseño de celdas combinadas
-        if (rowsRec.length === 0 && sRec) {
-          const raw = window.XLSX.utils.sheet_to_json(sRec, { header: 1, defval: '' });
-          if (raw.length > 3) {
-            rowsRec = raw.slice(3).filter(r => r[0] || r[1]).map(r => ({
-              plato: r[0], ingrediente: r[1], proveedor: r[2], stock_min: r[3],
-              presentacion: r[4], cantidad_compra: r[5], unidad: r[6],
-              costo_total: r[7], costo_unit: r[9], cantidad: r[10],
-              subtotal: r[12], margen_pct: r[13], pvp_sug: r[18]
-            }));
-          }
+        // Buscar la hoja de recetas con normalización flexible
+        const normalizeSheet = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const recSheetName = wb.SheetNames.find(n =>
+          normalizeSheet(n).includes('RECETA') || normalizeSheet(n).includes('5RECETA')
+        );
+        const sRec = recSheetName ? wb.Sheets[recSheetName] : findSheet(['RECETAS', 'RECETA', 'INGREDIENTES', '5_']);
+
+        // Extraer ingredientes y análisis financiero de 5_RECETAS
+        const platoData = {};
+        const recs = [];
+
+        if (sRec) {
+          const raw5 = window.XLSX.utils.sheet_to_json(sRec, { header: 1, defval: '' });
+          const dataRows5 = raw5.length >= 4 ? raw5.slice(3) : [];
+          let currentPlato = '';
+
+          dataRows5.forEach((row, i) => {
+            const colA = String(row[0] || '').trim();
+            if (colA) currentPlato = colA;
+
+            const colQ = row[16], colR = row[17], colS = row[18], colT = row[19];
+            const tieneValorQ = colQ !== '' && colQ !== null && colQ !== undefined && !isNaN(parseFloat(colQ));
+
+            if (tieneValorQ && currentPlato && !platoData[currentPlato]) {
+              platoData[currentPlato] = {
+                costoMateriaPrima:      parseFloat(colQ) || 0,
+                margenBrutoPctPromedio: parseFloat(colR) || 0,
+                precioVentaSugerido:    parseFloat(colS) || 0,
+                margenBrutoPesos:       parseFloat(colT) || 0,
+              };
+            }
+
+            const ingrediente = String(row[1] || '').trim();
+            if (ingrediente && currentPlato) {
+              recs.push({
+                id: `rec-${Date.now()}-${i}`,
+                nombre_plato:         currentPlato,
+                ingrediente_nombre:   ingrediente,
+                cantidad:             parseNum(row[10]),  // Col K: Cantidad (Porción)
+                unidad_medida:        row[11] || 'g',     // Col L: Unidad de Medida
+                subtotal_costo:       parseNum(row[12]),  // Col M: Subtotal Costo MP
+                margen_ingrediente_pct: parseNum(row[13]) * (String(row[13]).includes('%') ? 1 : 100), // Col N
+                pvp_sugerido_ing:     parseNum(row[14]),  // Col O: Precio Venta Sugerido
+                margen_bruto_pesos_ing: parseNum(row[15]),// Col P: Margen Bruto Pesos
+                costo_por_plato:      tieneValorQ ? parseFloat(colQ) : 0,
+                margen_plato_pct:     tieneValorQ ? parseFloat(colR) * 100 : 0,
+                pvp_sugerido_plato:   tieneValorQ ? parseFloat(colS) : 0,
+                margen_plato_pesos:   tieneValorQ ? parseFloat(colT) : 0,
+                proveedor:            row[2] || '',       // Col C
+                stock_minimo:         parseNum(row[3]),   // Col D
+                unidad_compra:        row[4] || 'kg',     // Col E
+                costo_unitario:       parseNum(row[9]),   // Col J
+                stock_actual:         parseNum(row[5]) || 0,  // Col F
+              });
+            }
+          });
         }
 
-        const recs = rowsRec.filter(r => r.plato || r.ingrediente).map((r, i) => ({
-          id: `rec-${Date.now()}-${i}`,
-          nombre_plato: String(r.plato || '').trim(),
-          ingrediente_nombre: String(r.ingrediente || '').trim(),
-          cantidad: parseNum(r.cantidad),
-          unidad_medida: r.unidad || 'g',
-          costo_unitario: parseNum(r.costo_unit),
-          subtotal_costo: parseNum(r.subtotal),
-          margen_plato_pct: parseNum(r.margen_pct) * (String(r.margen_pct).includes('%') ? 1 : 100),
-          pvp_sugerido_plato: parseNum(r.pvp_sug),
-          proveedor: r.proveedor || '',
-          stock_minimo: parseNum(r.stock_min),
-          stock_actual: parseNum(r.stock_actual) || parseNum(r.cantidad_compra)
+        // Enriquecer platos con análisis financiero de 5_RECETAS
+        const platosEnriquecidos = pls.map((plato) => {
+          const receta = platoData[plato.nombre] || null;
+          return {
+            ...plato,
+            costo_materia_prima:       receta ? receta.costoMateriaPrima       : null,
+            margen_bruto_pct_promedio: receta ? receta.margenBrutoPctPromedio   : null,
+            precio_venta_sugerido:     receta ? receta.precioVentaSugerido      : null,
+            margen_bruto_pesos:        receta ? receta.margenBrutoPesos         : null,
+            tiene_receta:              receta !== null,
+          };
+        });
+
+        // 4. IMPORTAR MODIFICADORES
+        const sMod = findSheet(['MODIFICADORES', 'GRUPOS', '3_']);
+        const rowsMod = readSheetRobust(sMod, 'mod_grupo');
+        const grupos = rowsMod.filter(r => r.nombre).map((r, i) => ({
+          id: `gmod-${Date.now()}-${i}`,
+          nombre: String(r.nombre).trim(),
+          tipo_seleccion: String(r.tipo || 'UNICA').toUpperCase(),
+          obligatorio: parseBool(r.obligatorio),
+          min_selecciones: parseInt(r.min) || 1,
+          max_selecciones: parseInt(r.max) || 1,
+          estado: parseBool(r.estado) ? 'ACTIVO' : 'INACTIVO',
+          _aplica_a_platos: String(r.aplica || '').trim(),
+          _orden: parseInt(r.orden) || (i + 1)
         }));
+
+        const sOp = findSheet(['OPCIONES', '4_']);
+        const rowsOp = readSheetRobust(sOp, 'mod_opcion');
+        const opciones = rowsOp.filter(r => r.nombre).map((r, i) => {
+          const gObj = grupos.find(g => norm(g.nombre) === norm(r.grupo));
+          return {
+            id: `opmod-${Date.now()}-${i}`,
+            grupo_id: gObj ? gObj.id : '',
+            nombre: String(r.nombre).trim(),
+            precio_adicional: parseNum(r.precio),
+            estado: 'DISPONIBLE',
+            orden: i + 1
+          };
+        });
+
+        // Generar vínculos de modificadores
+        const vinculos = [];
+        grupos.forEach(g => {
+          if (!g._aplica_a_platos) return;
+          if (norm(g._aplica_a_platos) === 'todos') {
+            pls.forEach(p => vinculos.push({ plato_id: p.id, grupo_id: g.id, orden_en_plato: g._orden }));
+          } else {
+            g._aplica_a_platos.split(',').forEach(n => {
+              const p = pls.find(pl => norm(pl.nombre) === norm(n.trim()));
+              if (p) vinculos.push({ plato_id: p.id, grupo_id: g.id, orden_en_plato: g._orden });
+            });
+          }
+        });
 
         // Generar inventario único
         const invMap = {};
@@ -5910,21 +5851,30 @@ function ViewMenu({
 
         // --- ACTUALIZAR ESTADO ---
         if (cats.length > 0) setCategorias(cats);
-        if (pls.length > 0) setPlatos(pls);
+        if (platosEnriquecidos.length > 0) setPlatos(platosEnriquecidos);
         if (recs.length > 0) setRecetas(recs);
+        if (grupos.length > 0) setGruposMod(grupos);
+        if (opciones.length > 0) setOpcionesMod(opciones);
+        if (vinculos.length > 0) setVinculosMod(vinculos);
+        
         const newInv = Object.values(invMap);
         if (newInv.length > 0) setInventario(newInv);
+
+        console.log('[Import Summary]', { cats: cats.length, platos: pls.length, recetas: recs.length, grupos: grupos.length, opciones: opciones.length, vinculos: vinculos.length });
 
         setImportResult({
           categorias: cats.length,
           platos: pls.length,
           recetas: recs.length,
-          insumos: newInv.length
+          insumos: newInv.length,
+          modificadores: grupos.length
         });
         
         setFechaCarga(new Date().toLocaleString());
         setImporting(false);
-        alert(`✅ ¡Importación Exitosa!\n\nSe cargaron:\n- ${cats.length} Categorías\n- ${pls.length} Platos\n- ${recs.length} Líneas de Receta\n- ${newInv.length} Insumos de Inventario`);
+        const platosConReceta = platosEnriquecidos.filter(p => p.tiene_receta).length;
+        const platosSinReceta = platosEnriquecidos.filter(p => !p.tiene_receta).length;
+        alert(`✅ Importación exitosa:\n  📚 ${cats.length} categorías\n  🍽 ${platosEnriquecidos.length} platos\n  📋 ${Object.keys(platoData).length} platos con receta y análisis de margen\n  ⚠️ ${platosSinReceta} platos sin receta registrada en 5_RECETAS`);
 
       } catch (err) {
         console.error('Error Crítico Importación:', err);

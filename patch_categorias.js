@@ -13,8 +13,8 @@ const newBlock = ` function MenuCategoriasBlock({ restauranteId, categorias = nu
     { id: 'uuid-3', nombre: 'Pizzas Premium', canal: 'DELIVERY', orden: 3, estado: 'INACTIVA', horario: null }
   ]);
 
-  const activeCategorias = categorias || localCats;
-  const activeSetCategorias = setCategorias || setLocalCats;
+  const categorias = categorias || localCats;
+  const setCategorias = setCategorias || setLocalCats;
 
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -45,19 +45,19 @@ const newBlock = ` function MenuCategoriasBlock({ restauranteId, categorias = nu
     setFormError('');
     const nombreLimpio = formData.nombre.trim();
     if (!nombreLimpio) return setFormError('El nombre de la categoría es obligatorio.');
-    const isDuplicate = activeCategorias.some(c => c.nombre.toLowerCase() === nombreLimpio.toLowerCase() && c.id !== editingCategory?.id);
+    const isDuplicate = categorias.some(c => c.nombre.toLowerCase() === nombreLimpio.toLowerCase() && c.id !== editingCategory?.id);
     if (isDuplicate) return setFormError('Ya existe una categoría con este nombre (Error 409).');
     const nuevaCategoria = {
       id: editingCategory ? editingCategory.id : \`uuid-\${Date.now()}\`,
       nombre: nombreLimpio, canal: formData.canal,
-      orden: editingCategory ? editingCategory.orden : (activeCategorias.length > 0 ? Math.max(...activeCategorias.map(c => c.orden)) + 1 : 1),
+      orden: editingCategory ? editingCategory.orden : (categorias.length > 0 ? Math.max(...categorias.map(c => c.orden)) + 1 : 1),
       estado: formData.estado,
       horario: formData.hasHorario ? { inicio: formData.hora_inicio, fin: formData.hora_fin, dias: formData.dias } : null
     };
     if (editingCategory) {
-      activeSetCategorias(activeCategorias.map(c => c.id === editingCategory.id ? nuevaCategoria : c));
+      setCategorias(categorias.map(c => c.id === editingCategory.id ? nuevaCategoria : c));
     } else {
-      activeSetCategorias([...activeCategorias, nuevaCategoria]);
+      setCategorias([...categorias, nuevaCategoria]);
     }
     setShowModal(false);
   };
@@ -68,30 +68,30 @@ const newBlock = ` function MenuCategoriasBlock({ restauranteId, categorias = nu
       const ok = window.confirm(\`⚠️ Al desactivar "\${cat.nombre}" sus platos dejarán de aparecer en la carta.\\n\\n¿Continuar?\`);
       if (!ok) return;
     }
-    activeSetCategorias(activeCategorias.map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
+    setCategorias(categorias.map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
     fetch('/api/categorias/toggle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: cat.id, estado: nuevoEstado }) }).catch(() => {});
   };
 
   const handleDelete = (cat) => {
     const ok = window.confirm(\`🗑️ ¿Eliminar la categoría "\${cat.nombre}"?\\n\\nEsta acción es irreversible.\`);
     if (!ok) return;
-    activeSetCategorias(activeCategorias.filter(c => c.id !== cat.id));
+    setCategorias(categorias.filter(c => c.id !== cat.id));
   };
 
   const handleDragStart = (e, position) => { dragItem.current = position; };
   const handleDragEnter = (e, position) => { dragOverItem.current = position; };
   const handleDragEnd = () => {
-    const copy = [...activeCategorias];
+    const copy = [...categorias];
     const dragged = copy[dragItem.current];
     copy.splice(dragItem.current, 1);
     copy.splice(dragOverItem.current, 0, dragged);
-    activeSetCategorias(copy.map((c, i) => ({ ...c, orden: i + 1 })));
+    setCategorias(copy.map((c, i) => ({ ...c, orden: i + 1 })));
     dragItem.current = null; dragOverItem.current = null;
   };
 
   const handleToggleScheduleActive = (cat) => {
     if (cat.horario) {
-      activeSetCategorias(activeCategorias.map(c => c.id === cat.id ? { ...c, horario: null } : c));
+      setCategorias(categorias.map(c => c.id === cat.id ? { ...c, horario: null } : c));
       setExpandedSchedule(null);
     } else {
       setInlineHorario(prev => ({ ...prev, [cat.id]: { inicio: '07:00', fin: '22:00', dias: ['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO','DOMINGO'] } }));
@@ -115,7 +115,7 @@ const newBlock = ` function MenuCategoriasBlock({ restauranteId, categorias = nu
   const handleSaveInlineSchedule = (cat) => {
     const h = inlineHorario[cat.id];
     if (!h || h.dias.length === 0) return;
-    activeSetCategorias(activeCategorias.map(c => c.id === cat.id ? { ...c, horario: { inicio: h.inicio, fin: h.fin, dias: h.dias } } : c));
+    setCategorias(categorias.map(c => c.id === cat.id ? { ...c, horario: { inicio: h.inicio, fin: h.fin, dias: h.dias } } : c));
     setExpandedSchedule(null);
   };
 
@@ -157,7 +157,7 @@ const newBlock = ` function MenuCategoriasBlock({ restauranteId, categorias = nu
             </tr>
           </thead>
           <tbody>
-            {[...activeCategorias].sort((a,b) => a.orden - b.orden).map((cat, index) => (
+            {[...categorias].sort((a,b) => a.orden - b.orden).map((cat, index) => (
               <React.Fragment key={cat.id}>
                 <tr
                   draggable onDragStart={(e) => handleDragStart(e, index)} onDragEnter={(e) => handleDragEnter(e, index)}
@@ -224,7 +224,7 @@ const newBlock = ` function MenuCategoriasBlock({ restauranteId, categorias = nu
                 )}
               </React.Fragment>
             ))}
-            {activeCategorias.length === 0 && (
+            {categorias.length === 0 && (
               <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">No hay categorías. Crea la primera con "+ Nueva Categoría".</td></tr>
             )}
           </tbody>

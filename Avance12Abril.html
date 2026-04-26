@@ -1605,17 +1605,17 @@
         setFormError('');
         const nombreLimpio = formData.nombre.trim();
         if (!nombreLimpio) return setFormError('El nombre de la categoría es obligatorio.');
-        const isDuplicate = activeCategorias.some(c => c.nombre.toLowerCase() === nombreLimpio.toLowerCase() && c.id !== editingCategory?.id);
+        const isDuplicate = (categorias || []).some(c => c.nombre.toLowerCase() === nombreLimpio.toLowerCase() && c.id !== editingCategory?.id);
         if (isDuplicate) return setFormError('Ya existe una categoría con este nombre (Error 409).');
         const nuevaCategoria = {
           id: editingCategory ? editingCategory.id : `uuid-${Date.now()}`,
           nombre: nombreLimpio, canal: formData.canal,
-          orden: editingCategory ? editingCategory.orden : (activeCategorias.length > 0 ? Math.max(...activeCategorias.map(c => c.orden)) + 1 : 1),
+          orden: editingCategory ? editingCategory.orden : (categorias.length > 0 ? Math.max(...(categorias || []).map(c => c.orden)) + 1 : 1),
           estado: formData.estado,
           horario: formData.hasHorario ? { inicio: formData.hora_inicio, fin: formData.hora_fin, dias: formData.dias } : null
         };
         if (editingCategory) {
-          setCategorias(categorias.map(c => c.id === editingCategory.id ? nuevaCategoria : c));
+          setCategorias((categorias || []).map(c => c.id === editingCategory.id ? nuevaCategoria : c));
         } else {
           setCategorias([...categorias, nuevaCategoria]);
         }
@@ -1628,7 +1628,7 @@
           const ok = window.confirm(`⚠️ Al desactivar "${cat.nombre}" sus platos dejarán de aparecer en la carta.\n\n¿Continuar?`);
           if (!ok) return;
         }
-        setCategorias(categorias.map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
+        setCategorias((categorias || []).map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
         if (nuevoEstado === 'ACTIVA') {
           setActiveCatNames(prev => prev.includes(cat.nombre) ? prev : [...prev, cat.nombre]);
           setCategoriasExpandidas(prev => prev.includes(cat.nombre) ? prev : [...prev, cat.nombre]);
@@ -1641,13 +1641,13 @@
       const handleDelete = (cat) => {
         const ok = window.confirm(`🗑️ ¿Eliminar la categoría "${cat.nombre}"?\n\nEsta acción es irreversible.`);
         if (!ok) return;
-        setCategorias(categorias.filter(c => c.id !== cat.id));
+        setCategorias((categorias || []).filter(c => c.id !== cat.id));
       };
 
       const handleDragStart = (e, position) => { dragItem.current = position; };
       const handleDragEnter = (e, position) => { dragOverItem.current = position; };
       const handleDragEnd = () => {
-        const copy = [...activeCategorias];
+        const copy = [...(categorias || [])];
         const dragged = copy[dragItem.current];
         copy.splice(dragItem.current, 1);
         copy.splice(dragOverItem.current, 0, dragged);
@@ -1657,7 +1657,7 @@
 
       const handleToggleScheduleActive = (cat) => {
         if (cat.horario) {
-          activeSetCategorias(activeCategorias.map(c => c.id === cat.id ? { ...c, horario: null } : c));
+          setCategorias((categorias || []).map(c => c.id === cat.id ? { ...c, horario: null } : c));
           setExpandedSchedule(null);
         } else {
           setInlineHorario(prev => ({ ...prev, [cat.id]: { inicio: '07:00', fin: '22:00', dias: ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'] } }));
@@ -1681,7 +1681,7 @@
       const handleSaveInlineSchedule = (cat) => {
         const h = inlineHorario[cat.id];
         if (!h || h.dias.length === 0) return;
-        setCategorias(categorias.map(c => c.id === cat.id ? { ...c, horario: { inicio: h.inicio, fin: h.fin, dias: h.dias } } : c));
+        setCategorias((categorias || []).map(c => c.id === cat.id ? { ...c, horario: { inicio: h.inicio, fin: h.fin, dias: h.dias } } : c));
         setExpandedSchedule(null);
       };
 
@@ -1723,7 +1723,7 @@
                 </tr>
               </thead>
               <tbody>
-                {[...activeCategorias].sort((a, b) => a.orden - b.orden).map((cat, index) => (
+                {[...(categorias || [])].sort((a, b) => a.orden - b.orden).map((cat, index) => (
                   <React.Fragment key={cat.id}>
                     <tr
                       draggable onDragStart={(e) => handleDragStart(e, index)} onDragEnter={(e) => handleDragEnter(e, index)}
@@ -1973,7 +1973,7 @@
           console.log(`[Evento Backend Simulado] PUT /api/carta/platos/${nuevoPlato.id}`);
         } else {
 
-          activeSetPlatos([...activePlatos, nuevoPlato]);
+          setPlatos([...platos, nuevoPlato]);
           console.log(`[Evento] plato.creado: ${nuevoPlato.id}. Operaciones y Delivery sincronizados.`);
         }
 
@@ -1991,7 +1991,7 @@
         else setExpandedCats([...expandedCats, catId]);
       };
 
-      const categoriasConPlatos = categorias.filter(c => activeCatNames.includes(c.nombre));
+      const categoriasConPlatos = (categorias || []).filter(c => activeCatNames.includes(c.nombre));
 
       // Filtra platos usando categoria_nombre (campo real de la API) con fallback a otros alias
       const platosVisibles = (platos || []).filter(p => {
@@ -2269,7 +2269,7 @@
                         <label className="text-xs font-bold text-slate-700 mb-1.5 block">Categoría <span className="text-red-500">*</span></label>
                         <select value={formData.categoria_id} onChange={(e) => setFormData({ ...formData, categoria_id: e.target.value })} className="w-full text-sm p-3 rounded-xl border border-gray-300 focus:border-emerald-500 outline-none bg-white cursor-pointer" required>
                           <option value="" disabled>Selecciona categoría...</option>
-                          {categorias.filter(c => c.estado === 'ACTIVA' || c.id === formData.categoria_id).map(c => (
+                          {(categorias || []).filter(c => c.estado === 'ACTIVA' || c.id === formData.categoria_id).map(c => (
                             <option key={c.id} value={c.id}>{c.nombre} {c.estado === 'INACTIVA' ? '(Inactiva)' : ''}</option>
                           ))}
                         </select>
