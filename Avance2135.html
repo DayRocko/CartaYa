@@ -791,7 +791,7 @@ function App() {
                 vinculosMod={vinculosMod}
               />}
             {activeTab === 'operaciones' && <ViewOperaciones />}
-            {activeTab === 'inventario' && <ViewInventario inventario={inventario} setInventario={setInventario} />}
+            {activeTab === 'inventario' && <ViewInventario inventario={inventario} setInventario={setInventario} platos={platos} recetas={recetas} />}
             {activeTab === 'delivery' && <ViewDelivery />}
             
             {activeTab === 'reservas' && <ViewReservas />}
@@ -2861,47 +2861,302 @@ function ViewVentas() {
 // =========================================================================
 // 3. FINANZAS Y CUMPLIMIENTO
 // =========================================================================
-function ViewFinanzas() {
+function ViewFinanzas({ platos = [], recetas = [], inventario = [] }) {
+  const formatearMonto = (monto) => {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
+  };
+
+  // --- MOCK DATA PARA FINANZAS ---
+  const finStats = {
+    ingresosMes: 45200000,
+    costosTotales: 32800000,
+    utilidadNeta: 12400000,
+    flujoCaja: 8500000,
+    deltaIngresos: "+14.2%",
+    deltaCostos: "+2.1%",
+    deltaUtilidad: "+18.5%",
+    deltaFlujo: "-5.4%"
+  };
+
+  const trioCostos = [
+    { label: 'Food Cost', value: 32.5, target: 30, color: 'emerald', status: 'Saludable', desc: 'Dentro del rango óptimo operativo.' },
+    { label: 'Labor Cost', value: 28.2, target: 30, color: 'blue', status: 'Optimizado', desc: 'Eficiencia alta en turnos de personal.' },
+    { label: 'Overhead', value: 22.8, target: 20, color: 'amber', status: 'Revisar', desc: 'Servicios públicos superan el presupuesto.' }
+  ];
+
+  const utilCanal = [
+    { name: 'Mesa', share: 65, margin: 28 },
+    { name: 'Delivery', share: 22, margin: 18 },
+    { name: 'Eventos', share: 8, margin: 42 },
+    { name: 'Para llevar', share: 5, margin: 35 }
+  ];
+
+  // Datos para gráfico de Ingresos vs Costos (4 semanas)
+  const chartData = [
+    { label: 'Sem 1', ingresos: 10200, costos: 7800 },
+    { label: 'Sem 2', ingresos: 11500, costos: 8100 },
+    { label: 'Sem 3', ingresos: 12800, costos: 8400 },
+    { label: 'Sem 4', ingresos: 10700, costos: 8500 }
+  ];
+
+  const maxVal = 14000;
+  const breakEvenPoint = 28000000; // Punto de equilibrio mensual
+  const beProgress = Math.min((finStats.ingresosMes / breakEvenPoint) * 100, 100);
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
-      <div className="flex items-center gap-4 bg-emerald-50 border border-emerald-200 p-4 rounded-2xl">
-         <span style={{fontSize:'16px', lineHeight:1}}>🛡️</span>
-         <div>
-            <h4 className="text-sm font-bold text-emerald-900">Conexión DIAN Activa</h4>
-            <p className="text-xs text-emerald-700">Tus facturas electrónicas se están emitiendo correctamente.</p>
-         </div>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-10">
+      
+      {/* HEADER DE ESTADO */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-4">
+           <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-xl border border-emerald-100 animate-pulse">🛡️</div>
+           <div>
+              <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">Pulso Financiero en Tiempo Real</h4>
+              <p className="text-[11px] text-emerald-600 font-bold uppercase tracking-widest">✓ Conexión DIAN Activa • Datos sincronizados con POS</p>
+           </div>
+        </div>
+        <div className="flex gap-2">
+           <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase hover:bg-slate-800 transition-all shadow-lg shadow-slate-100">Cierre de Caja</button>
+           <button className="px-4 py-2 bg-white border border-gray-200 text-slate-600 rounded-xl text-[11px] font-black uppercase hover:bg-gray-50 transition-all">Reporte P&L</button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Utilidad Bruta" value="$4,200,000" delta="33.7% Margen" isUp vsText="Este mes" icon={<span style={{fontSize:'15px', lineHeight:1}}>🥧</span>} />
-        <StatCard label="Gastos Operativos" value="$2,800,000" delta="+5%" isDanger vsText="Este mes" icon={<span style={{fontSize:'16px', lineHeight:1}}>📉</span>} />
-        <StatCard label="Caja Real" value="$1,400,000" delta="Disponible" isUp vsText="Efectivo + Bancos" icon={<span style={{fontSize:'16px', lineHeight:1}}>🏛️</span>} />
+      {/* 4 GRANDES NÚMEROS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard label="Ingresos del Mes" value={formatearMonto(finStats.ingresosMes)} delta={finStats.deltaIngresos} sub="vs mes anterior" color="blue" icon="💰" />
+        <MetricCard label="Costos Totales" value={formatearMonto(finStats.costosTotales)} delta={finStats.deltaCostos} sub="Gasto operativo" color="red" icon="📉" isDanger />
+        <MetricCard label="Utilidad Neta" value={formatearMonto(finStats.utilidadNeta)} delta={finStats.deltaUtilidad} sub="Margen final" color="emerald" icon="🥧" />
+        <MetricCard label="Flujo de Caja" value={formatearMonto(finStats.flujoCaja)} delta={finStats.deltaFlujo} sub="Disponible real" color="amber" icon="🏦" isWarning />
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
-         <h3 className="text-lg font-bold text-slate-800 mb-4">Estructura de Costos (P&L Resumido)</h3>
-         <div className="space-y-4">
-            <div>
-               <div className="flex justify-between text-sm font-bold mb-1"><span className="text-slate-700">Costo de Alimentos (Food Cost)</span><span className="text-red-600">35%</span></div>
-               <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-red-500 h-2 rounded-full" style={{width: '35%'}}></div></div>
+      {/* TRIO CRÍTICO DE COSTOS & PUNTO DE EQUILIBRIO */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* TRIO DE COSTOS (8 cols) */}
+        <div className="lg:col-span-8 bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
+            <h3 className="font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
+              <span className="w-2 h-6 bg-slate-900 rounded-full"></span>
+              Estructura Crítica de Costos (Estándar Global)
+            </h3>
+            <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full border border-indigo-100">Auditado IA</span>
+          </div>
+          <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            {trioCostos.map((costo, idx) => (
+              <div key={idx} className="space-y-4">
+                <div className="flex justify-between items-end">
+                   <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{costo.label}</p>
+                      <p className={`text-2xl font-black ${costo.value > costo.target ? 'text-rose-600' : 'text-slate-900'}`}>{costo.value}%</p>
+                   </div>
+                   <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${costo.value > costo.target ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                      {costo.status}
+                   </div>
+                </div>
+                <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden relative">
+                   <div className="absolute top-0 bottom-0 border-r-2 border-slate-300 z-10" style={{left: `${costo.target}%`}}></div>
+                   <div 
+                      className={`h-full rounded-full transition-all duration-1000 ${costo.value > costo.target ? 'bg-rose-500' : 'bg-indigo-500'}`}
+                      style={{ width: `${costo.value}%` }}
+                   ></div>
+                </div>
+                <p className="text-[10px] text-gray-400 leading-relaxed font-medium italic">Target: {costo.target}% • {costo.desc}</p>
+              </div>
+            ))}
+          </div>
+          
+          {/* PUNTO DE EQUILIBRIO */}
+          <div className="p-8 pt-0">
+             <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
+                <div className="absolute -right-4 -bottom-4 opacity-10 text-4xl">🎯</div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                   <div>
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Punto de Equilibrio del Mes</h4>
+                      <p className="text-lg font-bold">Has cubierto el <span className="text-emerald-400">{beProgress.toFixed(1)}%</span> de tus costos fijos y variables.</p>
+                   </div>
+                   <div className="text-right">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ventas Actuales</p>
+                      <p className="text-xl font-black text-emerald-400">{formatearMonto(finStats.ingresosMes)}</p>
+                   </div>
+                </div>
+                <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden mb-2">
+                   <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(16,185,129,0.5)]" style={{ width: `${beProgress}%` }}></div>
+                </div>
+                <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                   <span>$0 (Inicio)</span>
+                   <span>Break Even: {formatearMonto(breakEvenPoint)}</span>
+                   <span className="text-emerald-400">Zona de Utilidad</span>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        {/* UTILIDAD POR CANAL & PROYECCIÓN (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
+           <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
+              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6">Utilidad por Canal de Venta</h4>
+              <div className="space-y-6">
+                 {utilCanal.map((canal, idx) => (
+                    <div key={idx} className="space-y-2">
+                       <div className="flex justify-between items-end">
+                          <span className="text-xs font-black text-slate-800">{canal.name}</span>
+                          <span className="text-[10px] font-black text-emerald-600">{canal.margin}% Margen Real</span>
+                       </div>
+                       <div className="w-full bg-gray-50 h-2 rounded-full overflow-hidden flex">
+                          <div className="bg-indigo-600 h-full rounded-full" style={{ width: `${canal.share}%` }}></div>
+                       </div>
+                       <p className="text-[9px] text-gray-400 font-bold uppercase">{canal.share}% del volumen total de ventas</p>
+                    </div>
+                 ))}
+              </div>
+           </div>
+
+           <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[32px] p-6 text-white shadow-xl shadow-blue-100 relative overflow-hidden">
+              <div className="absolute -right-10 -top-10 text-white opacity-10 text-8xl">📊</div>
+              <h4 className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mb-4">Proyección de Cierre</h4>
+              <div className="space-y-4 relative z-10">
+                 <div>
+                    <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest">Ingreso Estimado</p>
+                    <p className="text-2xl font-black text-white">{formatearMonto(finStats.ingresosMes * 1.22)}</p>
+                 </div>
+                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                    <div>
+                       <p className="text-[9px] text-indigo-200 font-bold uppercase">Mejor Día</p>
+                       <p className="text-xs font-black">Sábado ($3.8M)</p>
+                    </div>
+                    <div>
+                       <p className="text-[9px] text-indigo-200 font-bold uppercase">vs Año Anterior</p>
+                       <p className="text-xs font-black text-emerald-300">↑ +12.5%</p>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+      </div>
+
+      {/* GRÁFICO DE INGRESOS VS COSTOS & FLUJO DE CAJA */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+         
+         {/* GRÁFICO INGRESOS VS COSTOS (8 cols) */}
+         <div className="lg:col-span-8 bg-white rounded-[32px] border border-gray-100 shadow-sm p-8">
+            <div className="flex justify-between items-center mb-10">
+               <div>
+                  <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Brecha de Utilidad Semanal</h3>
+                  <p className="text-xs text-gray-400 font-medium">Comparativa de ingresos vs costos de operación</p>
+               </div>
+               <div className="flex gap-4">
+                  <div className="flex items-center gap-2">
+                     <span className="w-3 h-3 bg-indigo-500 rounded-full"></span>
+                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Ingresos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <span className="w-3 h-3 bg-rose-400 rounded-full"></span>
+                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Costos</span>
+                  </div>
+               </div>
             </div>
-            <div>
-               <div className="flex justify-between text-sm font-bold mb-1"><span className="text-slate-700">Nómina (Labor Cost)</span><span className="text-amber-500">25%</span></div>
-               <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-amber-500 h-2 rounded-full" style={{width: '25%'}}></div></div>
-            </div>
-            <div>
-               <div className="flex justify-between text-sm font-bold mb-1"><span className="text-slate-700">Gastos Fijos (Arriendo, Servicios)</span><span className="text-blue-500">15%</span></div>
-               <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-blue-500 h-2 rounded-full" style={{width: '15%'}}></div></div>
-            </div>
-            <div>
-               <div className="flex justify-between text-sm font-bold mb-1"><span className="text-slate-700">Utilidad Neta</span><span className="text-emerald-500">25%</span></div>
-               <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-emerald-500 h-2 rounded-full" style={{width: '25%'}}></div></div>
+
+            <div className="h-64 w-full relative">
+               <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  {/* Grid Lines */}
+                  {[0, 25, 50, 75, 100].map(v => (
+                     <line key={v} x1="0" y1={v} x2="100" y2={v} stroke="#f1f5f9" strokeWidth="0.5" />
+                  ))}
+                  
+                  {/* Area de Brecha (Utility Gap) */}
+                  <path 
+                     d={`M 0 ${100 - (chartData[0].ingresos / maxVal * 100)} L 33.3 ${100 - (chartData[1].ingresos / maxVal * 100)} L 66.6 ${100 - (chartData[2].ingresos / maxVal * 100)} L 100 ${100 - (chartData[3].ingresos / maxVal * 100)} L 100 ${100 - (chartData[3].costos / maxVal * 100)} L 66.6 ${100 - (chartData[2].costos / maxVal * 100)} L 33.3 ${100 - (chartData[1].costos / maxVal * 100)} L 0 ${100 - (chartData[0].costos / maxVal * 100)} Z`}
+                     fill="url(#utilityGradient)"
+                     className="opacity-20"
+                  />
+                  
+                  {/* Línea de Ingresos */}
+                  <path 
+                     d={`M 0 ${100 - (chartData[0].ingresos / maxVal * 100)} L 33.3 ${100 - (chartData[1].ingresos / maxVal * 100)} L 66.6 ${100 - (chartData[2].ingresos / maxVal * 100)} L 100 ${100 - (chartData[3].ingresos / maxVal * 100)}`}
+                     fill="none" stroke="#4f46e5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  />
+                  
+                  {/* Línea de Costos */}
+                  <path 
+                     d={`M 0 ${100 - (chartData[0].costos / maxVal * 100)} L 33.3 ${100 - (chartData[1].costos / maxVal * 100)} L 66.6 ${100 - (chartData[2].costos / maxVal * 100)} L 100 ${100 - (chartData[3].costos / maxVal * 100)}`}
+                     fill="none" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"
+                  />
+
+                  <defs>
+                     <linearGradient id="utilityGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#4f46e5" />
+                        <stop offset="100%" stopColor="#818cf8" />
+                     </linearGradient>
+                  </defs>
+               </svg>
+               <div className="flex justify-between mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  {chartData.map((d, i) => <span key={i}>{d.label}</span>)}
+               </div>
             </div>
          </div>
+
+         {/* KPIs ADICIONALES (4 cols) */}
+         <div className="lg:col-span-4 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6">Métricas de Rendimiento (KPI)</h4>
+            <div className="grid grid-cols-1 gap-6">
+               <KPIItem label="Ticket Promedio" value="$42,500" icon="🧾" delta="+2.5%" />
+               <KPIItem label="Clientes Atendidos" value="1,240 pax" icon="👥" delta="+152 pax" />
+               <KPIItem label="Mesas por Hora Pico" value="18.5 mesas" icon="🕐" delta="-2 mesas" isDanger />
+               <KPIItem label="ROI del Mes" value="22.4%" icon="🚀" delta="+4.2%" />
+            </div>
+         </div>
+
       </div>
+
     </div>
   );
 }
+
+// Subcomponente de Tarjeta de Métrica
+function MetricCard({ label, value, delta, sub, color, icon, isDanger, isWarning }) {
+   const colors = {
+      blue: 'bg-blue-50 text-blue-600 border-blue-100',
+      red: 'bg-rose-50 text-rose-600 border-rose-100',
+      emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+      amber: 'bg-amber-50 text-amber-600 border-amber-100'
+   };
+
+   return (
+      <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+         <div className="flex justify-between items-start mb-4">
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-inner ${colors[color]}`}>
+               {icon}
+            </div>
+            <div className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border ${isDanger ? 'bg-rose-50 text-rose-600 border-rose-100' : isWarning ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+               {delta}
+            </div>
+         </div>
+         <div>
+            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</h4>
+            <p className="text-xl font-black text-slate-900">{value}</p>
+            <p className="text-[10px] text-gray-400 font-bold mt-1">{sub}</p>
+         </div>
+      </div>
+   );
+}
+
+// Subcomponente de KPI
+function KPIItem({ label, value, icon, delta, isDanger }) {
+   return (
+      <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-100 group hover:bg-white hover:shadow-sm transition-all">
+         <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-lg border border-gray-100">{icon}</div>
+            <div>
+               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</p>
+               <p className="text-sm font-black text-slate-800">{value}</p>
+            </div>
+         </div>
+         <span className={`text-[10px] font-black ${isDanger ? 'text-rose-500' : 'text-emerald-500'}`}>{delta}</span>
+      </div>
+   );
+}
+
 
 // =========================================================================
 // 4. OPERACIONES Y MESAS
@@ -2943,55 +3198,309 @@ function ViewOperaciones() {
 // =========================================================================
 // 5. INVENTARIO Y COMPRAS (REDISEÑO CON DATOS REALES)
 // =========================================================================
-function ViewInventario({ inventario = [] }) {
-  const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function ViewInventario({ inventario = [], platos = [], recetas = [] }) {
+  const [invTab, setInvTab] = React.useState('general'); // 'general', 'compras', 'proveedores', 'recetas'
 
-  const criticos = (inventario || []).filter(i => (i.stock_actual || 0) < (i.stock_minimo_alerta || 5));
-  const totalValor = (inventario || []).reduce((acc, i) => acc + ((i.stock_actual || 0) * (i.precio_por_unidad || 0)), 0);
+  const formatearMonto = (monto) => {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
+  };
+
+  // --- CÁLCULOS DINÁMICOS ---
+  const totalInsumos = inventario.length;
+  const stockCritico = inventario.filter(i => (i.stock_actual || 0) <= 0).length;
+  const stockBajo = inventario.filter(i => (i.stock_actual || 0) > 0 && (i.stock_actual || 0) <= (i.stock_minimo_alerta || 0)).length;
+  const valorTotalInv = inventario.reduce((acc, i) => acc + ((i.stock_actual || 0) * (i.precio_por_unidad || 0)), 0);
+  const mermaMesMock = valorTotalInv * 0.042; // Simulación de 4.2% de merma
+
+  // Alertas (Top 5 urgentes)
+  const alertasUrgentes = inventario
+    .filter(i => (i.stock_actual || 0) <= (i.stock_minimo_alerta || 0))
+    .sort((a, b) => (a.stock_actual / (a.stock_minimo_alerta || 1)) - (b.stock_actual / (b.stock_minimo_alerta || 1)))
+    .slice(0, 5);
+
+  // Costo Real por Plato (Top 5 con margen)
+  const platosConCosteo = platos
+    .filter(p => p.costo_produccion > 0)
+    .map(p => {
+      const margen = p.precio_venta > 0 ? ((p.precio_venta - p.costo_produccion) / p.precio_venta) * 100 : 0;
+      return { ...p, margen };
+    })
+    .sort((a, b) => a.margen - b.margen) // Mostrar los de menor margen primero para alertar
+    .slice(0, 5);
+
+  // Mocks para Compras y Proveedores
+  const comprasRecientes = [
+    { fecha: '24 Abr', proveedor: 'Distribuidora Global', monto: 1250000, estado: 'Recibido' },
+    { fecha: '25 Abr', proveedor: 'Carnes Premium', monto: 840000, estado: 'Pendiente' },
+    { fecha: '26 Abr', proveedor: 'Fruver Central', monto: 320000, estado: 'Recibido' }
+  ];
+
+  const proveedoresActivos = [
+    { nombre: 'Fruver Central', cat: 'Vegetales', entrega: '24h' },
+    { nombre: 'Carnes Premium', cat: 'Proteínas', entrega: '48h' },
+    { nombre: 'Lácteos del Campo', cat: 'Lácteos', entrega: '12h' }
+  ];
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Valor del Inventario" value={`$${totalValor.toLocaleString()}`} delta="En bodega" isUp vsText="Actualizado hoy" icon={<span style={{fontSize:'15px', lineHeight:1}}>📦</span>} />
-        <StatCard label="Ítems Críticos" value={criticos.length} delta="Requieren compra" isDanger={criticos.length > 0} vsText="Stock bajo el mínimo" icon={<span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>} />
-        <StatCard label="Total Insumos" value={inventario.length} delta="Registrados" isUp vsText="En base de datos" icon={<span style={{fontSize:'15px', lineHeight:1}}>▧</span>} />
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-10">
+      
+      {/* HEADER DINÁMICO */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <div>
+          <h2 className="text-2xl font-black text-slate-800">Inventario & Compras</h2>
+          <p className="text-sm text-gray-500">El dinero que se pierde sin control se ve en el costo, no en la caja.</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-100">
+            <span>➕</span> Registrar Compra
+          </button>
+          <button className="px-4 py-2 bg-white border border-gray-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all flex items-center gap-2">
+            <span>📋</span> Ajuste de Stock
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm border-l-4 border-l-red-500">
-         <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><span style={{fontSize:'15px', lineHeight:1}}>⚠️</span> Alertas de Stock Crítico</h3>
-         <table className="token-table w-full">
-            <thead>
-               <tr><th>Ingrediente</th><th>Stock Actual</th><th>Mínimo Requerido</th><th>Proveedor Predeterminado</th><th>Acción</th></tr>
-            </thead>
-            <tbody>
-                {inventario.length === 0 ? (
-                  <tr><td colSpan="5" className="py-10 text-center text-gray-400">No hay datos de inventario. Sube tu base de datos en "Carta & Menú".</td></tr>
-                ) : (
-                  inventario.map((c, i) => {
-                    const isCritico = (c.stock_actual || 0) < (c.stock_minimo_alerta || 0);
+      {/* STRIP DE 5 MÉTRICAS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <MetricBadge label="Insumos en Stock" value={totalInsumos} sub="Total registrados" icon="📦" color="blue" />
+        <MetricBadge label="Stock Crítico" value={stockCritico} sub="Agotados (0)" icon="🚨" color="red" isDanger={stockCritico > 0} />
+        <MetricBadge label="Stock Bajo" value={stockBajo} sub="Bajo el mínimo" icon="⚠️" color="orange" />
+        <MetricBadge label="Valor Inventario" value={formatearMonto(valorTotalInv)} sub="Capital en bodega" icon="💰" color="emerald" />
+        <MetricBadge label="Merma del Mes" value={formatearMonto(mermaMesMock)} sub="Pérdida estimada" icon="🗑️" color="pink" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* COLUMNA IZQUIERDA: TABLA PRINCIPAL (8 COLS) */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden h-full">
+            <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+              <h3 className="font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
+                <span className="w-2 h-6 bg-indigo-500 rounded-full"></span>
+                Control de Existencias en Tiempo Real
+              </h3>
+              <div className="relative">
+                <input type="text" placeholder="Buscar insumo..." className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none w-64" />
+                <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4">Insumo / Categoría</th>
+                    <th className="px-6 py-4">Stock Actual</th>
+                    <th className="px-6 py-4">Nivel Visual</th>
+                    <th className="px-6 py-4">Costo Unit.</th>
+                    <th className="px-6 py-4">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {inventario.length > 0 ? inventario.map((item, idx) => {
+                    const ratio = Math.min((item.stock_actual || 0) / (item.stock_minimo_alerta * 2 || 10), 1);
+                    const isLow = (item.stock_actual || 0) <= (item.stock_minimo_alerta || 0);
+                    const isZero = (item.stock_actual || 0) <= 0;
+                    
                     return (
-                      <tr key={i} className={isCritico ? 'bg-red-50/30' : ''}>
-                        <td className="font-bold text-slate-800">{c.nombre}</td>
-                        <td className={`font-black ${isCritico ? 'text-red-600' : 'text-slate-900'}`}>
-                          {c.stock_actual} {c.unidad_compra}
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-8 rounded-full ${isZero ? 'bg-red-500' : isLow ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-800">{item.nombre}</p>
+                              <p className="text-[10px] text-gray-400 font-bold uppercase">{item.proveedor || 'Sin categoría'}</p>
+                            </div>
+                          </div>
                         </td>
-                        <td className="text-gray-500">{c.stock_minimo_alerta} {c.unidad_compra}</td>
-                        <td className="text-sm">{c.proveedor || 'No asignado'}</td>
-                        <td>
-                          <button className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${isCritico ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
-                            {isCritico ? 'Reponer Ya' : 'Gestionar'}
-                          </button>
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-black text-slate-900">{item.stock_actual} <span className="text-gray-400 font-medium text-[10px]">{item.unidad_compra}</span></p>
+                          <p className="text-[10px] text-gray-400 font-bold">Mín: {item.stock_minimo_alerta}</p>
+                        </td>
+                        <td className="px-6 py-4 min-w-[120px]">
+                          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all duration-1000 ${isZero ? 'w-0' : isLow ? 'bg-orange-400' : 'bg-emerald-400'}`}
+                              style={{ width: `${ratio * 100}%` }}
+                            ></div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-bold text-slate-700">{formatearMonto(item.precio_por_unidad || 0)}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-[9px] font-black px-2.5 py-1 rounded-full border uppercase tracking-tighter ${
+                            isZero ? 'bg-red-50 text-red-600 border-red-100' : 
+                            isLow ? 'bg-orange-50 text-orange-600 border-orange-100' : 
+                            'bg-emerald-50 text-emerald-600 border-emerald-100'
+                          }`}>
+                            {isZero ? 'Agotado' : isLow ? 'Bajo' : 'Normal'}
+                          </span>
                         </td>
                       </tr>
                     );
-                  })
-                )}
-            </tbody>
-         </table>
+                  }) : (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-20 text-center">
+                        <div className="flex flex-col items-center opacity-20">
+                          <span className="text-6xl mb-4">📦</span>
+                          <p className="text-lg font-black uppercase">Sin Inventario</p>
+                          <p className="text-xs">Sube tus recetas en Carta & Menú para iniciar el control.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* COLUMNA DERECHA: INSIGHTS & ALERTAS (4 COLS) */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* PANEL DE ALERTAS CRÍTICAS */}
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
+            <h4 className="text-[11px] font-black text-red-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span className="animate-pulse w-2 h-2 bg-red-500 rounded-full"></span>
+              Alertas Urgentes (Top 5)
+            </h4>
+            <div className="space-y-4">
+              {alertasUrgentes.length > 0 ? alertasUrgentes.map((a, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-red-50/50 rounded-2xl border border-red-100/50 group hover:bg-red-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-lg shadow-sm">⚠️</div>
+                    <div>
+                      <p className="text-xs font-black text-slate-800">{a.nombre}</p>
+                      <p className="text-[10px] text-red-600 font-bold">Quedan: {a.stock_actual} {a.unidad_compra}</p>
+                    </div>
+                  </div>
+                  <button className="w-8 h-8 rounded-lg bg-red-600 text-white flex items-center justify-center hover:scale-110 transition-transform">🛒</button>
+                </div>
+              )) : (
+                <p className="text-xs text-gray-400 py-4 text-center">Todo en orden por ahora ✅</p>
+              )}
+            </div>
+          </div>
+
+          {/* COSTO REAL POR PLATO */}
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Costo Real vs Margen</h4>
+            <div className="space-y-4">
+              {platosConCosteo.map((p, i) => (
+                <div key={i}>
+                  <div className="flex justify-between items-end mb-1">
+                    <span className="text-xs font-bold text-slate-700">{p.nombre}</span>
+                    <span className={`text-[10px] font-black ${p.margen >= 55 ? 'text-emerald-500' : p.margen >= 45 ? 'text-orange-500' : 'text-red-500'}`}>
+                      {p.margen.toFixed(0)}% Margen
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full ${p.margen >= 55 ? 'bg-emerald-500' : p.margen >= 45 ? 'bg-orange-500' : 'bg-red-500'}`}
+                        style={{ width: `${Math.min(p.margen, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400">{formatearMonto(p.costo_produccion)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* PROVEEDORES ACTIVOS */}
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Proveedores Principales</h4>
+            <div className="grid grid-cols-1 gap-3">
+              {proveedoresActivos.map((prov, i) => (
+                <div key={i} className="flex items-center justify-between p-3 border border-gray-50 rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs">🏢</div>
+                    <div>
+                      <p className="text-xs font-black text-slate-800">{prov.nombre}</p>
+                      <p className="text-[9px] text-gray-400 font-bold uppercase">{prov.cat}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-500 bg-gray-50 px-2 py-1 rounded-lg">{prov.entrega}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ÚLTIMAS COMPRAS */}
+          <div className="bg-slate-900 rounded-[32px] p-6 text-white shadow-xl shadow-slate-200">
+            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Últimas Compras</h4>
+            <div className="space-y-4">
+              {comprasRecientes.map((compra, i) => (
+                <div key={i} className="flex justify-between items-center pb-3 border-b border-slate-800 last:border-0 last:pb-0">
+                  <div>
+                    <p className="text-xs font-bold text-white">{compra.proveedor}</p>
+                    <p className="text-[10px] text-slate-500">{compra.fecha} • <span className={compra.estado === 'Pendiente' ? 'text-amber-500' : 'text-emerald-500'}>{compra.estado}</span></p>
+                  </div>
+                  <p className="text-xs font-black text-slate-300">{formatearMonto(compra.monto)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ROTACIÓN DE INVENTARIO */}
+          <div className="bg-indigo-50 rounded-[32px] p-6 border border-indigo-100 shadow-sm">
+            <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-widest mb-4">Rotación de Capital</h4>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <p className="text-xs font-bold text-slate-700 flex-1">Alta Rotación (Lácteos, Pan)</p>
+                <span className="text-[10px] font-black text-emerald-600">FLUJO OK</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                <p className="text-xs font-bold text-slate-700 flex-1">Baja Rotación (Licores, Secos)</p>
+                <span className="text-[10px] font-black text-orange-600">STOCK PARADO</span>
+              </div>
+              <div className="mt-4 pt-4 border-t border-indigo-100/50">
+                <p className="text-[10px] text-indigo-600 font-bold leading-relaxed">
+                  💡 <span className="font-black italic">Tip IA:</span> Tienes $450k en insumos que no se han movido en 15 días. Considera una promoción para liberar este capital.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
 }
+
+// Subcomponente auxiliar para métricas
+function MetricBadge({ label, value, sub, icon, color, isDanger }) {
+  const colors = {
+    blue: 'bg-blue-50 text-blue-600 border-blue-100',
+    red: 'bg-red-50 text-red-600 border-red-100',
+    orange: 'bg-orange-50 text-orange-600 border-orange-100',
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    pink: 'bg-pink-50 text-pink-600 border-pink-100'
+  };
+
+  return (
+    <div className={`bg-white p-5 rounded-[28px] border ${isDanger ? 'border-red-200 shadow-lg shadow-red-50 animate-pulse' : 'border-gray-100 shadow-sm'} transition-all hover:shadow-md group`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-inner ${colors[color] || colors.blue}`}>
+          {icon}
+        </div>
+        <span className="text-[10px] font-black text-gray-300 group-hover:text-gray-400 transition-colors">↗</span>
+      </div>
+      <div>
+        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</h4>
+        <div className="flex items-baseline gap-2">
+          <p className="text-xl font-black text-slate-900">{value}</p>
+          <p className="text-[9px] font-bold text-gray-400 truncate">{sub}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 // =========================================================================
 // 6. DELIVERY & DOMICILIOS
