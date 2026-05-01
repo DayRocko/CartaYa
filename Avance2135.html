@@ -593,20 +593,203 @@ function App() {
   const [gruposMod, setGruposMod] = useState(MOCK_DATA.grupos_modificadores || []);
   const [opcionesMod, setOpcionesMod] = useState(MOCK_DATA.opciones_modificadores || []);
   const [vinculosMod, setVinculosMod] = useState(MOCK_DATA.vinculos_modificadores || []);
+  const [alertasInventario, setAlertasInventario] = useState([]);
+
+  // =========================================================================
+  // SINCRONIZACIÓN: Carta & Menú <-> Inventario & Compras
+  // =========================================================================
+
+  // FLUJO 1: Carta & Menú → Inventario (al guardar receta)
+  const handleGuardarReceta = (platoId, nuevosIngredientes) => {
+    setRecetas(prev => ({
+      ...prev,
+      [platoId]: nuevosIngredientes
+    }));
+
+    // Crear insumos en inventario si no existen
+    nuevosIngredientes.forEach(({ insumoId, unidad }) => {
+      setInventario(prev => {
+        if (prev[insumoId]) return prev; 
+        return {
+          ...prev,
+          [insumoId]: {
+            nombre: insumoId, 
+            cantidad: 0,
+            unidad,
+            stockMin: 0,
+            costo: 0,
+            proveedorId: null,
+            autoCreado: true 
+          }
+        };
+      });
+    });
+  };
+
+  // FLUJO 2: POS venta → descuenta Inventario (al confirmar pedido)
+  const verificarStockMinimo = () => {
+    const alertas = Object.entries(inventario)
+      .filter(([_, item]) => item.cantidad <= item.stockMin)
+      .map(([id, item]) => ({
+        insumoId: id,
+        nombre: item.nombre,
+        stockActual: item.cantidad,
+        stockMin: item.stockMin,
+        tipo: 'STOCK_BAJO'
+      }));
+    
+    if (alertas.length > 0) {
+      setAlertasInventario(alertas); 
+    } else {
+      setAlertasInventario([]);
+    }
+  };
+
+  const handleConfirmarPedido = (itemsPedido) => {
+    setInventario(prev => {
+      const nuevo = { ...prev };
+      
+      itemsPedido.forEach(({ platoId, cantidad }) => {
+        const ingredientes = recetas[platoId] || [];
+        
+        ingredientes.forEach(({ insumoId, cantidad: cantPorUnidad }) => {
+          if (nuevo[insumoId]) {
+            nuevo[insumoId] = {
+              ...nuevo[insumoId],
+              cantidad: Math.max(0, nuevo[insumoId].cantidad - (cantPorUnidad * cantidad))
+            };
+          }
+        });
+      });
+      
+      return nuevo;
+    });
+
+    verificarStockMinimo();
+  };
+
+  // FLUJO 3: Carta & Menú (plato activo/inactivo) → Inventario (visibilidad)
+  const handleTogglePlato = (platoId, activo) => {
+    setPlatos(prev => prev.map(p =>
+      p.id === platoId ? { ...p, activo } : p
+    ));
+
+    if (!activo) {
+      const ingredientes = recetas[platoId] || [];
+      const insumosDePlato = ingredientes.map(i => i.insumoId);
+      
+      const insumosExclusivos = insumosDePlato.filter(insumoId => {
+        const usadoEnOtros = Object.entries(recetas)
+          .filter(([pid]) => pid !== platoId && platos.find(p => p.id === pid)?.activo)
+          .some(([_, ings]) => ings.some(i => i.insumoId === insumoId));
+        return !usadoEnOtros;
+      });
+
+      setInventario(prev => {
+        const nuevo = { ...prev };
+        insumosExclusivos.forEach(id => {
+          if (nuevo[id]) nuevo[id] = { ...nuevo[id], enPausa: true };
+        });
+        return nuevo;
+      });
+    }
+  };
+
+  // FLUJO 4: Inventario costo unitario → Receta (cálculo de margen)
+  const handleActualizarCostoInsumo = (insumoId, nuevoCosto) => {
+    setInventario(prev => ({
+      ...prev,
+      [insumoId]: { ...prev[insumoId], costo: nuevoCosto }
+    }));
+
+    const platosAfectados = Object.entries(recetas)
+      .filter(([_, ings]) => ings.some(i => i.insumoId === insumoId))
+      .map(([platoId]) => platoId);
+    
+    setPlatos(prev => prev.map(p => {
+      if (!platosAfectados.includes(p.id)) return p;
+      const ingredientes = recetas[p.id] || [];
+      const costoReceta = ingredientes.reduce((sum, { insumoId: iId, cantidad }) => {
+        const costoUnit = iId === insumoId ? nuevoCosto : (inventario[iId]?.costo || 0);
+        return sum + (costoUnit * cantidad);
+      }, 0);
+      const margen = p.precio > 0 ? ((p.precio - costoReceta) / p.precio) * 100 : 0;
+      return { ...p, costoReceta, margenBruto: margen };
+    }));
+  };
+
+  // FLUJO 5: Modificadores → Inventario (ingredientes extra)
+  const handleConfirmarConModificadores = (itemsPedido) => {
+    itemsPedido.forEach(({ platoId, cantidad, opcionesSeleccionadas }) => {
+      const ingredientesBase = recetas[platoId] || [];
+      
+      const ingredientesExtra = (opcionesSeleccionadas || []).flatMap(opcionId => {
+        const opcion = opcionesMod.find(o => o.id === opcionId) || opcionesMod[opcionId];
+        return opcion?.ingredientes || [];
+      });
+
+      const todosLosIngredientes = [...ingredientesBase, ...ingredientesExtra];
+      
+      setInventario(prev => {
+        const nuevo = { ...prev };
+        todosLosIngredientes.forEach(({ insumoId, cantidad: cantUnit }) => {
+          if (nuevo[insumoId]) {
+            nuevo[insumoId] = {
+              ...nuevo[insumoId],
+              cantidad: Math.max(0, nuevo[insumoId].cantidad - (cantUnit * cantidad))
+            };
+          }
+        });
+        return nuevo;
+      });
+    });
+  };
+
+  // HELPERS
+  const costoPlato = React.useMemo(() => {
+    return Object.fromEntries(
+      platos.map(p => {
+        const ings = recetas[p.id] || [];
+        const costo = ings.reduce((sum, { insumoId, cantidad }) =>
+          sum + ((inventario[insumoId]?.costo || 0) * cantidad), 0);
+        return [p.id, costo];
+      })
+    );
+  }, [platos, recetas, inventario]);
+
+  const alertasStock = React.useMemo(() => {
+    return Object.entries(inventario)
+      .filter(([_, item]) => item.cantidad <= item.stockMin)
+      .map(([id, item]) => ({
+        insumoId: id,
+        ...item,
+        platosAfectados: platos.filter(p =>
+          (recetas[p.id] || []).some(i => i.insumoId === id)
+        ).map(p => p.nombre)
+      }));
+  }, [inventario, recetas, platos]);
+
+  const insumosActivos = React.useMemo(() => {
+    const platoIds = platos.filter(p => p.activo).map(p => p.id);
+    const ids = new Set(
+      platoIds.flatMap(pid => (recetas[pid] || []).map(i => i.insumoId))
+    );
+    return Object.fromEntries(
+      [...ids].map(id => [id, inventario[id]])
+    );
+  }, [platos, recetas, inventario]);
 
   const getTabTitle = (tab) => {
     const titles = {
       dashboard: 'Dashboard Principal',
       brain: 'Cerebro IA',
       pos: 'POS / Pedidos',
-      ventas: 'Ventas y Facturación',
-      finanzas: 'Finanzas y Costos',
+      'ventas-finanzas': 'Ventas & Finanzas',
       operaciones: 'Gestión Operativa',
       inventario: 'Inventario y Compras',
       delivery: 'Delivery y Domicilios',
       reservas: 'Reservas y CRM',
-      marketing: 'Marketing y Promociones',
-      fidelizacion: 'Fidelización',
+      'marketing-fidelizacion': 'Marketing & Fidelización',
       eventos: 'Eventos y Catering',
       rrhh: 'Gestión de Talento',
       data: 'Data & Insights',
@@ -654,40 +837,32 @@ function App() {
           <div className="flex-1 overflow-y-auto pb-6 w-full custom-scrollbar" style={{ scrollbarWidth: 'none' }}>
             <div className={`py-4 space-y-2 transition-all duration-250 ${sidebarCollapsed ? 'px-2' : 'px-4'}`}>
               <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>} 
-                label="Dashboard" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} collapsed={sidebarCollapsed} 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>} 
+                label="Dashboard Principal" isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} collapsed={sidebarCollapsed} 
               />
               <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8.66 5v10L12 23l-8.66-5V8z"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v8M3.34 8l5.2 3M15.46 13l5.2 3M3.34 16l5.2-3M15.46 11l5.2-3"/></svg>} 
-                label="Brain IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} collapsed={sidebarCollapsed} 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>} 
+                label="Cerebro IA" isActive={activeTab === 'brain'} onClick={() => setActiveTab('brain')} collapsed={sidebarCollapsed} 
               />
             </div>
-
+            
             <div className={`py-2 transition-all duration-250 ${sidebarCollapsed ? 'px-2' : 'px-4 mt-2'}`}>
               {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] text-slate-600 font-extrabold mb-3 px-3">Gestión Operativa</div>}
               {sidebarCollapsed && <div className="w-8 border-b border-slate-800/50 my-4 ml-4"></div>}
               <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M17 13c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" strokeWidth="1.5"/><path d="M15 11l2 2-2 2" strokeWidth="1.5"/></svg>} 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>} 
                 label="POS / Pedidos" isActive={activeTab === 'pos'} onClick={() => setActiveTab('pos')} collapsed={sidebarCollapsed} 
               />
               <NavItemDark 
                 icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 7L13.5 15.5L8.5 10.5L2 17"/><circle cx="2" cy="17" r="2" fill="currentColor" stroke="none"/><path d="M16 7h6v6"/></svg>} 
-                label="Ventas" isActive={activeTab === 'ventas'} onClick={() => setActiveTab('ventas')} collapsed={sidebarCollapsed} 
+                label="Ventas & Finanzas" isActive={activeTab === 'ventas-finanzas'} onClick={() => setActiveTab('ventas-finanzas')} collapsed={sidebarCollapsed} 
               />
               <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M18 9h.01M18 15h.01"/></svg>} 
-                label="Finanzas" isActive={activeTab === 'finanzas'} onClick={() => setActiveTab('finanzas')} collapsed={sidebarCollapsed} 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>} 
+                label="Inventario & Compras" isActive={activeTab === 'inventario'} onClick={() => setActiveTab('inventario')} collapsed={sidebarCollapsed} 
               />
               <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="5"/><circle cx="12" cy="16" r="3"/><path d="M12 3v1M12 12v1M17 8h1M6 8h1M15.5 4.5l-.7.7M9.2 10.8l-.7.7"/><circle cx="18" cy="15" r="4"/><path d="M18 11v1M18 19v1M22 15h-1M14 15h-1"/></svg>} 
-                label="Operaciones" isActive={activeTab === "operaciones"} onClick={() => setActiveTab("operaciones")} collapsed={sidebarCollapsed} 
-              />
-              <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-4-9 4v8l9 4 9-4V8z"/><path d="M3 8l9 4 9-4M12 12v10"/><path d="M17 4.5V2l-5 2-5-2v2.5"/></svg>} 
-                label="Inventario & Compras" isActive={activeTab === "inventario"} onClick={() => setActiveTab("inventario")} collapsed={sidebarCollapsed} 
-              />
-              <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 18V9c0-2-1-3-3-3H4"/><path d="M16 18h2a2 2 0 0 0 2-2v-5h-3l-2-3h-3"/></svg>} 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>} 
                 label="Delivery & Domicilios" isActive={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} collapsed={sidebarCollapsed} 
               />
             </div>
@@ -696,16 +871,12 @@ function App() {
               {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] text-slate-600 font-extrabold mb-3 px-3">Crecimiento & Clientes</div>}
               {sidebarCollapsed && <div className="w-8 border-b border-slate-800/50 my-4 ml-4"></div>}
               <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><rect x="15" y="14" width="7" height="6" rx="1"/></svg>} 
+                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>} 
                 label="Reservas & CRM" isActive={activeTab === 'reservas'} onClick={() => setActiveTab('reservas')} collapsed={sidebarCollapsed} 
               />
               <NavItemDark 
                 icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>} 
-                label="Marketing" isActive={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} collapsed={sidebarCollapsed} 
-              />
-              <NavItemDark 
-                icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8V3m0 0a3 3 0 1 0-3 3 3 3 0 1 0 6 0 3 3 0 1 0-3-3zM3 8h18"/></svg>} 
-                label="Fidelización" isActive={activeTab === 'fidelizacion'} onClick={() => setActiveTab('fidelizacion')} collapsed={sidebarCollapsed} 
+                label="Marketing & Fidelización" isActive={activeTab === 'marketing-fidelizacion'} onClick={() => setActiveTab('marketing-fidelizacion')} collapsed={sidebarCollapsed} 
               />
               <NavItemDark 
                 icon={<svg className="icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 22h8M12 11v11M7 3c0 4.42 2.24 8 5 8s5-3.58 5-8H7z"/><path d="M12 11a5 5 0 0 1-5-5h10a5 5 0 0 1-5 5z"/></svg>} 
@@ -786,17 +957,12 @@ function App() {
                 vinculosMod={vinculosMod}
               />
             )}
-            {activeTab === 'ventas' && <ViewVentas />}
-            {activeTab === 'finanzas' && <ViewFinanzas platos={platos} recetas={recetas} inventario={inventario} gruposMod={gruposMod} opcionesMod={opcionesMod}
-                vinculosMod={vinculosMod}
-              />}
-            {activeTab === 'operaciones' && <ViewOperaciones />}
+            {activeTab === 'ventas-finanzas' && <ViewVentasFinanzas platos={platos} recetas={recetas} inventario={inventario} gruposMod={gruposMod} opcionesMod={opcionesMod} vinculosMod={vinculosMod} />}
             {activeTab === 'inventario' && <ViewInventario inventario={inventario} setInventario={setInventario} platos={platos} recetas={recetas} />}
             {activeTab === 'delivery' && <ViewDelivery />}
             
             {activeTab === 'reservas' && <ViewReservas />}
-            {activeTab === 'marketing' && <ViewMarketing />}
-            {activeTab === 'fidelizacion' && <ViewFidelizacion />}
+            {activeTab === 'marketing-fidelizacion' && <ViewMarketingFidelizacion />}
             {activeTab === 'eventos' && <ViewEventos />}
             {activeTab === 'rrhh' && <ViewRRHH />}
             {activeTab === 'data' && <ViewData />}
@@ -2423,421 +2589,499 @@ function ViewDashboard() {
 }
 
 // =========================================================================
-// 2. VENTAS
+// 2. VENTAS & FINANZAS (MÓDULO UNIFICADO)
 // =========================================================================
-function ViewVentas() {
-  const [filtroCanal, setFiltroCanal] = React.useState('Todos');
-  const [filtroEstado, setFiltroEstado] = React.useState('Todos');
-  const [filtroHora, setFiltroHora] = React.useState('Todas');
+function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [] }) {
+  const formatearMonto = (monto) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
+  const compactMonto = (monto) => new Intl.NumberFormat('es-CO', { notation: "compact", compactDisplay: "short" }).format(monto);
+
+  const [periodo, setPeriodo] = React.useState('Hoy');
   const [ordenSeleccionada, setOrdenSeleccionada] = React.useState(null);
 
-  // MOCK DATA PARA VENTAS Y TRANSACCIONES
-  const ventasDelDia = [
-    { id: '1042', hora: '12:15', cliente: 'Mesa 4', canal: 'Salón', items: [{nombre: 'Pizza Margherita', qty: 2, precio: 28000}, {nombre: 'Coca-Cola', qty: 2, precio: 5000}], total: 66000, estado: 'Pagado' },
-    { id: '1043', hora: '12:30', cliente: 'Juan Pérez', canal: 'Delivery', items: [{nombre: 'Fettuccine al Funghi', qty: 1, precio: 32000}, {nombre: 'Tiramisú della Casa', qty: 1, precio: 16000}], total: 48000, estado: 'En Ruta' },
-    { id: '1044', hora: '12:45', cliente: 'Ana Gómez', canal: 'Para llevar', items: [{nombre: 'Pizza Diavola', qty: 1, precio: 34000}], total: 34000, estado: 'Pagado' },
-    { id: '1045', hora: '13:10', cliente: 'Mesa 12', canal: 'Salón', items: [{nombre: 'Lasagna della Nonna', qty: 2, precio: 28000}, {nombre: 'Copa de Chianti Classico', qty: 2, precio: 22000}], total: 100000, estado: 'Pagado' },
-    { id: '1046', hora: '13:25', cliente: 'Carlos R.', canal: 'Delivery', items: [{nombre: 'Pizza Quattro Formaggi', qty: 1, precio: 36000}, {nombre: 'Calzone di Napoli', qty: 1, precio: 30000}], total: 66000, estado: 'Pagado' },
-    { id: '1047', hora: '13:50', cliente: 'Mesa 7', canal: 'Salón', items: [{nombre: 'Spaghetti Carbonara', qty: 3, precio: 26000}, {nombre: 'Bruschettas al Pomodoro', qty: 1, precio: 18000}], total: 96000, estado: 'Abierta' },
-    { id: '1048', hora: '14:20', cliente: 'Mesa 2', canal: 'Salón', items: [{nombre: 'Burrata di Puglia', qty: 1, precio: 32000}, {nombre: 'Pizza Margherita', qty: 1, precio: 28000}], total: 60000, estado: 'Anulado' },
-    { id: '1049', hora: '15:00', cliente: 'Delivery App', canal: 'Delivery', items: [{nombre: 'Pizza Funghi e Tartufo', qty: 2, precio: 38000}], total: 76000, estado: 'En Preparación' },
+  // MOCK DATA VENTAS
+  const ventasHora = [
+    {h: '11am', v: 0}, {h: '12pm', v: 140000}, {h: '1pm', v: 260000}, {h: '2pm', v: 180000}, {h: '3pm', v: 60000},
+    {h: '4pm', v: 0}, {h: '5pm', v: 45000}, {h: '6pm', v: 190000}, {h: '7pm', v: 380000}, {h: '8pm', v: 420000},
+    {h: '9pm', v: 310000}, {h: '10pm', v: 120000}
+  ];
+  const maxVenta = Math.max(...ventasHora.map(d => d.v)) || 1;
+
+  const transacciones = [
+    { id: '1042', hora: '12:15', cliente: 'Mesa 4', canal: 'Salón', items: 4, total: 66000, estado: 'Pagado', eColor: 'emerald' },
+    { id: '1043', hora: '12:30', cliente: 'Juan Pérez', canal: 'Delivery', items: 2, total: 48000, estado: 'En Ruta', eColor: 'purple' },
+    { id: '1044', hora: '12:45', cliente: 'Ana Gómez', canal: 'Para llevar', items: 1, total: 34000, estado: 'Pagado', eColor: 'emerald' },
+    { id: '1045', hora: '13:10', cliente: 'Mesa 12', canal: 'Salón', items: 4, total: 100000, estado: 'Abierta', eColor: 'blue' },
+    { id: '1046', hora: '13:25', cliente: 'Carlos R.', canal: 'Delivery', items: 2, total: 66000, estado: 'Pagado', eColor: 'emerald' },
   ];
 
-  // Ventas por hora para el gráfico (mock)
-  const ventasPorHora = [
-    { hora: '11:00', ventas: 0 },
-    { hora: '12:00', ventas: 148000 },
-    { hora: '13:00', ventas: 262000 },
-    { hora: '14:00', ventas: 60000 },
-    { hora: '15:00', ventas: 76000 },
-    { hora: '16:00', ventas: 0 },
-    { hora: '17:00', ventas: 0 },
-    { hora: '18:00', ventas: 0 },
-    { hora: '19:00', ventas: 0 },
-    { hora: '20:00', ventas: 0 }
-  ];
-
-  const maxVentasHora = Math.max(...ventasPorHora.map(d => d.ventas)) || 1;
-
-  // Top platos (mock basado en MOCK_DATA)
   const topPlatos = [
-    { nombre: 'Pizza Margherita', cantidad: 14, ventas: 392000 },
-    { nombre: 'Fettuccine al Funghi', cantidad: 11, ventas: 352000 },
-    { nombre: 'Lasagna della Nonna', cantidad: 9, ventas: 252000 },
-    { nombre: 'Spaghetti Carbonara', cantidad: 8, ventas: 208000 },
-    { nombre: 'Pizza Diavola', cantidad: 6, ventas: 204000 }
+    { nombre: 'Pizza Margherita', ventas: 392000, qty: 14, pct: 100 },
+    { nombre: 'Lasagna della Nonna', ventas: 280000, qty: 10, pct: 71 },
+    { nombre: 'Fettuccine al Funghi', ventas: 192000, qty: 6, pct: 49 },
+    { nombre: 'Tiramisú', ventas: 128000, qty: 8, pct: 33 },
+    { nombre: 'Calzone di Napoli', ventas: 90000, qty: 3, pct: 23 },
   ];
-  const maxVentasTopPlato = Math.max(...topPlatos.map(p => p.ventas));
 
-  // KPIs calculados
-  const ingresosPagados = ventasDelDia.filter(v => v.estado !== 'Anulado').reduce((acc, v) => acc + v.total, 0);
-  const totalTransacciones = ventasDelDia.filter(v => v.estado !== 'Anulado').length;
-  const ticketPromedio = totalTransacciones > 0 ? ingresosPagados / totalTransacciones : 0;
-  
-  const metaDiaria = 1000000; // Meta predefinida
-  const avanceMeta = Math.min((ingresosPagados / metaDiaria) * 100, 100);
-
-  // Participación canal
-  const ventasSalon = ventasDelDia.filter(v => v.canal === 'Salón' && v.estado !== 'Anulado').reduce((acc, v) => acc + v.total, 0);
-  const ventasDelivery = ventasDelDia.filter(v => v.canal === 'Delivery' && v.estado !== 'Anulado').reduce((acc, v) => acc + v.total, 0);
-  const ventasParaLlevar = ventasDelDia.filter(v => v.canal === 'Para llevar' && v.estado !== 'Anulado').reduce((acc, v) => acc + v.total, 0);
-  
-  const percSalon = ingresosPagados > 0 ? (ventasSalon / ingresosPagados * 100).toFixed(1) : 0;
-  const percDelivery = ingresosPagados > 0 ? (ventasDelivery / ingresosPagados * 100).toFixed(1) : 0;
-  const percParaLlevar = ingresosPagados > 0 ? (ventasParaLlevar / ingresosPagados * 100).toFixed(1) : 0;
-
-  // Filtrado de tabla
-  const transaccionesFiltradas = ventasDelDia.filter(v => {
-    let matchCanal = filtroCanal === 'Todos' || v.canal === filtroCanal;
-    let matchEstado = filtroEstado === 'Todos' || v.estado === filtroEstado;
-    let matchHora = true;
-    if (filtroHora !== 'Todas') {
-      const hStr = v.hora.split(':')[0]; // extrae la hora
-      matchHora = hStr === filtroHora; 
-    }
-    return matchCanal && matchEstado && matchHora;
-  });
-
-  const exportarCSV = () => {
-    // Exportador nativo a CSV
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Orden,Hora,Cliente,Canal,Total,Estado\n";
-    ventasDelDia.forEach(v => {
-      let row = `${v.id},${v.hora},${v.cliente},${v.canal},${v.total},${v.estado}`;
-      csvContent += row + "\n";
-    });
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "transacciones_hoy.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const formatearMonto = (monto) => {
-    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
-  };
-
-  // Horas únicas para el filtro dropdown ordenadas ascendentemente
-  const horasUnicas = [...new Set(ventasDelDia.map(v => v.hora.split(':')[0]))].sort();
+  const flujoSemanal = [
+    { d: 'L', in: 1.2, out: 0.8 }, { d: 'M', in: 0.9, out: 0.6 }, { d: 'M', in: 1.4, out: 0.9 },
+    { d: 'J', in: 1.6, out: 1.1 }, { d: 'V', in: 2.1, out: 1.3 }, { d: 'S', in: 2.4, out: 1.4 }, { d: 'D', in: 1.9, out: 1.2 }
+  ];
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-10">
       
-      {/* BLOQUE 1: KPIs del día */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Tarjeta 1: Ventas Hoy */}
-        <div className="stat-card relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">💰</div>
-           <p className="text-sm font-bold text-gray-500">Ventas Hoy</p>
-           <div>
-              <p className="text-2xl font-black text-slate-900">{formatearMonto(ingresosPagados)}</p>
-              <div className="mt-2 flex items-center gap-2">
-                 <span className="delta-badge delta-badge--up">↑ 12%</span>
-                 <span className="text-xs text-gray-400 font-medium">vs ayer</span>
-              </div>
-           </div>
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+        <div>
+          <div className="flex items-center gap-3">
+             <h2 className="text-2xl font-black text-slate-800 tracking-tight">Ventas <span className="text-emerald-500">&</span> Finanzas</h2>
+             <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-100 uppercase tracking-tighter">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> DIAN Activa
+             </span>
+          </div>
+          <p className="text-xs text-gray-500 font-medium mt-1">La Leña Restaurante · {new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
+        <div className="flex gap-2 items-center">
+           <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100 mr-2">
+              {['Hoy', '7 días', 'Este mes', 'Trimestre'].map(d => (
+                 <button key={d} onClick={() => setPeriodo(d)} className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${periodo === d ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>{d}</button>
+              ))}
+           </div>
+           <button className="px-4 py-2 bg-white border border-gray-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-tight hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+              📥 Exportar P&L
+           </button>
+           <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-tight hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-100">
+              Cierre de Caja
+           </button>
+        </div>
+      </div>
+
+      {/* SECCIÓN 1: VENTAS DEL DÍA */}
+      <div className="space-y-6">
         
-        {/* Tarjeta 2: Ticket Promedio */}
-        <div className="stat-card relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">🧾</div>
-           <p className="text-sm font-bold text-gray-500">Ticket Promedio</p>
-           <div>
-              <p className="text-2xl font-black text-slate-900">{formatearMonto(ticketPromedio)}</p>
-              <div className="mt-2 flex items-center gap-2">
-                 <span className="delta-badge delta-badge--neutral">- 2%</span>
-                 <span className="text-xs text-gray-400 font-medium">vs mes pasado</span>
+        {/* KPIs VENTAS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Ingresos Totales ({periodo}) <span className="text-lg">💰</span></p>
+              <p className="text-2xl font-black text-slate-800">$2,105,000</p>
+              <div className="flex items-center gap-2 mt-2">
+                 <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+14%</span>
+                 <span className="text-[10px] font-bold text-gray-400">vs. el martes pasado</span>
+              </div>
+           </div>
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Ticket Promedio <span className="text-lg">🧾</span></p>
+              <p className="text-2xl font-black text-slate-800">$65,200</p>
+              <div className="flex items-center gap-2 mt-2">
+                 <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+5%</span>
+                 <span className="text-[10px] font-bold text-gray-400">vs. promedio mensual</span>
+              </div>
+           </div>
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Clientes Atendidos <span className="text-lg">👥</span></p>
+              <p className="text-2xl font-black text-slate-800">42 pax</p>
+              <div className="flex items-center gap-2 mt-2">
+                 <span className="text-[10px] font-black bg-gray-100 text-slate-600 px-1.5 py-0.5 rounded">+8</span>
+                 <span className="text-[10px] font-bold text-gray-400">Flujo constante</span>
+              </div>
+           </div>
+           <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm bg-emerald-50/30 flex flex-col justify-between relative overflow-hidden">
+              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex justify-between">Avance vs Meta Diaria <span className="text-lg">🎯</span></p>
+              <p className="text-2xl font-black text-emerald-700">84%</p>
+              <div className="mt-2">
+                 <div className="w-full bg-emerald-100 h-1.5 rounded-full overflow-hidden mb-1"><div className="bg-emerald-500 h-full rounded-full" style={{width: '84%'}}></div></div>
+                 <span className="text-[10px] font-bold text-emerald-600">$2.1M / $2.5M · En Camino</span>
               </div>
            </div>
         </div>
 
-        {/* Tarjeta 3: Transacciones */}
-        <div className="stat-card relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">📈</div>
-           <p className="text-sm font-bold text-gray-500">Transacciones</p>
-           <div>
-              <p className="text-2xl font-black text-slate-900">{totalTransacciones}</p>
-              <div className="mt-2 flex items-center gap-2">
-                 <span className="delta-badge delta-badge--up">↑ 8 ord</span>
-                 <span className="text-xs text-gray-400 font-medium">vs promedio</span>
+        {/* GRÁFICO + MIX */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+           <div className="lg:col-span-8 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Comportamiento por Hora</h3>
+              <div className="flex-1 flex items-end gap-2 h-40">
+                 {ventasHora.map((v, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative">
+                       <div className="w-full bg-emerald-500 rounded-t-md hover:bg-emerald-600 transition-colors" style={{ height: `${(v.v / maxVenta) * 100}%`, minHeight: v.v > 0 ? '4px' : '0' }}></div>
+                       <span className="text-[9px] font-black text-gray-400">{v.h}</span>
+                       {v.v > 0 && <div className="absolute -top-6 bg-slate-800 text-white text-[9px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">{compactMonto(v.v)}</div>}
+                    </div>
+                 ))}
+              </div>
+           </div>
+           <div className="lg:col-span-4 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Mix de Canales</h3>
+              <div className="space-y-5 flex-1 justify-center flex flex-col">
+                 <div>
+                    <div className="flex justify-between items-center mb-1">
+                       <span className="text-xs font-black text-slate-800 flex items-center gap-2">🍽️ Salón <span className="text-[9px] text-gray-400">(60%)</span></span>
+                       <span className="text-xs font-black text-slate-800">$1.26M</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden mb-1"><div className="h-full bg-indigo-500 rounded-full" style={{width: '60%'}}></div></div>
+                    <p className="text-[9px] text-gray-400 font-bold text-right">+2% vs ayer</p>
+                 </div>
+                 <div>
+                    <div className="flex justify-between items-center mb-1">
+                       <span className="text-xs font-black text-slate-800 flex items-center gap-2">🛵 Delivery <span className="text-[9px] text-gray-400">(30%)</span></span>
+                       <span className="text-xs font-black text-slate-800">$630K</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden mb-1"><div className="h-full bg-emerald-500 rounded-full" style={{width: '30%'}}></div></div>
+                    <p className="text-[9px] text-gray-400 font-bold text-right">-1.5% vs ayer</p>
+                 </div>
+                 <div>
+                    <div className="flex justify-between items-center mb-1">
+                       <span className="text-xs font-black text-slate-800 flex items-center gap-2">🛍️ Para Llevar <span className="text-[9px] text-gray-400">(10%)</span></span>
+                       <span className="text-xs font-black text-slate-800">$215K</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden mb-1"><div className="h-full bg-amber-500 rounded-full" style={{width: '10%'}}></div></div>
+                    <p className="text-[9px] text-gray-400 font-bold text-right">+4% vs ayer</p>
+                 </div>
               </div>
            </div>
         </div>
 
-        {/* Tarjeta 4: Avance vs Meta */}
-        <div className="stat-card relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl">🎯</div>
-           <div className="flex justify-between items-end mb-2">
-              <p className="text-sm font-bold text-gray-500">Avance Meta</p>
-              <p className="text-xs font-black text-emerald-600">{avanceMeta.toFixed(1)}%</p>
-           </div>
-           <div>
-              <p className="text-xl font-black text-slate-900">{formatearMonto(ingresosPagados)} <span className="text-sm text-gray-400 font-medium">/ {formatearMonto(metaDiaria)}</span></p>
-              <div className="w-full bg-gray-100 rounded-full h-2 mt-3 overflow-hidden">
-                 <div className="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${avanceMeta}%` }}></div>
+        {/* TABLA + TOP PLATOS */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+           <div className="lg:col-span-8 bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+              <div className="p-5 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
+                 <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Transacciones del Día</h3>
+                 <div className="flex gap-2">
+                    <select className="bg-white border border-gray-200 text-xs font-bold text-slate-600 rounded-lg px-2 py-1 outline-none"><option>Hora: Todas</option></select>
+                    <select className="bg-white border border-gray-200 text-xs font-bold text-slate-600 rounded-lg px-2 py-1 outline-none"><option>Canal: Todos</option></select>
+                    <select className="bg-white border border-gray-200 text-xs font-bold text-slate-600 rounded-lg px-2 py-1 outline-none"><option>Estado: Todos</option></select>
+                    <button className="px-3 py-1 bg-white border border-gray-200 text-slate-700 rounded-lg text-xs font-black uppercase tracking-tight hover:bg-gray-50 flex items-center gap-1 shadow-sm">📥 Exportar</button>
+                 </div>
               </div>
-           </div>
-        </div>
-      </div>
-
-      {/* FILA MEDIA: Gráfico de Horas y Participación Canales */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* BLOQUE 2: Gráfico Ventas por Hora usando SVG nativo */}
-         <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 p-6 shadow-sm flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Comportamiento por Hora</h3>
-            <div className="flex-1 relative w-full h-full min-h-[160px]">
-               <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
-                 {ventasPorHora.map((d, i) => {
-                   const count = ventasPorHora.length;
-                   const gap = 100 / count; 
-                   const xCenter = (gap * i) + (gap / 2);
-                   const barWidth = 4; // porcentaje
-                   const maxH = 80;
-                   const hPerc = d.ventas === 0 ? 0 : Math.max(5, (d.ventas / maxVentasHora) * maxH);
-                   return (
-                     <g key={i} className="group cursor-pointer">
-                        <rect 
-                           x={`${xCenter - barWidth/2}%`} 
-                           y={`${100 - 15 - hPerc}%`} 
-                           width={`${barWidth}%`} 
-                           height={`${hPerc}%`} 
-                           rx="4" 
-                           fill="#34d399" 
-                           className="opacity-70 group-hover:opacity-100 transition-all duration-300" 
-                        />
-                        {d.ventas > 0 && (
-                          <text 
-                             x={`${xCenter}%`} 
-                             y={`${100 - 20 - hPerc}%`} 
-                             textAnchor="middle" 
-                             fill="#64748B" 
-                             fontSize="10px" 
-                             fontWeight="bold" 
-                             className="opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none"
-                          >
-                             {new Intl.NumberFormat('es-CO', { notation: "compact", compactDisplay: "short" }).format(d.ventas)}
-                          </text>
-                        )}
-                        <text 
-                           x={`${xCenter}%`} 
-                           y="100%" 
-                           textAnchor="middle" 
-                           fill="#94A3B8" 
-                           fontSize="11px" 
-                           fontWeight="bold"
-                           className="pointer-events-none"
-                        >
-                           {d.hora}
-                        </text>
-                     </g>
-                   )
-                 })}
-               </svg>
-            </div>
-         </div>
-
-         {/* BLOQUE 4: Desglose por Canal */}
-         <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm flex flex-col">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Mix de Canales</h3>
-            <div className="space-y-6 flex-1 justify-center flex flex-col">
-               {/* Salón */}
-               <div>
-                  <div className="flex justify-between items-center mb-2">
-                     <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><span className="text-lg">🍽️</span> Salón ({percSalon}%)</span>
-                     <span className="text-sm font-black text-slate-900">{formatearMonto(ventasSalon)}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-indigo-500 h-2 rounded-full" style={{width: `${percSalon}%`}}></div></div>
-                  <p className="text-[10px] text-gray-400 font-bold mt-1 text-right">+2% vs ayer</p>
-               </div>
-               {/* Delivery */}
-               <div>
-                  <div className="flex justify-between items-center mb-2">
-                     <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><span className="text-lg">🛵</span> Delivery ({percDelivery}%)</span>
-                     <span className="text-sm font-black text-slate-900">{formatearMonto(ventasDelivery)}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-emerald-500 h-2 rounded-full" style={{width: `${percDelivery}%`}}></div></div>
-                  <p className="text-[10px] text-gray-400 font-bold mt-1 text-right">-1.5% vs ayer</p>
-               </div>
-               {/* Para Llevar */}
-               <div>
-                  <div className="flex justify-between items-center mb-2">
-                     <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><span className="text-lg">🛍️</span> Para Llevar ({percParaLlevar}%)</span>
-                     <span className="text-sm font-black text-slate-900">{formatearMonto(ventasParaLlevar)}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-amber-500 h-2 rounded-full" style={{width: `${percParaLlevar}%`}}></div></div>
-                  <p className="text-[10px] text-gray-400 font-bold mt-1 text-right">Igual vs ayer</p>
-               </div>
-            </div>
-         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* BLOQUE 3: Tabla Transacciones con filtros*/}
-         <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex flex-wrap gap-4 justify-between items-center flex-col sm:flex-row">
-               <h3 className="text-lg font-bold text-slate-800">Transacciones del Día</h3>
-               <div className="flex gap-2 w-full sm:w-auto">
-                  <select className="border border-gray-200 rounded-lg p-2 text-xs font-medium bg-white focus:outline-none focus:border-emerald-500 flex-1" value={filtroHora} onChange={e => setFiltroHora(e.target.value)}>
-                    <option value="Todas">Hora</option>
-                    {horasUnicas.map(h => <option key={h} value={h}>{h}:00</option>)}
-                  </select>
-                  <select className="border border-gray-200 rounded-lg p-2 text-xs font-medium bg-white focus:outline-none focus:border-emerald-500 flex-1" value={filtroCanal} onChange={e => setFiltroCanal(e.target.value)}>
-                    <option value="Todos">Canal</option>
-                    <option value="Salón">Salón</option>
-                    <option value="Delivery">Delivery</option>
-                    <option value="Para llevar">Para llevar</option>
-                  </select>
-                  <select className="border border-gray-200 rounded-lg p-2 text-xs font-medium bg-white focus:outline-none focus:border-emerald-500 flex-1" value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}>
-                    <option value="Todos">Estado</option>
-                    <option value="Pagado">Pagado</option>
-                    <option value="Abierta">Abierta</option>
-                    <option value="En Ruta">En Ruta</option>
-                    <option value="En Preparación">En Prep.</option>
-                    <option value="Anulado">Anulado</option>
-                  </select>
-                  {/* BLOQUE 6: Botón de Exportar CSV */}
-                  <button onClick={exportarCSV} className="bg-slate-900 text-white rounded-lg px-3 py-2 hover:bg-slate-800 shadow-sm flex items-center gap-1 text-xs font-bold transition-all active:scale-95">
-                     📥 Exportar
-                  </button>
-               </div>
-            </div>
-            
-            <div className="overflow-x-auto flex-1">
-               <table className="token-table w-full">
-                  <thead className="bg-gray-50/50">
-                     <tr>
-                        <th># Orden</th>
-                        <th>Hora</th>
-                        <th>Cliente / Mesa</th>
-                        <th>Canal</th>
-                        <th>Items</th>
-                        <th>Total</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                     </tr>
-                  </thead>
-                  <tbody>
-                     {transaccionesFiltradas.length > 0 ? transaccionesFiltradas.map(v => {
-                       let stateStyles = 'bg-gray-100 text-gray-700 border-gray-200';
-                       if (v.estado === 'Pagado') stateStyles = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                       else if (v.estado === 'Abierta') stateStyles = 'bg-blue-50 text-blue-700 border-blue-200';
-                       else if (v.estado === 'En Ruta' || v.estado === 'En Preparación') stateStyles = 'bg-purple-50 text-purple-700 border-purple-200';
-                       else if (v.estado === 'Anulado') stateStyles = 'bg-red-50 text-red-700 border-red-200';
-                       
-                       const nItems = v.items ? v.items.reduce((acc, it) => acc + it.qty, 0) : 0;
-
-                       return (
-                         <tr key={v.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="font-bold text-slate-800">#{v.id}</td>
-                            <td className="text-gray-500 font-medium">{v.hora}</td>
-                            <td className="font-bold text-slate-700">{v.cliente}</td>
-                            <td><span className="bg-gray-100 border border-gray-200 px-2 py-1 rounded text-[10px] font-bold text-gray-600 uppercase tracking-wider">{v.canal}</span></td>
-                            <td className="text-gray-500 font-medium">{nItems}</td>
-                            <td className="font-black text-slate-900">{formatearMonto(v.total)}</td>
-                            <td><span className={`text-[10px] font-bold px-2 py-1 rounded uppercase border ${stateStyles}`}>{v.estado}</span></td>
-                            <td>
-                               <button onClick={() => setOrdenSeleccionada(v)} className="text-indigo-600 hover:text-indigo-800 hover:underline text-xs font-bold bg-indigo-50 px-3 py-1 rounded-full transition-colors hidden sm:inline-block">Ver Detalle</button>
-                               <button onClick={() => setOrdenSeleccionada(v)} className="text-indigo-600 hover:text-indigo-800 text-xs font-bold bg-indigo-50 w-8 h-8 rounded-full sm:hidden flex items-center justify-center">▶</button>
-                            </td>
-                         </tr>
-                       );
-                     }) : (
-                       <tr>
-                         <td colSpan="8" className="text-center py-10">
-                            <div className="flex flex-col items-center">
-                               <span className="text-4xl mb-3 opacity-30">🔍</span>
-                               <p className="text-sm font-bold text-slate-600">No hay transacciones</p>
-                               <p className="text-xs text-gray-400 mt-1">Intenta con otros filtros de búsqueda.</p>
-                            </div>
-                         </td>
+              <div className="overflow-x-auto">
+                 <table className="w-full text-left border-collapse">
+                    <thead>
+                       <tr className="bg-gray-50/50">
+                          <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest pl-6"># Orden</th>
+                          <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Hora</th>
+                          <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cliente / Mesa</th>
+                          <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Canal</th>
+                          <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Items</th>
+                          <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</th>
+                          <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado</th>
+                          <th className="p-3"></th>
                        </tr>
-                     )}
-                  </tbody>
-               </table>
-            </div>
-         </div>
-
-         {/* BLOQUE 5: Top Platos Vendidos */}
-         <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><span className="text-amber-500 text-xl">🏆</span> Platos Más Vendidos</h3>
-            <div className="space-y-5">
-               {topPlatos.map((p, i) => (
-                  <div key={i} className="group">
-                     <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-3">
-                           <span className="w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 text-[10px] font-black text-slate-500 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
-                             {i+1}
-                           </span>
-                           <span className="text-sm font-bold text-slate-700">{p.nombre}</span>
-                        </div>
-                        <div className="text-right">
-                           <span className="text-sm font-black text-slate-900 block">{formatearMonto(p.ventas)}</span>
-                           <span className="text-[10px] font-bold text-gray-400">{p.cantidad} unidades</span>
-                        </div>
-                     </div>
-                     <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-amber-400 h-1.5 rounded-full transition-all group-hover:bg-amber-500" style={{width: `${(p.ventas / maxVentasTopPlato) * 100}%`}}></div>
-                     </div>
-                  </div>
-               ))}
-            </div>
-         </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                       {transacciones.map((t, i) => (
+                          <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                             <td className="p-3 pl-6 text-xs font-black text-slate-800">#{t.id}</td>
+                             <td className="p-3 text-xs font-bold text-gray-500">{t.hora}</td>
+                             <td className="p-3 text-xs font-bold text-slate-700">{t.cliente}</td>
+                             <td className="p-3"><span className="text-[9px] font-black px-2 py-1 rounded bg-gray-100 text-slate-600">{t.canal}</span></td>
+                             <td className="p-3 text-xs font-bold text-gray-500 text-center">{t.items}</td>
+                             <td className="p-3 text-xs font-black text-slate-800">{formatearMonto(t.total)}</td>
+                             <td className="p-3"><span className={`text-[9px] font-black px-2 py-1 rounded bg-${t.eColor}-50 text-${t.eColor}-600 border border-${t.eColor}-100`}>{t.estado}</span></td>
+                             <td className="p-3 text-right pr-6"><button onClick={() => setOrdenSeleccionada(t)} className="text-[10px] font-black text-emerald-600 hover:text-emerald-800 uppercase tracking-tight">Ver Detalle</button></td>
+                          </tr>
+                       ))}
+                    </tbody>
+                 </table>
+              </div>
+           </div>
+           
+           <div className="lg:col-span-4 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-amber-500 rounded-full"></span>Platos Más Vendidos 🏆</h3>
+              <div className="space-y-4 flex-1">
+                 {topPlatos.map((p, i) => (
+                    <div key={i} className="group cursor-pointer">
+                       <div className="flex justify-between items-start mb-1">
+                          <div className="flex gap-2">
+                             <span className="text-[10px] font-black w-4 text-gray-300 group-hover:text-amber-500 transition-colors">0{i+1}</span>
+                             <p className="text-xs font-black text-slate-800 leading-none mt-0.5 group-hover:text-amber-600 transition-colors">{p.nombre}</p>
+                          </div>
+                          <p className="text-xs font-black text-slate-800">{compactMonto(p.ventas)}</p>
+                       </div>
+                       <div className="flex justify-between items-center pl-6 mb-1">
+                          <p className="text-[9px] text-gray-400 font-bold">{p.qty} unidades</p>
+                       </div>
+                       <div className="ml-6 h-1 w-full bg-gray-50 rounded-full overflow-hidden"><div className="h-full bg-amber-400 group-hover:bg-amber-500 transition-colors rounded-full" style={{width: `${p.pct}%`}}></div></div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </div>
       </div>
 
-      {/* MODAL DETALLES DE ORDEN */}
+      {/* SEPARADOR */}
+      <div className="py-4 mt-8 mb-4 relative flex items-center justify-center">
+         <div className="absolute w-full h-px bg-gray-200"></div>
+         <span className="bg-[#f8f9fc] px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest relative z-10">Finanzas & Rentabilidad</span>
+      </div>
+
+      {/* SECCIÓN 2: FINANZAS & RENTABILIDAD */}
+      <div className="space-y-6">
+        
+        {/* KPIs FINANZAS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1 flex justify-between">Ingresos del Mes <span className="text-lg">💰</span></p>
+              <p className="text-2xl font-black text-slate-800">$28.4M</p>
+              <div className="flex items-center gap-2 mt-2">
+                 <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">+14.2%</span>
+                 <span className="text-[10px] font-bold text-gray-400">vs abril 2025</span>
+              </div>
+           </div>
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1 flex justify-between">Costos Totales <span className="text-lg">📉</span></p>
+              <p className="text-2xl font-black text-slate-800">$19.8M</p>
+              <div className="flex items-center gap-2 mt-2">
+                 <span className="text-[10px] font-black bg-red-50 text-red-600 px-1.5 py-0.5 rounded">+8.1%</span>
+                 <span className="text-[10px] font-bold text-gray-400">Gasto operativo</span>
+              </div>
+           </div>
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 flex justify-between">Utilidad Neta <span className="text-lg">🥧</span></p>
+              <p className="text-2xl font-black text-slate-800">$8.6M</p>
+              <div className="flex items-center gap-2 mt-2">
+                 <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">30.3%</span>
+                 <span className="text-[10px] font-bold text-gray-400">Proyección de cierre</span>
+              </div>
+           </div>
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1 flex justify-between">Flujo Caja Disponible <span className="text-lg">🏦</span></p>
+              <p className="text-2xl font-black text-slate-800">$6.2M</p>
+              <div className="flex items-center gap-2 mt-2">
+                 <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+</span>
+                 <span className="text-[10px] font-bold text-gray-400">Disponible real</span>
+              </div>
+           </div>
+        </div>
+
+        {/* 3 COSTOS CRÍTICOS */}
+        <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
+           <div className="mb-6">
+              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Los 3 Costos que definen tu rentabilidad</h3>
+              <p className="text-[10px] text-gray-400 font-bold mt-1">Estándar del sector: Food ≤30% · Labor ≤30% · Fijos ≤20%</p>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+              <div className="md:pr-6 pt-4 md:pt-0">
+                 <p className="text-xs font-black text-slate-800 mb-2">Food Cost (Comida & Bebida)</p>
+                 <div className="flex items-end gap-3 mb-2">
+                    <span className="text-4xl font-black text-emerald-500">28.4%</span>
+                    <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full border border-emerald-100 mb-1">Saludable</span>
+                 </div>
+                 <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden mb-2"><div className="h-full bg-emerald-500" style={{width: '28.4%'}}></div></div>
+                 <div className="flex justify-between text-[10px] font-bold">
+                    <span className="text-gray-400">Meta: ≤30%</span>
+                    <span className="text-slate-600">$8.06M</span>
+                 </div>
+              </div>
+              <div className="md:px-6 pt-4 md:pt-0">
+                 <p className="text-xs font-black text-slate-800 mb-2">Labor Cost (Nómina & Personal)</p>
+                 <div className="flex items-end gap-3 mb-2">
+                    <span className="text-4xl font-black text-amber-500">33.7%</span>
+                    <span className="text-[10px] font-black bg-amber-50 text-amber-600 px-2 py-1 rounded-full border border-amber-100 mb-1">Revisar</span>
+                 </div>
+                 <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden mb-2"><div className="h-full bg-amber-500" style={{width: '33.7%'}}></div></div>
+                 <div className="flex justify-between text-[10px] font-bold">
+                    <span className="text-gray-400">Meta: ≤30%</span>
+                    <span className="text-slate-600">$9.57M</span>
+                 </div>
+              </div>
+              <div className="md:pl-6 pt-4 md:pt-0">
+                 <p className="text-xs font-black text-slate-800 mb-2">Overhead (Arriendo & Fijos)</p>
+                 <div className="flex items-end gap-3 mb-2">
+                    <span className="text-4xl font-black text-rose-500">22.1%</span>
+                    <span className="text-[10px] font-black bg-rose-50 text-rose-600 px-2 py-1 rounded-full border border-rose-100 mb-1">Optimizar</span>
+                 </div>
+                 <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden mb-2"><div className="h-full bg-rose-500" style={{width: '22.1%'}}></div></div>
+                 <div className="flex justify-between text-[10px] font-bold">
+                    <span className="text-gray-400">Meta: ≤20%</span>
+                    <span className="text-slate-600">$6.27M</span>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* EQUILIBRIO + FLUJO */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+           <div className="lg:col-span-7 bg-slate-900 rounded-[32px] shadow-sm p-8 flex flex-col justify-center relative overflow-hidden">
+              <div className="relative z-10">
+                 <h3 className="text-xs font-black text-white uppercase tracking-widest mb-2">Punto de Equilibrio · Meta $21.3M</h3>
+                 <p className="text-[11px] text-slate-400 font-bold mb-6 max-w-md">Has cubierto tus costos fijos y variables. Todo ingreso adicional genera utilidad pura.</p>
+                 
+                 <div className="relative h-6 bg-slate-800 rounded-full overflow-hidden mb-2 shadow-inner border border-slate-700">
+                    <div className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-1000" style={{width: '100%'}}></div>
+                    <div className="absolute top-0 right-0 h-full bg-emerald-400 transition-all duration-1000 opacity-50" style={{width: '25%'}}></div>
+                 </div>
+                 <div className="flex justify-between items-center text-[10px] font-black">
+                    <span className="text-emerald-400">133% alcanzado</span>
+                    <span className="text-white">+$7.1M de excedente</span>
+                 </div>
+              </div>
+              {/* Decoración gráfica */}
+              <div className="absolute right-[-10%] top-[-20%] w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+           </div>
+           
+           <div className="lg:col-span-5 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+              <div className="flex justify-between items-center mb-6">
+                 <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Flujo de Caja Semanal</h3>
+                 <div className="flex gap-3">
+                    <span className="flex items-center gap-1.5 text-[9px] font-black text-gray-400"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Entradas</span>
+                    <span className="flex items-center gap-1.5 text-[9px] font-black text-gray-400"><span className="w-2 h-2 rounded-full bg-rose-400/80"></span> Salidas</span>
+                 </div>
+              </div>
+              <div className="space-y-2.5 flex-1 justify-center flex flex-col">
+                 {flujoSemanal.map((f, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                       <span className="text-[10px] font-black text-gray-400 w-4">{f.d}</span>
+                       <div className="flex-1 relative h-3 bg-gray-50 rounded-full overflow-hidden">
+                          <div className="absolute top-0 left-0 h-full bg-emerald-500 rounded-full" style={{width: `${(f.in/3)*100}%`}}></div>
+                          <div className="absolute top-0 left-0 h-full bg-rose-400/80 rounded-full" style={{width: `${(f.out/3)*100}%`}}></div>
+                       </div>
+                       <div className="flex gap-2 w-20 justify-end">
+                          <span className="text-[9px] font-black text-emerald-600">+{f.in}M</span>
+                          <span className="text-[9px] font-black text-rose-500">-{f.out}M</span>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+
+        {/* UTILIDAD POR CANAL + GASTOS */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+           <div className="lg:col-span-7 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Utilidad por Canal</h3>
+              <div className="space-y-5 flex-1">
+                 {[
+                   { name: 'Salón', margin: 34, share: 64, val: 18.2, color: 'emerald', ok: true },
+                   { name: 'Domicilios', margin: 22, share: 20, val: 5.8, color: 'blue', ok: false },
+                   { name: 'Eventos & Catering', margin: 41, share: 11, val: 3.1, color: 'purple', ok: true },
+                   { name: 'Para llevar', margin: 28, share: 5, val: 1.3, color: 'amber', ok: false },
+                 ].map((c, i) => (
+                    <div key={i}>
+                       <div className="flex justify-between items-end mb-1">
+                          <span className="text-xs font-black text-slate-800">{c.name}</span>
+                          <span className={`text-[10px] font-black ${c.ok ? 'text-emerald-600' : 'text-amber-600'}`}>{c.margin}% margen</span>
+                       </div>
+                       <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2 bg-gray-50 rounded-full overflow-hidden"><div className={`h-full bg-${c.color}-500`} style={{width: `${c.share}%`}}></div></div>
+                          <span className="text-[10px] font-bold text-gray-500 w-24 text-right">{c.share}% · ${c.val}M</span>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+           <div className="lg:col-span-5 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Desglose de Gastos</h3>
+              <div className="space-y-4 flex-1 justify-center flex flex-col">
+                 {[
+                   { name: 'Nómina & Personal', val: 9.57, pct: 33.7, color: 'rose' },
+                   { name: 'Insumos & Materia prima', val: 8.06, pct: 28.4, color: 'amber' },
+                   { name: 'Arriendo', val: 4.20, pct: 14.8, color: 'pink' },
+                   { name: 'Servicios públicos', val: 0.82, pct: 2.9, color: 'blue' },
+                   { name: 'Marketing', val: 0.36, pct: 1.3, color: 'emerald' },
+                 ].map((g, i) => (
+                    <div key={i} className="flex justify-between items-center group">
+                       <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full bg-${g.color}-500`}></span>
+                          <span className="text-xs font-bold text-slate-700">{g.name}</span>
+                       </div>
+                       <div className="flex items-center gap-3">
+                          <span className="text-xs font-black text-slate-800">${g.val}M</span>
+                          <span className="text-[10px] font-bold text-gray-400 w-8 text-right">{g.pct}%</span>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+
+        {/* KPIs + PROYECCIÓN */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+           <div className="lg:col-span-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { l: 'Ticket Promedio', v: '$68.4K', d: '+5.2%', c: 'blue' },
+                { l: 'Clientes (Mes)', v: '2,140', d: 'pax total', c: 'slate' },
+                { l: 'Mesa Pico', v: 'Viernes', d: '8:00 PM', c: 'amber' },
+                { l: 'ROI Inversión', v: '18.4%', d: '+2.1%', c: 'emerald' },
+              ].map((k, i) => (
+                 <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-center text-center group hover:border-gray-200 transition-colors">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{k.l}</p>
+                    <p className="text-xl font-black text-slate-800">{k.v}</p>
+                    <p className={`text-[9px] font-bold mt-1 ${k.c === 'slate' ? 'text-gray-400' : 'text-' + k.c + '-600'}`}>{k.d}</p>
+                 </div>
+              ))}
+           </div>
+           <div className="lg:col-span-4 bg-slate-900 rounded-2xl p-5 shadow-sm text-white relative overflow-hidden flex flex-col justify-center border border-slate-800">
+              <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3">Proyección de Cierre (IA)</h3>
+              <div className="flex items-end gap-3 mb-4">
+                 <span className="text-3xl font-black text-white">$32.5M</span>
+                 <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 mb-1">+18% vs 2025</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/50">
+                 <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Utilidad Estimada</p>
+                    <p className="text-sm font-black text-white">$9.8M (30.1%)</p>
+                 </div>
+                 <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Mejor Día</p>
+                    <p className="text-sm font-black text-white">Sáb 15 ($2.4M)</p>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+      </div>
+
+      {/* MODAL DETALLE ORDEN */}
       {ordenSeleccionada && (
-         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
-               <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+               
+               <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                   <div>
-                     <h2 className="text-lg font-black text-slate-800">Orden #{ordenSeleccionada.id}</h2>
-                     <p className="text-xs font-bold text-gray-500 mt-1">{ordenSeleccionada.hora} • Canal: {ordenSeleccionada.canal}</p>
+                     <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Orden #{ordenSeleccionada.id}</p>
+                     <h2 className="text-xl font-black text-slate-800">{ordenSeleccionada.cliente}</h2>
+                     <p className="text-sm text-gray-500 font-bold mt-1">{ordenSeleccionada.hora} • {ordenSeleccionada.canal}</p>
                   </div>
-                  <button onClick={() => setOrdenSeleccionada(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 font-black transition-colors transform hover:rotate-90">✕</button>
+                  <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest
+                     ${ordenSeleccionada.estado === 'Pagado' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
+                        ordenSeleccionada.estado === 'Abierta' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                        ordenSeleccionada.estado === 'En Ruta' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
+                        ordenSeleccionada.estado === 'En Preparación' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                        'bg-red-50 text-red-600 border border-red-100'}`}>
+                     {ordenSeleccionada.estado}
+                  </span>
                </div>
                
                <div className="p-6">
-                  <div className="flex justify-between items-end mb-6 pb-5 border-b border-gray-100">
-                     <div>
-                        <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase block mb-1">Cliente / Mesa</span>
-                        <span className="text-sm font-black text-slate-800 flex items-center gap-2">
-                           <span className="text-indigo-500">👤</span> {ordenSeleccionada.cliente}
-                        </span>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Productos</p>
+                  <div className="space-y-4 mb-6">
+                     <div className="flex justify-between items-start">
+                        <div className="flex gap-3">
+                           <span className="text-sm font-black text-gray-400">1x</span>
+                           <span className="text-sm font-bold text-slate-700">Producto Principal</span>
+                        </div>
+                        <span className="text-sm font-black text-slate-800">$38,000</span>
                      </div>
-                     <div>
-                        <span className={`px-3 py-1 rounded border text-[10px] font-bold uppercase tracking-wider ${ordenSeleccionada.estado === 'Pagado' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
-                           {ordenSeleccionada.estado}
-                        </span>
+                     <div className="flex justify-between items-start">
+                        <div className="flex gap-3">
+                           <span className="text-sm font-black text-gray-400">2x</span>
+                           <span className="text-sm font-bold text-slate-700">Bebida Adicional</span>
+                        </div>
+                        <span className="text-sm font-black text-slate-800">$10,000</span>
                      </div>
                   </div>
                   
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Detalle de Productos</h3>
-                  <div className="space-y-4 mb-6 min-h-[120px] max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                     {ordenSeleccionada.items && ordenSeleccionada.items.map((it, i) => (
-                        <div key={i} className="flex justify-between items-start">
-                           <div className="flex gap-3">
-                              <span className="text-xs font-black text-slate-600 bg-gray-100 rounded border border-gray-200 w-6 h-6 flex justify-center items-center shrink-0">{it.qty}</span>
-                              <span className="text-sm font-bold text-slate-700">{it.nombre}</span>
-                           </div>
-                           <span className="text-sm font-bold text-slate-600 font-mono">{formatearMonto(it.precio * it.qty)}</span>
-                        </div>
-                     ))}
-                  </div>
-
-                  <div className="pt-5 border-t-2 border-dashed border-gray-200">
-                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-bold text-gray-500">Subtotal</span>
-                        <span className="text-sm font-bold text-slate-700 font-mono">{formatearMonto(ordenSeleccionada.total / 1.08)}</span>
+                  <div className="border-t border-dashed border-gray-200 pt-4 space-y-2">
+                     <div className="flex justify-between items-center text-sm">
+                        <span className="font-bold text-gray-500">Subtotal</span>
+                        <span className="font-bold text-slate-700">{formatearMonto(ordenSeleccionada.total * 0.92)}</span>
                      </div>
-                     <div className="flex justify-between items-center mb-5">
-                        <span className="text-sm font-bold text-gray-500">Impuestos (8%)</span>
-                        <span className="text-sm font-bold text-slate-700 font-mono">{formatearMonto(ordenSeleccionada.total - (ordenSeleccionada.total / 1.08))}</span>
+                     <div className="flex justify-between items-center text-sm">
+                        <span className="font-bold text-gray-500">Impuestos (8%)</span>
+                        <span className="font-bold text-slate-700">{formatearMonto(ordenSeleccionada.total * 0.08)}</span>
                      </div>
-                     <div className="flex justify-between items-center py-4 bg-emerald-50 rounded-2xl px-5 border border-emerald-100">
-                        <span className="text-sm font-black text-slate-900 uppercase tracking-wider">Total</span>
-                        <span className="text-2xl font-black text-emerald-600 font-mono">{formatearMonto(ordenSeleccionada.total)}</span>
+                     <div className="flex justify-between items-center text-lg mt-2 pt-2 border-t border-gray-100">
+                        <span className="font-black text-slate-800">Total</span>
+                        <span className="font-black text-emerald-600">{formatearMonto(ordenSeleccionada.total)}</span>
                      </div>
                   </div>
                </div>
@@ -2854,366 +3098,6 @@ function ViewVentas() {
          </div>
       )}
 
-    </div>
-  );
-}
-
-// =========================================================================
-// 3. FINANZAS Y CUMPLIMIENTO
-// =========================================================================
-function ViewFinanzas({ platos = [], recetas = [], inventario = [] }) {
-  const formatearMonto = (monto) => {
-    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
-  };
-
-  // --- DATOS REALES PROPORCIONADOS ---
-  const finStats = {
-    ingresosMes: 28400000,
-    costosTotales: 19800000,
-    utilidadNeta: 8600000,
-    flujoCaja: 6200000,
-    deltaIngresos: "+14.2%",
-    deltaCostos: "+8.1%",
-    deltaUtilidad: "30.3%",
-    deltaFlujo: "+ positivo"
-  };
-
-  const trioCostos = [
-    { label: 'Food Cost — Comida & Bebida', value: 28.4, target: 30, color: 'emerald', status: 'Saludable', desc: 'Bajo control ✓', monto: 8060000 },
-    { label: 'Labor Cost — Nómina & Personal', value: 33.7, target: 30, color: 'amber', status: 'Revisar', desc: 'Ligeramente alto ⚠', monto: 9570000 },
-    { label: 'Overhead — Arriendo & Fijos', value: 22.1, target: 20, color: 'rose', status: 'Optimizar', desc: 'Por encima ✕', monto: 6270000 }
-  ];
-
-  const utilCanal = [
-    { name: 'Salón', share: 64, margin: 34, venta: 18200000, color: 'emerald' },
-    { name: 'Domicilios', share: 20, margin: 22, venta: 5800000, color: 'blue' },
-    { name: 'Eventos & Catering', share: 11, margin: 41, venta: 3100000, color: 'purple' },
-    { name: 'Para llevar', share: 5, margin: 28, venta: 1300000, color: 'amber' }
-  ];
-
-  const cashFlowSemanal = [
-    { d: 'Lun', i: 1200000, o: 820000 },
-    { d: 'Mar', i: 980000, o: 640000 },
-    { d: 'Mié', i: 1450000, o: 930000 },
-    { d: 'Jue', i: 1680000, o: 1100000 },
-    { d: 'Vie', i: 2100000, o: 1300000 },
-    { d: 'Sáb', i: 2400000, o: 1480000 },
-    { d: 'Dom', i: 1950000, o: 1250000 }
-  ];
-
-  const desgloseGastos = [
-    { nombre: 'Nómina & Personal', monto: 9570000, pct: 33.7, color: 'rose' },
-    { nombre: 'Arriendo', monto: 4200000, pct: 14.8, color: 'pink' },
-    { nombre: 'Insumos & Materia prima', monto: 8060000, pct: 28.4, color: 'amber' },
-    { nombre: 'Servicios públicos', monto: 820000, pct: 2.9, color: 'blue' },
-    { nombre: 'Marketing', monto: 360000, pct: 1.3, color: 'emerald' }
-  ];
-
-  const breakEvenPoint = 21300000;
-
-  return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-10">
-      
-      {/* HEADER DE ESTADO */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-        <div className="flex items-center gap-4">
-           <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-xl border border-emerald-100 animate-pulse">🛡️</div>
-           <div>
-              <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">Finanzas · Restaurante El Nómada</h4>
-              <p className="text-[11px] text-emerald-600 font-bold uppercase tracking-widest">✓ Conexión DIAN Activa • Periodo Abril 2026</p>
-           </div>
-        </div>
-        <div className="flex gap-2">
-           <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase hover:bg-slate-800 transition-all shadow-lg shadow-slate-100">Cierre de Caja</button>
-           <button className="px-4 py-2 bg-white border border-gray-200 text-slate-600 rounded-xl text-[11px] font-black uppercase hover:bg-gray-50 transition-all">Exportar P&L</button>
-        </div>
-      </div>
-
-      {/* 4 GRANDES NÚMEROS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard label="Ingresos del Mes" value={formatearMonto(finStats.ingresosMes)} delta={finStats.deltaIngresos} sub="vs abril 2025" color="blue" icon="💰" />
-        <MetricCard label="Costos Totales" value={formatearMonto(finStats.costosTotales)} delta={finStats.deltaCostos} sub="Gasto operativo" color="red" icon="📉" isDanger />
-        <MetricCard label="Utilidad Neta" value={formatearMonto(finStats.utilidadNeta)} delta={finStats.deltaUtilidad} sub="30.3% margen" color="emerald" icon="🥧" />
-        <MetricCard label="Flujo de Caja" value={formatearMonto(finStats.flujoCaja)} delta={finStats.deltaFlujo} sub="Disponible real" color="amber" icon="🏦" isWarning />
-      </div>
-
-      {/* TRIO COSTOS CRÍTICOS */}
-      <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
-          <h3 className="font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
-            <span className="w-2 h-6 bg-slate-900 rounded-full"></span>
-            Los 3 Costos que definen tu rentabilidad
-          </h3>
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Estándar: Food ≤30% · Labor ≤30% · Fijos ≤20%</span>
-        </div>
-        <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {trioCostos.map((costo, idx) => (
-            <div key={idx} className="space-y-4">
-              <div className="flex justify-between items-end">
-                 <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{costo.label}</p>
-                    <p className={`text-2xl font-black ${
-                      costo.color === 'emerald' ? 'text-emerald-600' : 
-                      costo.color === 'amber' ? 'text-amber-600' : 'text-rose-600'
-                    }`}>{costo.value}%</p>
-                 </div>
-                 <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                   costo.status === 'Saludable' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
-                   costo.status === 'Revisar' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 
-                   'bg-rose-50 text-rose-600 border border-rose-100'
-                 }`}>
-                    {costo.status}
-                 </div>
-              </div>
-              <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden relative">
-                 <div 
-                    className={`h-full rounded-full transition-all duration-1000 ${
-                      costo.color === 'emerald' ? 'bg-emerald-500' : 
-                      costo.color === 'amber' ? 'bg-amber-500' : 'bg-rose-500'
-                    }`}
-                    style={{ width: `${(costo.value / 40) * 100}%` }}
-                 ></div>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-[10px] text-gray-400 font-bold">Meta ≤ {costo.target}%</p>
-                <p className="text-[11px] font-black text-slate-700">{formatearMonto(costo.monto)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* PUNTO DE EQUILIBRIO & FLUJO (8 cols) */}
-        <div className="lg:col-span-8 space-y-6">
-           <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden">
-              <div className="absolute -right-4 -bottom-4 opacity-10 text-4xl">🎯</div>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                 <div>
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Punto de Equilibrio · Meta $30M</h4>
-                    <p className="text-xl font-bold">Has cubierto el <span className="text-emerald-400">100%</span> de tus costos fijos y variables.</p>
-                 </div>
-                 <div className="text-right">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ventas Logradas</p>
-                    <p className="text-2xl font-black text-emerald-400">{formatearMonto(finStats.ingresosMes)}</p>
-                 </div>
-              </div>
-              <div className="w-full bg-slate-800 h-4 rounded-full overflow-hidden mb-3">
-                 <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(16,185,129,0.5)]" style={{ width: '94.7%' }}></div>
-              </div>
-              <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                 <span>Equilibrio: {formatearMonto(breakEvenPoint)}</span>
-                 <span className="text-emerald-400">Superado (+{formatearMonto(finStats.ingresosMes - breakEvenPoint)})</span>
-              </div>
-           </div>
-
-           <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8">
-              <div className="flex justify-between items-center mb-8">
-                 <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Flujo de Caja Semanal</h4>
-                 <div className="flex gap-4">
-                    <div className="flex items-center gap-2">
-                       <span className="w-3 h-3 bg-emerald-500 rounded-full"></span>
-                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Entradas</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <span className="w-3 h-3 bg-rose-400 rounded-full"></span>
-                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Salidas</span>
-                    </div>
-                 </div>
-              </div>
-              <div className="space-y-4">
-                 {cashFlowSemanal.map((cf, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                       <span className="text-[10px] font-black text-gray-400 w-8">{cf.d}</span>
-                       <div className="flex-1 h-2 bg-gray-50 rounded-full overflow-hidden relative">
-                          <div className="absolute top-0 bottom-0 bg-emerald-500 rounded-full opacity-60" style={{ width: `${(cf.i / 2400000) * 100}%` }}></div>
-                          <div className="absolute top-0 bottom-0 bg-rose-400 rounded-full opacity-40" style={{ width: `${(cf.o / 2400000) * 100}%` }}></div>
-                       </div>
-                       <div className="flex gap-4 w-40 justify-end">
-                          <span className="text-[10px] font-black text-emerald-600">+{Math.round(cf.i/1000)}k</span>
-                          <span className="text-[10px] font-black text-rose-500">-{Math.round(cf.o/1000)}k</span>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        </div>
-
-        {/* UTILIDAD POR CANAL & GASTOS (4 cols) */}
-        <div className="lg:col-span-4 space-y-6">
-           <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
-              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6">Utilidad por Canal</h4>
-              <div className="space-y-6">
-                 {utilCanal.map((canal, idx) => (
-                    <div key={idx} className="space-y-2">
-                       <div className="flex justify-between items-end">
-                          <span className="text-xs font-black text-slate-800">{canal.name}</span>
-                          <span className={`text-[10px] font-black ${canal.margin >= 30 ? 'text-emerald-600' : 'text-amber-600'}`}>{canal.margin}% Margen</span>
-                       </div>
-                       <div className="w-full bg-gray-50 h-1.5 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${
-                            canal.color === 'emerald' ? 'bg-emerald-500' : 
-                            canal.color === 'blue' ? 'bg-blue-500' : 
-                            canal.color === 'purple' ? 'bg-purple-500' : 'bg-amber-500'
-                          }`} style={{ width: `${canal.share}%` }}></div>
-                       </div>
-                       <div className="flex justify-between text-[9px] text-gray-400 font-bold">
-                          <span>{canal.share}% Volumen</span>
-                          <span className="text-slate-600">{formatearMonto(canal.venta)}</span>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-
-           <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
-              <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6">Desglose de Gastos</h4>
-              <div className="space-y-4">
-                 {desgloseGastos.map((g, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${
-                            g.color === 'rose' ? 'bg-rose-500' : 
-                            g.color === 'pink' ? 'bg-pink-500' : 
-                            g.color === 'amber' ? 'bg-amber-500' : 'bg-blue-500'
-                          }`}></div>
-                          <span className="text-[11px] font-bold text-slate-700">{g.nombre}</span>
-                       </div>
-                       <div className="text-right">
-                          <p className="text-[11px] font-black text-slate-900">{formatearMonto(g.monto)}</p>
-                          <p className="text-[9px] text-gray-400 font-bold">{g.pct}%</p>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        </div>
-
-      </div>
-
-      {/* TERCERA FILA: KPIs & PROYECCION */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-         
-         {/* KPIs (8 cols) */}
-         <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPIItem label="Ticket Promedio" value="$68,000" icon="🧾" delta="↑ +$4K" />
-            <KPIItem label="Clientes" value="418 pax" icon="👥" delta="Este mes" />
-            <KPIItem label="Mesas Pico" value="8.4 mesas" icon="🕐" delta="Vie 7-9pm" />
-            <KPIItem label="ROI Inversión" value="43%" icon="🚀" delta="↑ +6pp" />
-         </div>
-
-         {/* PROYECCION (4 cols) */}
-         <div className="lg:col-span-4">
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[32px] p-6 text-white shadow-xl shadow-slate-100 relative overflow-hidden h-full">
-               <div className="absolute -right-10 -top-10 text-white opacity-5 text-8xl">📊</div>
-               <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Proyección de Cierre</h4>
-               <div className="space-y-4 relative z-10">
-                  <div className="flex justify-between items-end">
-                     <div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ingreso Proyectado</p>
-                        <p className="text-2xl font-black text-emerald-400">$31.2M</p>
-                     </div>
-                     <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">↑ +22.4% vs 2025</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
-                     <div>
-                        <p className="text-[9px] text-slate-500 font-bold uppercase">Utilidad Est.</p>
-                        <p className="text-sm font-black">$9.4M (30.1%)</p>
-                     </div>
-                     <div>
-                        <p className="text-[9px] text-slate-500 font-bold uppercase">Mejor Día</p>
-                        <p className="text-sm font-black text-blue-400">Sáb 19 Abr</p>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-
-      </div>
-
-    </div>
-  );
-}
-
-// Subcomponente de Tarjeta de Métrica
-function MetricCard({ label, value, delta, sub, color, icon, isDanger, isWarning }) {
-   const colors = {
-      blue: 'bg-blue-50 text-blue-600 border-blue-100',
-      red: 'bg-rose-50 text-rose-600 border-rose-100',
-      emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-      amber: 'bg-amber-50 text-amber-600 border-amber-100'
-   };
-
-   return (
-      <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-         <div className="flex justify-between items-start mb-4">
-            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-inner ${colors[color]}`}>
-               {icon}
-            </div>
-            <div className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border ${isDanger ? 'bg-rose-50 text-rose-600 border-rose-100' : isWarning ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-               {delta}
-            </div>
-         </div>
-         <div>
-            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</h4>
-            <p className="text-xl font-black text-slate-900">{value}</p>
-            <p className="text-[10px] text-gray-400 font-bold mt-1">{sub}</p>
-         </div>
-      </div>
-   );
-}
-
-// Subcomponente de KPI
-function KPIItem({ label, value, icon, delta, isDanger }) {
-   return (
-      <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-100 group hover:bg-white hover:shadow-sm transition-all h-full">
-         <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-lg border border-gray-100">{icon}</div>
-            <div>
-               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</p>
-               <p className="text-sm font-black text-slate-800">{value}</p>
-            </div>
-         </div>
-         <span className={`text-[10px] font-black ${isDanger ? 'text-rose-500' : 'text-emerald-500'}`}>{delta}</span>
-      </div>
-   );
-}
-
-
-// =========================================================================
-// 4. OPERACIONES Y MESAS
-// =========================================================================
-function ViewOperaciones() {
-  const mesas = [
-    { num: 1, pax: 2, estado: 'Ocupada', tiempo: '45 min', monto: 85000 },
-    { num: 2, pax: 4, estado: 'Ocupada', tiempo: '15 min', monto: 120000 },
-    { num: 3, pax: 0, estado: 'Libre', tiempo: '-', monto: 0 },
-    { num: 4, pax: 3, estado: 'Por Pagar', tiempo: '60 min', monto: 95000 },
-    { num: 5, pax: 0, estado: 'Reservada', tiempo: '19:00', monto: 0 },
-    { num: 6, pax: 0, estado: 'Libre', tiempo: '-', monto: 0 },
-  ];
-
-  return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
-      <div className="flex items-center justify-between mb-2">
-         <h3 className="text-lg font-bold text-slate-800">Mapa del Salón (En Vivo)</h3>
-         <button className="btn btn--dark py-2 px-4 text-xs">Modo KDS (Cocina)</button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-         {mesas.map(m => (
-           <div key={m.num} className={`p-4 rounded-2xl border-2 flex flex-col justify-between h-32 ${m.estado === 'Libre' ? 'bg-white border-gray-200' : m.estado === 'Ocupada' ? 'bg-blue-50 border-blue-200' : m.estado === 'Por Pagar' ? 'bg-amber-50 border-amber-200' : 'bg-purple-50 border-purple-200'}`}>
-              <div className="flex justify-between items-start">
-                 <span className="text-xl font-black text-slate-800">T{m.num}</span>
-                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${m.estado === 'Libre' ? 'bg-gray-100 text-gray-500' : m.estado === 'Ocupada' ? 'bg-blue-200 text-blue-800' : m.estado === 'Por Pagar' ? 'bg-amber-200 text-amber-800' : 'bg-purple-200 text-purple-800'}`}>{m.estado}</span>
-              </div>
-              <div>
-                 {m.estado !== 'Libre' && <p className="text-xs font-bold text-slate-600 mb-1">{m.pax} Pax • {m.tiempo}</p>}
-                 {m.monto > 0 && <p className="text-sm font-black text-emerald-600">${m.monto.toLocaleString()}</p>}
-              </div>
-           </div>
-         ))}
-      </div>
     </div>
   );
 }
@@ -4510,303 +4394,726 @@ function ViewReservas() {
 }
 
 // =========================================================================
-// 8. MARKETING
+// 8. MARKETING & FIDELIZACIÓN (MÓDULO UNIFICADO)
 // =========================================================================
-function ViewMarketing() {
+function ViewMarketingFidelizacion() {
+  const [periodo, setPeriodo] = React.useState('Este mes');
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-10">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-10">
       
-      {/* HEADER / TOPBAR */}
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Marketing <span className="text-emerald-500">&</span> Publicidad</h2>
-          <p className="text-xs text-gray-500 font-medium mt-1">Última actualización: hoy, 11:42 am · El Nómada Gastrobar</p>
+          <div className="flex items-center gap-3">
+             <h2 className="text-2xl font-black text-slate-800 tracking-tight">Marketing <span className="text-emerald-500">&</span> Fidelización</h2>
+             <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-100 uppercase tracking-tighter">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Programa VIP Activo
+             </span>
+          </div>
+          <p className="text-xs text-gray-500 font-medium mt-1">La Leña Restaurante · Actualizado hoy 14:30</p>
         </div>
-        <div className="flex gap-2">
-           <button className="px-4 py-2 bg-white border border-gray-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-tight hover:bg-gray-50 transition-all">7 días</button>
-           <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-tight hover:bg-slate-800 transition-all">Este mes</button>
-           <button className="px-4 py-2 bg-white border border-gray-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-tight hover:bg-gray-50 transition-all">Trimestre</button>
-           <button className="ml-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-tight hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Nueva campaña
+        <div className="flex gap-2 items-center">
+           <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100 mr-2">
+              {['7 días', 'Este mes', 'Trimestre', 'Año'].map(d => (
+                 <button key={d} onClick={() => setPeriodo(d)} className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${periodo === d ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>{d}</button>
+              ))}
+           </div>
+           <button className="px-4 py-2 bg-white border border-gray-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-tight hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+              📥 Exportar Reporte
+           </button>
+           <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-tight hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-100">
+              + Nueva Campaña
            </button>
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* ========================================================= */}
+      {/* SECCIÓN 1: MARKETING & PUBLICIDAD                         */}
+      {/* ========================================================= */}
+      
+      {/* 1.1 FRANJA DE KPIs DE MARKETING */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Alcance total" value="84,210" delta="12.4%" isUp vsText="vs mes anterior" icon="📣" />
-        <StatCard label="ROAS promedio" value="4.7x" delta="0.8x" isUp vsText="vs mes anterior" icon="💰" />
-        <StatCard label="Costo por cliente (CAC)" value="$3.20" delta="$0.40" isUp vsText="mejor que antes" icon="🎯" />
-        <StatCard label="Reputación online" value="4.6" delta="Sin cambio" icon="⭐" />
+         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-gray-300 transition-all">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Alcance Total <span className="text-lg">📣</span></p>
+            <p className="text-2xl font-black text-slate-800">42.5K</p>
+            <div className="flex items-center gap-2 mt-2">
+               <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+12%</span>
+               <span className="text-[10px] font-bold text-gray-400">vs mes anterior</span>
+            </div>
+         </div>
+         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-gray-300 transition-all">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">ROAS Promedio <span className="text-lg">💰</span></p>
+            <div className="flex items-end gap-2">
+               <p className="text-2xl font-black text-slate-800">4.7x</p>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+               <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+0.8x</span>
+               <span className="text-[10px] font-bold text-gray-400">vs mes anterior</span>
+            </div>
+         </div>
+         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-gray-300 transition-all">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Costo de Adquisición (CAC) <span className="text-lg">🎯</span></p>
+            <p className="text-2xl font-black text-slate-800">$12,400</p>
+            <div className="flex items-center gap-2 mt-2">
+               <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">-4%</span>
+               <span className="text-[10px] font-bold text-gray-400">Mejor eficiencia</span>
+            </div>
+         </div>
+         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-gray-300 transition-all">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Reputación Online <span className="text-lg">⭐</span></p>
+            <p className="text-2xl font-black text-slate-800">4.6 ★</p>
+            <div className="flex items-center gap-2 mt-2">
+               <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+0.2</span>
+               <span className="text-[10px] font-bold text-gray-400">Basado en 342 reseñas</span>
+            </div>
+         </div>
       </div>
 
+      {/* 1.2 RENDIMIENTO POR CANAL + CAMPAÑAS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* RENDIMIENTO POR CANAL */}
-        <div className="lg:col-span-7">
-           <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden h-full">
-              <div className="p-6 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
-                 <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <span className="w-1 h-4 bg-slate-900 rounded-full"></span>
-                    Rendimiento por canal
-                 </h3>
-                 <span className="text-[10px] font-bold text-gray-400">Clientes generados</span>
-              </div>
-              <div className="p-6 space-y-6">
-                 {[
-                   { name: 'Instagram', val: 1230, pct: 82, delta: '+18%', color: 'bg-emerald-500' },
-                   { name: 'Google Ads', val: 960, pct: 64, delta: '+9%', color: 'bg-blue-500' },
-                   { name: 'WhatsApp', val: 720, pct: 48, delta: '+22%', color: 'bg-emerald-400' },
-                   { name: 'Facebook', val: 540, pct: 36, delta: '-4%', color: 'bg-purple-400', down: true },
-                   { name: 'Rappi / Ifood', val: 330, pct: 22, delta: '+6%', color: 'bg-orange-400' },
-                   { name: 'Orgánico / SEO', val: 210, pct: 14, delta: '0%', color: 'bg-slate-300' },
-                 ].map((c, i) => (
-                    <div key={i} className="space-y-2">
-                       <div className="flex justify-between items-center">
-                          <p className="text-sm font-black text-slate-700">{c.name}</p>
-                          <div className="flex items-center gap-3">
-                             <span className="text-xs font-black text-slate-900 font-mono">{c.val}</span>
-                             <span className={`text-[10px] font-bold ${c.down ? 'text-red-500' : 'text-emerald-600'}`}>{c.delta}</span>
-                          </div>
-                       </div>
-                       <div className="h-2 bg-gray-50 rounded-full overflow-hidden border border-gray-100">
-                          <div className={`h-full rounded-full transition-all duration-1000 ${c.color}`} style={{ width: `${c.pct}%` }}></div>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        </div>
-
-        {/* CAMPAÑAS ACTIVAS */}
-        <div className="lg:col-span-5">
-           <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden h-full">
-              <div className="p-6 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
-                 <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <span className="w-1 h-4 bg-slate-900 rounded-full"></span>
-                    Campañas activas
-                 </h3>
-                 <span className="text-[10px] font-bold text-gray-400">Este mes</span>
-              </div>
-              <div className="divide-y divide-gray-50">
-                 {[
-                   { name: 'Lunes 2x1 en pizzas', sub: 'Instagram · $80k COP', roas: '6.1x', status: 'activa', color: 'bg-emerald-500' },
-                   { name: 'Búsqueda Google local', sub: 'Google Ads · $150k COP', roas: '4.2x', status: 'activa', color: 'bg-blue-500' },
-                   { name: 'Brunch de domingo', sub: 'Facebook · $60k COP', roas: '2.1x', status: 'pausada', color: 'bg-orange-500' },
-                   { name: 'San Valentín especial', sub: 'Multi-canal · Feb 2026', roas: '—', status: 'borrador', color: 'bg-slate-300' },
-                 ].map((c, i) => (
-                    <div key={i} className="p-5 flex items-center gap-4 hover:bg-gray-50 transition-colors cursor-pointer group">
-                       <div className={`w-2 h-10 rounded-full ${c.color}`}></div>
-                       <div className="flex-1 min-w-0">
-                          <p className="text-sm font-black text-slate-800 leading-tight truncate">{c.name}</p>
-                          <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-tight">{c.sub}</p>
-                          <span className={`mt-2 inline-block text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter border ${
-                             c.status === 'activa' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                             c.status === 'pausada' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                             'bg-gray-50 text-gray-400 border-gray-100'
-                          }`}>
-                             {c.status}
-                          </span>
-                       </div>
-                       <div className="text-right">
-                          <p className={`text-lg font-black ${c.roas === '—' ? 'text-slate-300' : parseFloat(c.roas) >= 3 ? 'text-emerald-600' : 'text-orange-500'}`}>{c.roas}</p>
-                          <p className="text-[9px] text-gray-300 font-bold uppercase tracking-widest">ROAS</p>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        </div>
-
+         {/* RENDIMIENTO POR CANAL (55%) */}
+         <div className="lg:col-span-7 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <div className="flex justify-between items-end mb-6">
+               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Rendimiento por Canal</h3>
+               <span className="text-[9px] font-bold text-gray-400 uppercase">Clientes generados en el período</span>
+            </div>
+            <div className="space-y-4 flex-1">
+               {[
+                  { name: 'Instagram', val: 340, pct: 100, color: 'emerald', delta: '+18%' },
+                  { name: 'Google Ads', val: 215, pct: 63, color: 'blue', delta: '+5%' },
+                  { name: 'WhatsApp Business', val: 180, pct: 53, color: 'emerald', delta: '+22%', shade: '800' },
+                  { name: 'Facebook', val: 95, pct: 28, color: 'purple', delta: '-4%', deltaColor: 'rose' },
+                  { name: 'Rappi / iFood', val: 65, pct: 19, color: 'orange', delta: '+2%' },
+                  { name: 'Orgánico / SEO', val: 45, pct: 13, color: 'slate', delta: '+1%' }
+               ].map((c, i) => (
+                  <div key={i} className="flex flex-col gap-1.5">
+                     <div className="flex justify-between items-center text-xs font-black text-slate-700">
+                        <span>{c.name}</span>
+                        <div className="flex items-center gap-3">
+                           <span>{c.val} pax</span>
+                           <span className={`text-[10px] w-8 text-right ${c.deltaColor === 'rose' ? 'text-rose-500' : 'text-emerald-500'}`}>{c.delta}</span>
+                        </div>
+                     </div>
+                     <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden">
+                        <div className={`h-full bg-${c.color}-${c.shade || '500'} rounded-full`} style={{width: `${c.pct}%`}}></div>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         </div>
+         
+         {/* CAMPAÑAS ACTIVAS (45%) */}
+         <div className="lg:col-span-5 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <div className="flex justify-between items-end mb-6">
+               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Campañas Activas</h3>
+               <span className="text-[9px] font-bold text-gray-400 uppercase">Este período</span>
+            </div>
+            <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar max-h-[300px]">
+               {[
+                  { name: 'Retargeting Finde', desc: 'Instagram · $150.000 COP', status: 'Activa', roas: '4.2x', c: 'emerald' },
+                  { name: 'Almuerzos Ejecutivos', desc: 'Google Ads · $200.000 COP', status: 'Activa', roas: '3.1x', c: 'emerald' },
+                  { name: 'Promo 2x1 Martes', desc: 'Facebook · $80.000 COP', status: 'Pausada', roas: '2.4x', c: 'amber' },
+                  { name: 'Aniversario Local', desc: 'WhatsApp · $50.000 COP', status: 'Activa', roas: '6.5x', c: 'emerald' },
+                  { name: 'Eventos Corporativos', desc: 'Google Ads · $300.000 COP', status: 'Borrador', roas: '-', c: 'slate' }
+               ].map((c, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 group">
+                     <div className={`w-1.5 h-10 rounded-full bg-${c.status === 'Activa' ? 'emerald-500' : c.status === 'Pausada' ? 'amber-400' : 'slate-300'}`}></div>
+                     <div className="flex-1">
+                        <p className="text-xs font-black text-slate-800">{c.name}</p>
+                        <p className="text-[10px] text-gray-500 font-bold">{c.desc}</p>
+                        <span className={`inline-block mt-1 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest bg-${c.status === 'Activa' ? 'emerald-50' : c.status === 'Pausada' ? 'amber-50' : 'slate-100'} text-${c.status === 'Activa' ? 'emerald-600' : c.status === 'Pausada' ? 'amber-600' : 'slate-500'}`}>{c.status}</span>
+                     </div>
+                     <div className="text-right">
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">ROAS</p>
+                        <p className={`text-lg font-black ${c.c === 'emerald' ? 'text-emerald-500' : c.c === 'amber' ? 'text-amber-500' : c.c === 'rose' ? 'text-rose-500' : 'text-slate-400'}`}>{c.roas}</p>
+                     </div>
+                  </div>
+               ))}
+            </div>
+            <button className="w-full mt-4 py-2 border-2 border-dashed border-gray-200 text-xs font-black text-slate-500 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all uppercase tracking-widest">+ Nueva Campaña</button>
+         </div>
       </div>
 
-      {/* REPUTACIÓN + EMBUDO + SEGMENTOS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         
-         {/* REPUTACIÓN */}
-         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-               <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Reputación online</h4>
+      {/* 1.3 REPUTACIÓN + EMBUDO + SEGMENTOS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+         {/* Panel 1: Reputación */}
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Reputación Online</h3>
+            <div className="flex items-end gap-3 mb-1">
+               <span className="text-4xl font-black text-slate-800 leading-none">4.6</span>
+               <span className="text-xl text-amber-400 mb-0.5">★★★★★</span>
             </div>
-            <div className="flex items-end gap-4 mb-6">
-               <div className="text-4xl font-black text-slate-800">4.6</div>
-               <div className="pb-1">
-                  <div className="flex text-orange-400 text-sm">★★★★★</div>
-                  <p className="text-[10px] text-gray-400 font-bold">382 reseñas totales</p>
+            <p className="text-xs font-bold text-gray-500 mb-4">342 reseñas en el período</p>
+            
+            <div className="w-full h-2 rounded-full overflow-hidden flex mb-2">
+               <div className="bg-emerald-500 h-full" style={{width: '74%'}}></div>
+               <div className="bg-amber-400 h-full" style={{width: '16%'}}></div>
+               <div className="bg-rose-500 h-full" style={{width: '10%'}}></div>
+            </div>
+            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-6">74% Positivas · 16% Neutras · 10% Negativas</p>
+
+            <div className="space-y-3 mb-6">
+               <div className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-slate-700 flex items-center gap-2">📍 Google Maps</span>
+                  <span className="text-slate-500">4.7 ★ <span className="text-gray-300 ml-1">(215)</span></span>
+               </div>
+               <div className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-slate-700 flex items-center gap-2">🦉 TripAdvisor</span>
+                  <span className="text-slate-500">4.5 ★ <span className="text-gray-300 ml-1">(89)</span></span>
+               </div>
+               <div className="flex justify-between items-center text-xs font-bold">
+                  <span className="text-slate-700 flex items-center gap-2">📸 Instagram</span>
+                  <span className="text-slate-500">4.8 ★ <span className="text-gray-300 ml-1">(38)</span></span>
                </div>
             </div>
-            <div className="space-y-4">
-               <div>
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-tight mb-1.5">
-                     <span className="text-emerald-600">74% Positivas</span>
-                     <span className="text-gray-400">10% Negativas</span>
-                  </div>
-                  <div className="h-2 flex rounded-full overflow-hidden border border-gray-50">
-                     <div className="h-full bg-emerald-500" style={{ width: '74%' }}></div>
-                     <div className="h-full bg-orange-400" style={{ width: '16%' }}></div>
-                     <div className="h-full bg-red-500" style={{ width: '10%' }}></div>
-                  </div>
-               </div>
-               <div className="space-y-2 pt-2">
+
+            <div className="flex-1">
+               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Reseñas Recientes</p>
+               <div className="space-y-2">
                   {[
-                    { plat: 'Google Maps', val: 4.7, count: 248 },
-                    { plat: 'TripAdvisor', val: 4.5, count: 89 },
-                    { plat: 'Instagram', val: 4.8, count: 45 },
-                  ].map((p, i) => (
-                    <div key={i} className="flex justify-between items-center text-xs p-2 rounded-xl border border-gray-50 bg-gray-50/30">
-                       <span className="font-bold text-slate-600">{p.plat}</span>
-                       <div className="flex items-center gap-2">
-                          <span className="font-black text-slate-800">{p.val} ★</span>
-                          <span className="text-[10px] text-gray-400 font-bold">{p.count}</span>
-                       </div>
-                    </div>
+                     { r: 5, t: "Excelente comida y ambiente. El servicio fue rápido.", s: "Google" },
+                     { r: 4, t: "Muy rico todo, un poco de espera pero vale la pena.", s: "TripAdvisor" },
+                     { r: 5, t: "El mejor ramen de la ciudad, volveré pronto.", s: "Google" }
+                  ].map((r, i) => (
+                     <div key={i} className="p-2 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-center mb-1">
+                           <span className="text-[10px] text-amber-400">{'★'.repeat(r.r)}</span>
+                           <span className="text-[9px] font-black text-gray-400">{r.s}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-600 font-medium truncate">{r.t}</p>
+                     </div>
                   ))}
                </div>
             </div>
          </div>
 
-         {/* EMBUDO */}
-         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-               <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Embudo de conversión</h4>
-            </div>
-            <div className="space-y-3">
+         {/* Panel 2: Embudo */}
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-emerald-500 rounded-full"></span>Embudo de Conversión</h3>
+            <div className="flex-1 flex flex-col items-center justify-center space-y-1.5 w-full">
                {[
-                 { label: 'Impresiones', val: '84,210', pct: 100, color: 'bg-slate-900', text: 'text-white' },
-                 { label: 'Clics / Visitas', val: '6,318', pct: 76, color: 'bg-emerald-600', text: 'text-white', rate: '7.5%' },
-                 { label: 'Ver menú', val: '3,160', pct: 52, color: 'bg-emerald-500', text: 'text-white', rate: '50%' },
-                 { label: 'Reserva/Pedido', val: '947', pct: 32, color: 'bg-emerald-400', text: 'text-slate-900', rate: '30%' },
-                 { label: 'Recurrentes', val: '312', pct: 18, color: 'bg-emerald-300', text: 'text-slate-900', rate: '33%' },
-               ].map((s, i) => (
-                  <div key={i} className="group">
-                     <div className="flex justify-between items-center mb-1 px-1">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{s.label}</span>
-                        {s.rate && <span className="text-[10px] font-black text-emerald-600">{s.rate}</span>}
+                  { n: 'Impresiones', v: '124,500', pct: 100, bg: 'bg-slate-900', t: 'text-white' },
+                  { n: 'Clics / Visitas', v: '9,337', cvr: '7.5%', pct: 85, bg: 'bg-emerald-800', t: 'text-emerald-50' },
+                  { n: 'Ver Menú', v: '4,108', cvr: '44.0%', pct: 65, bg: 'bg-emerald-600', t: 'text-white' },
+                  { n: 'Reserva o Pedido', v: '1,232', cvr: '30.0%', pct: 45, bg: 'bg-emerald-400', t: 'text-emerald-900' },
+                  { n: 'Clientes Recurrentes', v: '468', cvr: '38.0%', pct: 30, bg: 'bg-emerald-200', t: 'text-emerald-900' }
+               ].map((step, i) => (
+                  <div key={i} className="w-full flex flex-col items-center group relative">
+                     <div className={`${step.bg} ${step.t} flex justify-between items-center px-4 py-2.5 rounded-lg transition-all duration-300 hover:brightness-110`} style={{width: `${step.pct}%`}}>
+                        <span className="text-[10px] font-bold truncate">{step.n}</span>
+                        <span className="text-xs font-black">{step.v}</span>
                      </div>
-                     <div 
-                        className={`h-8 rounded-xl flex items-center px-4 transition-all group-hover:scale-[1.02] ${s.color} ${s.text}`}
-                        style={{ width: `${s.pct}%` }}
-                     >
-                        <span className="text-xs font-black">{s.val}</span>
-                     </div>
+                     {step.cvr && <span className="text-[9px] font-black text-slate-400 my-0.5">{step.cvr} conv.</span>}
                   </div>
                ))}
             </div>
          </div>
 
-         {/* SEGMENTOS */}
-         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col h-full">
-            <div className="flex justify-between items-center mb-6">
-               <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Segmentos de clientes</h4>
+         {/* Panel 3: Segmentos */}
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-blue-500 rounded-full"></span>Segmentos de Clientes</h3>
+            <div className="grid grid-cols-2 gap-4 flex-1">
+               <div className="bg-gray-50 rounded-2xl p-4 flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">VIP / Frecuentes</p>
+                  <p className="text-2xl font-black text-slate-800">428</p>
+                  <p className="text-[9px] font-bold text-emerald-600 mt-1">+12% este mes</p>
+               </div>
+               <div className="bg-gray-50 rounded-2xl p-4 flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Nuevos Clientes</p>
+                  <p className="text-2xl font-black text-slate-800">186</p>
+                  <p className="text-[9px] font-bold text-gray-500 mt-1">Desde campañas</p>
+               </div>
+               <div className="bg-rose-50/50 rounded-2xl p-4 flex flex-col justify-center border border-rose-100/50">
+                  <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">En Riesgo</p>
+                  <p className="text-2xl font-black text-rose-600">89</p>
+                  <p className="text-[9px] font-bold text-rose-400 mt-1">+45 días sin visitar</p>
+               </div>
+               <div className="bg-gray-50 rounded-2xl p-4 flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Ticket Promedio</p>
+                  <p className="text-2xl font-black text-slate-800">$65K</p>
+                  <p className="text-[9px] font-bold text-gray-500 mt-1">Por visita</p>
+               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-               {[
-                 { label: 'VIP / Frecuentes', val: '312', note: '+8% este mes', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                 { label: 'Nuevos clientes', val: '635', note: 'Desde campañas', color: 'text-blue-600', bg: 'bg-blue-50' },
-                 { label: 'En riesgo', val: '89', note: '+45 días s/visita', color: 'text-red-600', bg: 'bg-red-50' },
-                 { label: 'Ticket promedio', val: '$47k', note: 'COP por visita', color: 'text-slate-800', bg: 'bg-gray-50' },
-               ].map((s, i) => (
-                  <div key={i} className={`p-4 rounded-2xl border border-transparent hover:border-gray-100 transition-all ${s.bg}`}>
-                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter mb-1">{s.label}</p>
-                     <p className={`text-xl font-black ${s.color}`}>{s.val}</p>
-                     <p className="text-[9px] text-gray-400 font-bold mt-1">{s.note}</p>
-                  </div>
-               ))}
-            </div>
-            <button className="mt-auto w-full px-4 py-3 bg-red-50 text-red-600 rounded-xl text-xs font-black uppercase tracking-tight hover:bg-red-100 transition-all border border-red-100 flex items-center justify-center gap-2">
+            <button className="w-full mt-4 py-3 bg-rose-50 text-rose-600 text-xs font-black rounded-xl hover:bg-rose-100 transition-colors uppercase tracking-widest border border-rose-100 flex items-center justify-center gap-2">
                ⚠️ Recuperar clientes en riesgo
             </button>
          </div>
-
       </div>
 
-      {/* ACCIONES + INSIGHTS */}
+      {/* 1.4 ACCIONES + INSIGHTS IA */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+         <div className="lg:col-span-5 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Acciones Rápidas</h3>
+            <div className="space-y-3 flex-1">
+               <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200">
+                  <div className="flex items-center gap-3">
+                     <span className="text-xl">📸</span>
+                     <span className="text-xs font-black text-slate-700">Crear campaña en Instagram</span>
+                  </div>
+                  <span className="text-gray-400 group-hover:text-slate-800 transition-colors">→</span>
+               </button>
+               <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200">
+                  <div className="flex items-center gap-3">
+                     <span className="text-xl">💬</span>
+                     <span className="text-xs font-black text-slate-700">Enviar promo a clientes VIP</span>
+                  </div>
+                  <span className="text-gray-400 group-hover:text-slate-800 transition-colors">→</span>
+               </button>
+               <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200">
+                  <div className="flex items-center gap-3">
+                     <span className="text-xl">⭐</span>
+                     <span className="text-xs font-black text-slate-700">Responder reseñas negativas</span>
+                  </div>
+                  <span className="text-gray-400 group-hover:text-slate-800 transition-colors">→</span>
+               </button>
+               <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-emerald-50/50 hover:bg-emerald-50 transition-colors group border border-emerald-100">
+                  <div className="flex items-center gap-3">
+                     <span className="text-xl">🧠</span>
+                     <span className="text-xs font-black text-emerald-700">Sugerencia de Brain IA</span>
+                  </div>
+                  <span className="text-emerald-400 group-hover:text-emerald-600 transition-colors">→</span>
+               </button>
+            </div>
+         </div>
          
-         {/* ACCIONES */}
-         <div className="lg:col-span-5">
-            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6">
-               <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6">Acciones rápidas</h4>
-               <div className="space-y-3">
-                  {[
-                    { icon: '📸', text: 'Crear campaña en Instagram', color: 'bg-emerald-50 text-emerald-600' },
-                    { icon: '💬', text: 'Enviar promo a clientes VIP', color: 'bg-emerald-50 text-emerald-600' },
-                    { icon: '⭐', text: 'Responder reseñas negativas', color: 'bg-red-50 text-red-600' },
-                    { icon: '🧠', text: 'Sugerencia de Brain IA', color: 'bg-blue-50 text-blue-600' },
-                  ].map((a, i) => (
-                     <button key={i} className="w-full p-4 rounded-2xl border border-gray-100 hover:border-slate-200 hover:shadow-sm flex items-center gap-4 transition-all group">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${a.color} group-hover:scale-110 transition-transform`}>{a.icon}</div>
-                        <span className="text-sm font-black text-slate-700 flex-1 text-left">{a.text}</span>
-                        <span className="text-slate-300 font-black">→</span>
-                     </button>
-                  ))}
+         <div className="lg:col-span-7 bg-slate-900 rounded-[32px] shadow-sm p-6 flex flex-col border border-slate-800 relative overflow-hidden">
+            {/* Ambient glow */}
+            <div className="absolute top-[-50%] right-[-10%] w-96 h-96 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none"></div>
+            
+            <div className="flex justify-between items-center mb-6 relative z-10">
+               <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2"><span className="text-lg">✨</span> Insights del Período</h3>
+               <span className="text-[9px] font-black bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full border border-emerald-500/30 uppercase tracking-widest">Generados por IA</span>
+            </div>
+            
+            <div className="space-y-4 flex-1 relative z-10">
+               {[
+                  { t: 'Oportunidad', c: 'emerald', text: <><strong>WhatsApp</strong> tiene el mayor crecimiento (+22%) pero solo representa el 19% del presupuesto. Aumentar la inversión podría reducir el CAC hasta un 15%.</> },
+                  { t: 'Atención', c: 'amber', text: <>La campaña de <strong>Facebook</strong> tiene un ROAS de 2.1x, por debajo del umbral rentable (3x). Considera pausarla o ajustar la segmentación.</> },
+                  { t: 'Dato clave', c: 'blue', text: <><strong>89 clientes</strong> no han visitado en más de 45 días. Una campaña de reactivación podría recuperar entre 20–30% con un costo de $45.000 COP.</> },
+                  { t: 'Tendencia', c: 'purple', text: <>Las reservas de <strong>grupos de 6+ personas</strong> aumentaron 31% este mes impulsadas por Instagram. Considera crear contenido específico.</> }
+               ].map((ins, i) => (
+                  <div key={i} className="flex items-start gap-4 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+                     <span className={`mt-0.5 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded bg-${ins.c}-500/20 text-${ins.c}-400 border border-${ins.c}-500/30 w-24 text-center shrink-0`}>{ins.t}</span>
+                     <p className="text-xs text-slate-300 leading-relaxed font-medium">{ins.text}</p>
+                  </div>
+               ))}
+            </div>
+         </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* SEPARADOR VISUAL INTERNO                                  */}
+      {/* ========================================================= */}
+      <div className="py-8 relative flex items-center justify-center">
+         <div className="absolute w-full h-px bg-gray-200"></div>
+         <span className="bg-[#f8f9fc] px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest relative z-10 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Fidelización & Programa de Lealtad
+         </span>
+      </div>
+
+      {/* ========================================================= */}
+      {/* SECCIÓN 2: FIDELIZACIÓN & PROGRAMA DE LEALTAD             */}
+      {/* ========================================================= */}
+
+      {/* 2.1 BANNER DEL PROGRAMA ACTIVO */}
+      <div className="w-full rounded-[32px] bg-gradient-to-r from-amber-500 to-orange-500 p-8 shadow-lg relative overflow-hidden flex items-center justify-between">
+         {/* Decoración */}
+         <div className="absolute -right-10 -top-10 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+         
+         <div className="relative z-10">
+            <h2 className="text-2xl font-black text-white mb-2">Programa VIP Activo</h2>
+            <p className="text-sm font-bold text-orange-50">450 usuarios inscritos · Programa de puntos acumulables</p>
+         </div>
+         <div className="text-6xl relative z-10 drop-shadow-md">🏆</div>
+      </div>
+
+      {/* 2.2 FRANJA DE KPIs DE FIDELIZACIÓN */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+         {[
+            { l: 'Base Total', v: '2,140', d: '+186 nuevos', c: '👥', alert: false },
+            { l: 'Tasa Retención', v: '68%', d: '-2% vs meta 70%', c: '🔄', alert: false },
+            { l: 'LTV Promedio', v: '$285K', d: '+$15K vs prev', c: '💎', alert: false },
+            { l: 'En Riesgo', v: '89', d: '12% de la base', c: '🚫', alert: true },
+            { l: 'Canjes Puntos', v: '34', d: '+8 este mes', c: '🎁', alert: false }
+         ].map((k, i) => (
+            <div key={i} className={`bg-white p-5 rounded-2xl border ${k.alert ? 'border-rose-200 bg-rose-50/30' : 'border-gray-100'} shadow-sm flex flex-col justify-between group`}>
+               <p className={`text-[10px] font-black ${k.alert ? 'text-rose-500' : 'text-gray-400'} uppercase tracking-widest mb-1 flex justify-between`}>
+                  {k.l} <span className="text-lg">{k.c}</span>
+               </p>
+               <p className={`text-2xl font-black ${k.alert ? 'text-rose-600' : 'text-slate-800'}`}>{k.v}</p>
+               <div className="flex items-center gap-2 mt-2">
+                  <span className={`text-[9px] font-bold ${k.alert ? 'text-rose-500 flex items-center gap-1' : 'text-gray-400'}`}>
+                     {k.alert && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>}
+                     {k.d}
+                  </span>
                </div>
+            </div>
+         ))}
+      </div>
+
+      {/* 2.3 SEGMENTACIÓN + TOP CLIENTES */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <div className="flex justify-between items-end mb-6">
+               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Segmentación de Clientes</h3>
+               <span className="text-[9px] font-bold text-gray-400 uppercase">2,140 Base Total</span>
+            </div>
+            <div className="space-y-4 flex-1">
+               {[
+                  { n: 'VIP', d: '8+ visitas / $500K+', v: 428, pct: 100, c: 'purple', ltv: '$650K' },
+                  { n: 'Frecuentes', d: '4-7 visitas 90d', v: 342, pct: 80, c: 'emerald', ltv: '$280K' },
+                  { n: 'Ocasionales', d: '2-3 visitas', v: 850, pct: 45, c: 'blue', ltv: '$110K' },
+                  { n: 'Nuevos', d: '1ra visita período', v: 186, pct: 15, c: 'amber', ltv: '$65K' },
+                  { n: 'En Riesgo', d: '>30d inactivos', v: 89, pct: 10, c: 'rose', ltv: '$220K' },
+                  { n: 'Dormidos', d: '>90d inactivos', v: 245, pct: 25, c: 'slate', ltv: '$150K' }
+               ].map((s, i) => (
+                  <div key={i} className="flex flex-col gap-1">
+                     <div className="flex justify-between items-end">
+                        <div className="flex items-center gap-2">
+                           <span className={`w-2 h-2 rounded-full bg-${s.c}-500`}></span>
+                           <span className="text-xs font-black text-slate-800">{s.n} <span className="text-[9px] font-bold text-gray-400 hidden sm:inline">({s.d})</span></span>
+                        </div>
+                        <div className="text-right flex items-center gap-3">
+                           <span className="text-xs font-black text-slate-700">{s.v} pax</span>
+                           <span className="text-[9px] font-bold text-gray-400 w-12">LTV {s.ltv}</span>
+                        </div>
+                     </div>
+                     <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden">
+                        <div className={`h-full bg-${s.c}-500 rounded-full`} style={{width: `${s.pct}%`}}></div>
+                     </div>
+                  </div>
+               ))}
             </div>
          </div>
 
-         {/* INSIGHTS */}
-         <div className="lg:col-span-7">
-            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 h-full">
-               <div className="flex justify-between items-center mb-6">
-                  <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Insights del mes</h4>
-                  <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full border border-emerald-100">Generados por IA</span>
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-amber-400 rounded-full"></span>Top Clientes</h3>
+               <select className="bg-white border border-gray-200 text-[10px] font-black text-slate-600 rounded-lg px-2 py-1 outline-none uppercase tracking-widest">
+                  <option>Todos</option>
+                  <option>VIP</option>
+                  <option>Frecuentes</option>
+               </select>
+            </div>
+            <div className="overflow-x-auto flex-1 custom-scrollbar">
+               <table className="w-full text-left">
+                  <thead className="bg-gray-50/50 border-b border-gray-100">
+                     <tr>
+                        <th className="p-3 text-[9px] font-black text-gray-400 uppercase tracking-widest pl-6">Cliente</th>
+                        <th className="p-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">Visitas</th>
+                        <th className="p-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">Última Visita</th>
+                        <th className="p-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">LTV Total</th>
+                        <th className="p-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">Segmento</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                     {[
+                        { n: 'Carlos Rodríguez', i: 'CR', v: 42, u: 'Hoy', l: '$3.2M', s: 'VIP', c: 'purple' },
+                        { n: 'Ana María Gómez', i: 'AM', v: 38, u: 'Hace 2 días', l: '$2.8M', s: 'VIP', c: 'purple' },
+                        { n: 'Juan Pablo Vera', i: 'JV', v: 24, u: 'Hace 1 sem', l: '$1.5M', s: 'Frecuente', c: 'emerald' },
+                        { n: 'Laura Martínez', i: 'LM', v: 19, u: 'Ayer', l: '$1.2M', s: 'Frecuente', c: 'emerald' },
+                        { n: 'Diego Silva', i: 'DS', v: 15, u: 'Hace 3 días', l: '$980K', s: 'Frecuente', c: 'emerald' }
+                     ].map((c, i) => (
+                        <tr key={i} className="hover:bg-gray-50/50 cursor-pointer transition-colors group">
+                           <td className="p-3 pl-6 flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-full bg-${c.c}-100 text-${c.c}-600 flex items-center justify-center text-xs font-black`}>{c.i}</div>
+                              <span className="text-xs font-black text-slate-800 group-hover:text-emerald-600 transition-colors">{c.n}</span>
+                           </td>
+                           <td className="p-3 text-xs font-bold text-gray-600">{c.v}</td>
+                           <td className="p-3 text-xs font-bold text-gray-500">{c.u}</td>
+                           <td className="p-3 text-xs font-black text-slate-800">{c.l}</td>
+                           <td className="p-3"><span className={`text-[9px] font-black px-2 py-1 rounded bg-${c.c}-50 text-${c.c}-600 uppercase tracking-widest`}>{c.s}</span></td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </div>
+
+      {/* 2.4 TRIPLE BLOQUE: REGLAS + CAMPAÑAS CRM + RIESGO */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Programa de Puntos</h3>
+            
+            <div className="bg-orange-50/50 rounded-2xl p-4 mb-4 border border-orange-100/50">
+               <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2">Reglas de Acumulación</p>
+               <ul className="space-y-2 text-xs font-bold text-slate-700">
+                  <li className="flex items-center gap-2"><span>🪙</span> 1 pto por cada $1.000 COP</li>
+                  <li className="flex items-center gap-2"><span>🎉</span> 50 ptos bienvenida</li>
+                  <li className="flex items-center gap-2"><span>⭐</span> 30 ptos por reseña Google</li>
+                  <li className="flex items-center gap-2"><span>🤝</span> 100 ptos por referido</li>
+               </ul>
+            </div>
+            
+            <div className="flex-1">
+               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Niveles VIP</p>
+               <div className="space-y-2 text-xs font-bold text-slate-600">
+                  <div className="flex justify-between items-center"><span className="text-amber-700">🥉 Bronce</span><span>0 ptos</span></div>
+                  <div className="flex justify-between items-center"><span className="text-slate-400">🥈 Plata (Postre gratis)</span><span>500 ptos</span></div>
+                  <div className="flex justify-between items-center"><span className="text-yellow-500">🥇 Oro (-10% off)</span><span>1500 ptos</span></div>
+                  <div className="flex justify-between items-center"><span className="text-slate-800">💎 Platino (Mesa VIP)</span><span>3000 ptos</span></div>
                </div>
-               <div className="space-y-4">
-                  {[
-                    { type: 'Oportunidad', color: 'bg-emerald-100 text-emerald-700', text: 'WhatsApp tiene el mayor crecimiento (+22%) pero solo representa el 19% del presupuesto. Aumentar la inversión podría reducir el CAC hasta un 15%.' },
-                    { type: 'Atención', color: 'bg-orange-100 text-orange-700', text: 'La campaña "Brunch de domingo" tiene un ROAS de 2.1x, por debajo del umbral rentable (3x). Considera pausarla o ajustar la segmentación de audiencia.' },
-                    { type: 'Dato clave', color: 'bg-blue-100 text-blue-700', text: '89 clientes no han visitado en más de 45 días. Una campaña de reactivación podría recuperar entre 20–30% de ellos con un costo estimado de $45.000 COP.' },
-                    { type: 'Tendencia', color: 'bg-purple-100 text-purple-700', text: 'Las reservas de grupos de 6+ personas aumentaron 31% este mes impulsadas por Instagram. Considera crear contenido específico para celebraciones y eventos privados.' },
-                  ].map((ins, i) => (
-                     <div key={i} className="flex gap-4 p-4 rounded-2xl border border-gray-50 bg-gray-50/30 hover:bg-white hover:shadow-sm transition-all">
-                        <span className={`text-[9px] font-black px-2 py-1 h-fit rounded-full uppercase tracking-tighter ${ins.color}`}>{ins.type}</span>
-                        <p className="text-xs font-bold text-slate-600 leading-relaxed">{ins.text}</p>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
+               <p className="text-[10px] font-bold text-gray-500 text-center">45 clientes tienen puntos listos para canjear hoy.</p>
+               <button className="w-full py-2 bg-white border border-gray-200 text-slate-700 text-xs font-black rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                  ⚙️ Editar Reglas
+               </button>
+            </div>
+         </div>
+
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-emerald-500 rounded-full"></span>Campañas & Auto</h3>
+               <button className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors">+ Nueva</button>
+            </div>
+            <div className="space-y-3 flex-1">
+               {[
+                  { i: '🎂', n: 'Feliz Cumpleaños', t: 'Automático', p: '62% conv.', c: 'emerald', s: 'Activa' },
+                  { i: '🎁', n: 'Recuperación 30d', t: 'En Riesgo', p: '24% conv.', c: 'amber', s: 'Activa' },
+                  { i: '✉️', n: 'Bienvenida VIP', t: 'Nuevos', p: '85% apert.', c: 'emerald', s: 'Activa' },
+                  { i: '📊', n: 'Encuesta Post-Cena', t: 'Post-pago', p: '15% conv.', c: 'rose', s: 'Activa' },
+                  { i: '📱', n: 'Promo Jueves', t: 'Frecuentes', p: 'Envíos: 150', c: 'blue', s: 'En progreso' }
+               ].map((c, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors group">
+                     <div className="text-xl bg-gray-50 w-10 h-10 rounded-lg flex items-center justify-center group-hover:bg-white transition-colors">{c.i}</div>
+                     <div className="flex-1">
+                        <p className="text-xs font-black text-slate-800">{c.n}</p>
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{c.t}</p>
+                     </div>
+                     <div className="text-right">
+                        <p className={`text-[10px] font-black text-${c.c}-600`}>{c.p}</p>
+                        <p className="text-[9px] text-gray-400 font-bold">{c.s}</p>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         </div>
+
+         <div className="bg-rose-50/40 rounded-[32px] border border-rose-100 shadow-sm p-6 flex flex-col relative overflow-hidden">
+            <div className="flex justify-between items-center mb-4 relative z-10">
+               <h3 className="text-[11px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-2"><span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>Clientes en Riesgo</h3>
+               <span className="text-[10px] font-black bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full">89 Críticos</span>
+            </div>
+            
+            <div className="space-y-3 flex-1 relative z-10">
+               {[
+                  { n: 'Mario Cárdenas', i: 'MC', l: '12 visitas · LTV $950K', d: '35 días', c: 'purple' },
+                  { n: 'Sandra Ruiz', i: 'SR', l: '8 visitas · LTV $420K', d: '42 días', c: 'emerald' },
+                  { n: 'Felipe Vargas', i: 'FV', l: '15 visitas · LTV $1.1M', d: '31 días', c: 'purple' }
+               ].map((c, i) => (
+                  <div key={i} className="flex items-center justify-between p-2.5 bg-white rounded-xl shadow-sm border border-rose-50">
+                     <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full bg-${c.c}-100 text-${c.c}-600 flex items-center justify-center text-[10px] font-black`}>{c.i}</div>
+                        <div>
+                           <p className="text-[11px] font-black text-slate-800">{c.n}</p>
+                           <p className="text-[9px] text-gray-500 font-bold">{c.l}</p>
+                        </div>
+                     </div>
+                     <div className="text-right">
+                        <span className="text-[10px] font-black text-rose-500">{c.d}</span>
+                        <p className="text-[8px] uppercase tracking-widest text-gray-400 font-bold">Inactivo</p>
+                     </div>
+                  </div>
+               ))}
+            </div>
+            
+            <div className="mt-4 pt-4 relative z-10">
+               <p className="text-[10px] text-rose-600/70 font-bold mb-3 text-center leading-tight">No han visitado en más de 30 días y antes eran clientes regulares.</p>
+               <button className="w-full py-3 bg-rose-500 text-white text-xs font-black rounded-xl hover:bg-rose-600 transition-colors shadow-sm flex items-center justify-center gap-2">
+                  📞 Recuperar Clientes
+               </button>
+            </div>
+         </div>
+      </div>
+
+      {/* 2.5 MAPA DE CALOR + PREFERENCIAS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <div className="mb-6">
+               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Mapa de Calor — Ocupación</h3>
+               <p className="text-[10px] font-bold text-gray-400 mt-1">Frecuencia de visitas de las últimas 4 semanas</p>
+            </div>
+            
+            <div className="flex-1 flex flex-col">
+               <div className="flex text-[9px] font-black text-gray-400 mb-2 px-8 justify-between">
+                  <span>LUN</span><span>MAR</span><span>MIE</span><span>JUE</span><span>VIE</span><span>SAB</span><span>DOM</span>
+               </div>
+               <div className="flex-1 flex flex-col gap-1">
+                  {['12:00', '14:00', '18:00', '19:00', '20:00', '21:00', '22:00'].map((h, i) => (
+                     <div key={i} className="flex gap-2 items-center">
+                        <span className="text-[9px] font-bold text-gray-400 w-8">{h}</span>
+                        {/* Generamos 7 cuadritos con intensidades aleatorias para el mock */}
+                        {[0.1, 0.2, 0.4, 0.3, 0.8, 1.0, 0.6].map((op, j) => {
+                           // Alterar un poco la opacidad basada en el i y j para el mock visual
+                           const finalOp = Math.min(1, Math.max(0.05, op * (i===4||i===5?1.5:0.5) * (j===5||j===6?1.5:0.8)));
+                           return (
+                              <div key={j} className="flex-1 aspect-square rounded bg-emerald-500 transition-opacity hover:opacity-100 cursor-pointer" style={{opacity: finalOp}}></div>
+                           )
+                        })}
                      </div>
                   ))}
                </div>
+               <div className="flex items-center justify-center gap-2 mt-4 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                  <span>Libre</span>
+                  <div className="flex gap-0.5">
+                     <div className="w-3 h-3 rounded bg-emerald-500 opacity-20"></div>
+                     <div className="w-3 h-3 rounded bg-emerald-500 opacity-40"></div>
+                     <div className="w-3 h-3 rounded bg-emerald-500 opacity-60"></div>
+                     <div className="w-3 h-3 rounded bg-emerald-500 opacity-80"></div>
+                     <div className="w-3 h-3 rounded bg-emerald-500 opacity-100"></div>
+                  </div>
+                  <span>Lleno</span>
+               </div>
             </div>
          </div>
 
+         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <div className="mb-6">
+               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Preferencias Frecuentes</h3>
+               <p className="text-[10px] font-bold text-gray-400 mt-1">Top platos y tendencias de la base</p>
+            </div>
+            
+            <div className="space-y-4 flex-1">
+               {[
+                  { i: '🍜', n: 'Ramen Tonkotsu', v: 186, p: 100 },
+                  { i: '🥩', n: 'Lomo al chimichurri', v: 142, p: 76 },
+                  { i: '🍢', n: 'Satay de Pollo', v: 118, p: 63 },
+                  { i: '🍷', n: 'Copa de Chianti', v: 94, p: 50 },
+                  { i: '🥥', n: 'Sin lactosa (alergia)', v: 38, p: 20 }
+               ].map((p, i) => (
+                  <div key={i} className="flex flex-col gap-1.5">
+                     <div className="flex justify-between items-center text-xs font-black text-slate-700">
+                        <span className="flex items-center gap-2"><span className="text-sm">{p.i}</span> {p.n}</span>
+                        <span className="text-[10px] font-black text-gray-500">{p.v} pax</span>
+                     </div>
+                     <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-400 rounded-full" style={{width: `${p.p}%`}}></div>
+                     </div>
+                  </div>
+               ))}
+            </div>
+
+            <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
+               <p className="text-[10px] text-amber-700 font-bold leading-relaxed flex gap-2 items-start">
+                  <span className="text-sm">💡</span>
+                  <span>El 38% de tus clientes VIP piden el mismo plato en cada visita. Considera crear un "menú del habitual" personalizado.</span>
+               </p>
+            </div>
+         </div>
+      </div>
+
+      {/* 2.6 MÉTRICAS + COMPOSITOR */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+         <div className="lg:col-span-5 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
+            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Comportamiento de Retención</h3>
+            
+            <div className="grid grid-cols-2 gap-4 flex-1">
+               <div className="flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Recurrencia Prom.</p>
+                  <p className="text-xl font-black text-slate-800">14 días</p>
+               </div>
+               <div className="flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Ticket Leal</p>
+                  <p className="text-xl font-black text-emerald-600">+18%</p>
+               </div>
+               <div className="flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Tasa Activación</p>
+                  <p className="text-xl font-black text-slate-800">42%</p>
+               </div>
+               <div className="flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-0.5">Churn Mensual</p>
+                  <p className="text-xl font-black text-rose-600">8.4%</p>
+               </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-100">
+               <div className="flex justify-between items-end mb-2">
+                  <span className="text-[10px] font-black text-slate-700">Recurrentes (62%)</span>
+                  <span className="text-[10px] font-black text-blue-600">Nuevos (38%)</span>
+               </div>
+               <div className="w-full h-3 rounded-full flex overflow-hidden mb-2">
+                  <div className="bg-emerald-500 h-full" style={{width: '62%'}}></div>
+                  <div className="bg-blue-400 h-full" style={{width: '38%'}}></div>
+               </div>
+               <p className="text-[9px] font-bold text-gray-400 text-center">Tasa de retención actual: 68% · Meta: 70%</p>
+            </div>
+         </div>
+
+         <div className="lg:col-span-7 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col relative overflow-hidden">
+            <div className="mb-4">
+               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-emerald-500 rounded-full"></span>Envío Rápido de Campaña</h3>
+               <p className="text-[10px] font-bold text-gray-400 mt-1">Crea y envía en menos de 2 minutos</p>
+            </div>
+            
+            <div className="flex-1 space-y-4 relative z-10">
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
+                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Segmento Destino</label>
+                     <select className="w-full bg-gray-50 border border-gray-200 text-xs font-bold text-slate-700 rounded-xl px-3 py-2.5 outline-none focus:border-emerald-500 transition-colors">
+                        <option>En Riesgo (89 clientes)</option>
+                        <option>VIP (428 clientes)</option>
+                        <option>Frecuentes (342 clientes)</option>
+                        <option>Dormidos (245 clientes)</option>
+                        <option>Todos (2,140 clientes)</option>
+                     </select>
+                  </div>
+                  <div>
+                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Canal de Envío</label>
+                     <select className="w-full bg-gray-50 border border-gray-200 text-xs font-bold text-slate-700 rounded-xl px-3 py-2.5 outline-none focus:border-emerald-500 transition-colors">
+                        <option>WhatsApp</option>
+                        <option>Email</option>
+                        <option>SMS</option>
+                        <option>Push Notificación</option>
+                     </select>
+                  </div>
+               </div>
+               
+               <div>
+                  <label className="flex justify-between items-end text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                     <span>Mensaje</span>
+                     <span>0 / 160</span>
+                  </label>
+                  <textarea 
+                     className="w-full bg-gray-50 border border-gray-200 text-sm font-medium text-slate-700 rounded-xl px-3 py-2.5 outline-none focus:border-emerald-500 transition-colors resize-none h-20"
+                     placeholder="¡Hola! Te extrañamos en La Leña. Ven este finde y..."
+                     defaultValue="¡Hola! Hace tiempo que no te vemos por La Leña. Queremos invitarte a que vuelvas este fin de semana con un postre de cortesía enseñando este mensaje. ¡Te esperamos!"
+                  ></textarea>
+               </div>
+
+               <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <div className="flex items-center gap-2">
+                     <input type="checkbox" id="toggle-benefit" defaultChecked className="accent-emerald-500 w-4 h-4 cursor-pointer" />
+                     <label htmlFor="toggle-benefit" className="text-xs font-black text-slate-700 cursor-pointer">Incluir beneficio</label>
+                  </div>
+                  <select className="bg-white border border-gray-200 text-xs font-bold text-slate-600 rounded-lg px-2 py-1 outline-none">
+                     <option>Producto gratis</option>
+                     <option>Descuento %</option>
+                     <option>Puntos extra</option>
+                     <option>Cashback</option>
+                  </select>
+               </div>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-gray-100 relative z-10 flex flex-col gap-2">
+               <button className="w-full py-3 bg-emerald-500 text-white text-xs font-black rounded-xl hover:bg-emerald-600 transition-colors shadow-sm flex items-center justify-center gap-2 uppercase tracking-widest">
+                  🚀 Enviar Campaña (Ahora)
+               </button>
+               <p className="text-[9px] font-bold text-gray-400 text-center">Este mensaje llegará a 89 clientes · Costo estimado: $8.900 COP por WhatsApp API</p>
+            </div>
+            
+            {/* Decoración gráfica sutil */}
+            <div className="absolute right-[-5%] bottom-[-10%] w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+         </div>
       </div>
 
     </div>
   );
 }
-
-// =========================================================================
-// 9. FIDELIZACIÓN
-// =========================================================================
-function ViewFidelizacion() {
-  return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl p-8 text-white shadow-xl flex items-center justify-between">
-         <div>
-            <h2 className="text-2xl font-black mb-2">Programa VIP Activo</h2>
-            <p className="text-amber-100 text-sm max-w-md">Tus clientes están ganando puntos. Tienes 450 usuarios inscritos en el programa de recompensas.</p>
-         </div>
-         <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
-            <span style={{fontSize:'16px', lineHeight:1}}>🏆</span>
-         </div>
-      </div>
-
-      <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
-         <h3 className="text-lg font-bold text-slate-800 mb-4">Top Clientes Frecuentes</h3>
-         <table className="token-table w-full">
-            <thead className="bg-gray-50">
-               <tr><th>Cliente</th><th>Visitas (Total)</th><th>Puntos Acumulados</th><th>Última Visita</th></tr>
-            </thead>
-            <tbody>
-               <tr><td className="font-bold">Ana López</td><td>24</td><td className="text-amber-600 font-black">1,250 pts</td><td>Ayer</td></tr>
-               <tr><td className="font-bold">Carlos M.</td><td>18</td><td className="text-amber-600 font-black">940 pts</td><td>Hace 3 días</td></tr>
-               <tr><td className="font-bold">Luisa R.</td><td>15</td><td className="text-amber-600 font-black">720 pts</td><td>Hace 1 semana</td></tr>
-            </tbody>
-         </table>
-      </div>
-    </div>
-  );
-}
-
 // =========================================================================
 // 10. EVENTOS Y CATERING
 // =========================================================================
