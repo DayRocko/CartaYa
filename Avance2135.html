@@ -8,7 +8,17 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+      const originalWarn = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) {
+          return;
+        }
+        originalWarn.apply(console, args);
+      };
+    </script>
+<script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
     const originalWarn = console.warn;
@@ -24,6 +34,16 @@
       originalWarn.apply(console, args);
     };
   </script>
+
+    <script>
+      const originalConsoleError = console.error;
+      console.error = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('code generator has deoptimised the styling')) {
+          return;
+        }
+        originalConsoleError.apply(console, args);
+      };
+    </script>
 </head>
 <body class="bg-[#F4F4F2]">
     <div id="root"></div>
@@ -979,7 +999,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
     switch (status) {
       case 'draft': return { label: 'Por enviar', color: 'text-slate-400', emoji: '🐟' };
       case 'sent': return { label: 'En Cocina', color: 'text-amber-500', emoji: '🐟' };
-      case 'ready': return { label: 'Servido', color: 'text-emerald-500', emoji: 'Ã¢Å“â€¦' };
+      case 'ready': return { label: 'Servido', color: 'text-emerald-500', emoji: '✔¦' };
       default: return { label: 'Pendiente', color: 'text-gray-400', emoji: '🐟' };
     }
   };
@@ -1230,7 +1250,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                         />
                      </div>
                      <button className="bg-white border border-gray-200 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                        <span style={{fontSize:'20px'}}>Ã¢Å¡â„¢Ã¯Â¸Â</span>
+                        <span style={{fontSize:'20px'}}>⚖️</span>
                      </button>
                   </div>
 
@@ -1240,7 +1260,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                         onClick={() => setIsEditingCategories(!isEditingCategories)}
                         className="text-[11px] font-bold text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1.5"
                       >
-                        {isEditingCategories ? 'Ã¢Å“â€œ Listo' : 'Ã¢Å“Å½ Editar categorías'}
+                        {isEditingCategories ? '✔œ Listo' : '✏ Editar categorías'}
                       </button>
                   </div>
 
@@ -1276,7 +1296,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                                    e.stopPropagation();
                                    if (stockCount > 0) {
                                      alert('No puedes eliminar una categoría con platos activos asociados. Reasigna los platos primero.');
-                                   } else if (confirm(`Ã‚Â¿Eliminar la categoría "${cat}"?`)) {
+                                   } else if (confirm(`¿Eliminar la categoría "${cat}"?`)) {
                                      setCategories(categories.filter(c => c !== cat));
                                    }
                                  }}
@@ -1388,7 +1408,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                           </span>
                           {/* Nota de cocina compacta */}
                           {fullNote && fullNote.trim() !== "" && (
-                            <span style={{fontSize:10, color:'#d97706', fontWeight:600, background:'#fffbeb', borderRadius:4, padding:'2px 6px', whiteSpace:'nowrap', flexShrink:0}}>🐟 {fullNote.length > 18 ? fullNote.slice(0,18)+'Ã¢â‚¬Â¦' : fullNote}</span>
+                            <span style={{fontSize:10, color:'#d97706', fontWeight:600, background:'#fffbeb', borderRadius:4, padding:'2px 6px', whiteSpace:'nowrap', flexShrink:0}}>🐟 {fullNote.length > 18 ? fullNote.slice(0,18)+'…' : fullNote}</span>
                           )}
                           {/* Precio total */}
                           <span style={{fontSize:13, fontWeight:700, color:'#1a1a1a', whiteSpace:'nowrap'}}>${(item.price * item.qty).toLocaleString()}</span>
@@ -1525,7 +1545,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                              </div>
                           </div>
                        </div>
-                       <button onClick={() => setIsCheckoutOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all">Ã¢Å“â€¢</button>
+                       <button onClick={() => setIsCheckoutOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all">✔¢</button>
                     </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar no-scrollbar p-8">
@@ -1645,8 +1665,8 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
               ) : (
                  /* 8. PANTALLA DE CONFIRMACIÓN */
                  <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-[450px] p-12 text-center animate-in zoom-in duration-500">
-                    <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner">Ã¢Å“â€œ</div>
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Ã‚Â¡Pago Exitoso!</h3>
+                    <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner">✔œ</div>
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">¡Pago Exitoso!</h3>
                     <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-10">La transacción ha sido registrada</p>
                     
                     <div className="bg-slate-50 rounded-[32px] p-8 mb-10 space-y-4">
@@ -1702,16 +1722,16 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                              <h4 className="text-xl font-black text-slate-900 tracking-tight">Dividir Cuenta</h4>
                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Selecciona modalidad de pago</p>
                           </div>
-                          <button onClick={() => setIsSplitOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center">Ã¢Å“â€¢</button>
+                          <button onClick={() => setIsSplitOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center">✔¢</button>
                        </div>
 
                        <div className="p-8 space-y-8 flex-1 overflow-y-auto">
                           {/* MODALIDADES */}
                           <div className="grid grid-cols-1 gap-3">
                              {[
-                                { id: 'igualitaria', title: 'Partes Iguales', icon: 'Ã¢Å¡â€“Ã¯Â¸Â', desc: 'Dividir el total entre N personas' },
+                                { id: 'igualitaria', title: 'Partes Iguales', icon: '⚖️', desc: 'Dividir el total entre N personas' },
                                 { id: 'item', title: 'Por átem / Silla', icon: '🍽', desc: 'Asignar platos específicos a cada persona' },
-                                { id: 'monto', title: 'Monto Personalizado', icon: 'Ã¢Å’Â¨Ã¯Â¸Â', desc: 'Definir valores manuales por pago' }
+                                { id: 'monto', title: 'Monto Personalizado', icon: '⌨️', desc: 'Definir valores manuales por pago' }
                              ].map(m => (
                                 <button 
                                   key={m.id}
@@ -1732,7 +1752,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                              <div className="bg-slate-50 rounded-[32px] p-8 animate-in slide-in-from-bottom-4">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center">Número de Comensales</p>
                                 <div className="flex items-center justify-center gap-8 mb-8">
-                                   <button onClick={() => setSplitCount(Math.max(2, splitCount - 1))} className="w-14 h-14 rounded-full bg-white border border-slate-200 text-2xl font-light flex items-center justify-center hover:bg-white hover:shadow-lg transition-all shadow-sm">Ã¢Ë†â€™</button>
+                                   <button onClick={() => setSplitCount(Math.max(2, splitCount - 1))} className="w-14 h-14 rounded-full bg-white border border-slate-200 text-2xl font-light flex items-center justify-center hover:bg-white hover:shadow-lg transition-all shadow-sm">−</button>
                                    <span className="text-5xl font-black text-slate-900 tracking-tighter">{splitCount}</span>
                                    <button onClick={() => setSplitCount(splitCount + 1)} className="w-14 h-14 rounded-full bg-white border border-slate-200 text-2xl font-light flex items-center justify-center hover:bg-white hover:shadow-lg transition-all shadow-sm">+</button>
                                 </div>
@@ -1863,7 +1883,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                      </div>
                      <div style={{marginLeft:'auto', textAlign:'right'}}>
                        <div style={{fontSize:9, color:'#6b6d8a'}}>COP</div>
-                       <div style={{fontSize:10, color:'#6b6d8a', marginTop:2}}>Ã¢â€ â€˜ 12% vs ayer</div>
+                       <div style={{fontSize:10, color:'#6b6d8a', marginTop:2}}>↑ 12% vs ayer</div>
                      </div>
                    </div>
 
@@ -1921,7 +1941,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                                 <div className="mesa-field">
                                    <span className="mesa-label">Estado</span>
                                    <div className={`estado-badge ${mesa.estado === 'libre' ? 'activa' : mesa.estado}`}>
-                                      Ã¢â€”Â {mesa.estado === 'libre' ? 'ACTIVA' : mesa.estado.toUpperCase()}
+                                      ● {mesa.estado === 'libre' ? 'ACTIVA' : mesa.estado.toUpperCase()}
                                    </div>
                                 </div>
                                 <div className="mesa-field">
@@ -1946,7 +1966,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                              <button 
                                onClick={(e) => {
                                   e.stopPropagation();
-                                  if(confirm(`Ã‚Â¿Eliminar la mesa ${mesa.numero}?`)) setMesas(mesas.filter(x => x.id !== mesa.id));
+                                  if(confirm(`¿Eliminar la mesa ${mesa.numero}?`)) setMesas(mesas.filter(x => x.id !== mesa.id));
                                }}
                                className="absolute top-2 right-2 w-5 h-5 rounded-full bg-black/5 text-slate-400 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all z-10"
                              >
@@ -2028,7 +2048,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                         <div className="menu-bubble" onClick={(e) => e.stopPropagation()}>
                            <div className="bubble-header">
                               <span className="bubble-title">🍽 MESA {mesa.numero} – {mesa.mesero || 'ORDEN'}</span>
-                              <button onClick={() => setActiveBubbleMesaId(null)} className="bubble-close">Ã¢Å“â€¢</button>
+                              <button onClick={() => setActiveBubbleMesaId(null)} className="bubble-close">✔¢</button>
                            </div>
                            <ul className="bubble-items">
                               {tableOrders.length > 0 ? tableOrders.map((item, idx) => (
@@ -2086,11 +2106,11 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                           {/* X eliminar */}
                            <button 
                              onClick={() => {
-                                if(confirm(`Ã‚Â¿Eliminar a ${waiter.name}?`)) setWaiters(waiters.filter(w => w.id !== waiter.id));
+                                if(confirm(`¿Eliminar a ${waiter.name}?`)) setWaiters(waiters.filter(w => w.id !== waiter.id));
                              }}
                              style={{position:'absolute', top:12, right:14, background:'none', border:'none', color:'#bbb', fontSize:14, cursor:'pointer'}}
                            >
-                             Ã¢Å“â€¢
+                             ✔¢
                            </button>
 
                           {/* Avatar */}
@@ -2202,7 +2222,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                    <h4 className="text-[15px] font-black text-slate-900 uppercase tracking-tight">Personalizar</h4>
                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{posProducts.find(p => p.id === activeNotePlatoId)?.name}</p>
                 </div>
-                <button onClick={() => setActiveNotePlatoId(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">Ã¢Å“â€¢</button>
+                <button onClick={() => setActiveNotePlatoId(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">✔¢</button>
              </div>
 
              <div className="space-y-6">
@@ -2323,7 +2343,7 @@ function ViewDashboard() {
          <h3 className="dash-row-title mb-4"><span style={{fontSize:'15px', lineHeight:1}}>🥗</span> Bloque 2: Finanzas (Rentabilidad y Costos)</h3>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Prime Cost" value="58.2%" delta="En Riesgo" isDanger vsText="Límite ideal: 60%" icon={<span style={{fontSize:'16px', lineHeight:1}}>🐟</span>} highlightBadge="Monitorear" />
-            <StatCard label="COGS (Costo Ingred.)" value="32.5%" delta="+2.5%" isDanger vsText="Costo ideal: 30-32%" icon={<span style={{fontSize:'15px', lineHeight:1}}>Ã¢Å¡Â Ã¯Â¸Â</span>} />
+            <StatCard label="COGS (Costo Ingred.)" value="32.5%" delta="+2.5%" isDanger vsText="Costo ideal: 30-32%" icon={<span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>} />
             <StatCard label="Labor Cost (Nómina)" value="25.7%" delta="-0.5%" isUp vsText="Presupuesto estable" icon={<span style={{fontSize:'16px', lineHeight:1}}>🐟</span>} />
             <StatCard label="Margen Neto Est." value="18.5%" delta="+1.2%" isUp vsText="Proyección de cierre" icon={<span style={{fontSize:'16px', lineHeight:1}}>%</span>} />
          </div>
@@ -2331,7 +2351,7 @@ function ViewDashboard() {
 
       {/* Bloque 3 y 4 – Operaciones y Ecosistema */}
       <div>
-         <h3 className="dash-row-title mb-4">Ã¢Å Å¾ Bloques 3 & 4: Operaciones y Ecosistema Cruzado</h3>
+         <h3 className="dash-row-title mb-4">⊞ Bloques 3 & 4: Operaciones y Ecosistema Cruzado</h3>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="RevPASH" value="$12,500" delta="+15%" isUp vsText="Ingreso/silla/hora" icon={<span style={{fontSize:'15px', lineHeight:1}}>🐟</span>} />
             <StatCard label="Tiempo de Servicio" value="24 min" delta="-3 min" isUp vsText="Orden a entrega" icon={<span style={{fontSize:'16px', lineHeight:1}}>🐟</span>} />
@@ -2882,7 +2902,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [] }) {
                   <div>
                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Orden #{ordenSeleccionada.id}</p>
                      <h2 className="text-xl font-black text-slate-800">{ordenSeleccionada.cliente}</h2>
-                     <p className="text-sm text-gray-500 font-bold mt-1">{ordenSeleccionada.hora} Ã¢â‚¬Â¢ {ordenSeleccionada.canal}</p>
+                     <p className="text-sm text-gray-500 font-bold mt-1">{ordenSeleccionada.hora} • {ordenSeleccionada.canal}</p>
                   </div>
                   <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest
                      ${ordenSeleccionada.estado === 'Pagado' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
@@ -3061,9 +3081,9 @@ function ViewInventario({ inventario = [], platos = [], recetas = [] }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricBadge label="Insumos en stock" value="84" sub="ítems registrados" icon="🐟" color="emerald" />
         <MetricBadge label="Stock crítico" value="5" sub="requieren compra urgente" icon="🐟" color="red" isDanger />
-        <MetricBadge label="Stock bajo" value="9" sub="por debajo del mínimo" icon="Ã¢Å¡Â Ã¯Â¸Â" color="orange" />
+        <MetricBadge label="Stock bajo" value="9" sub="por debajo del mínimo" icon="⚠️" color="orange" />
         <MetricBadge label="Valor inventario" value="$4.2M" sub="COP en bodega hoy" icon="🍰" color="blue" />
-        <MetricBadge label="Merma del mes" value="$380K" sub="Ã¢â€ â€œ 8% vs mes anterior" icon="🐟" color="pink" />
+        <MetricBadge label="Merma del mes" value="$380K" sub="↓ 8% vs mes anterior" icon="🐟" color="pink" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -3163,7 +3183,7 @@ function ViewInventario({ inventario = [], platos = [], recetas = [] }) {
                  {alertas.map((a, i) => (
                     <div key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50/50 border border-transparent hover:border-gray-100 hover:bg-white transition-all group">
                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs flex-shrink-0 ${a.tipo === 'out' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
-                          {a.tipo === 'out' ? 'Ã¢Å¡Â ' : 'Ã¢â€ â€œ'}
+                          {a.tipo === 'out' ? '⚠' : '↓'}
                        </div>
                        <div className="flex-1">
                           <p className="text-xs font-black text-slate-800 tracking-tight">{a.titulo}</p>
@@ -3191,7 +3211,7 @@ function ViewInventario({ inventario = [], platos = [], recetas = [] }) {
                           <p className="text-xs font-black text-slate-800">{p.nombre}</p>
                           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{p.cat}</p>
                        </div>
-                       <div className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">Ã¢ÂÂ± {p.dias}</div>
+                       <div className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">⏱ {p.dias}</div>
                     </div>
                  ))}
               </div>
@@ -3307,7 +3327,7 @@ function MetricBadge({ label, value, sub, icon, color, isDanger }) {
         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-inner ${colors[color] || colors.blue}`}>
           {icon}
         </div>
-        <span className="text-[10px] font-black text-gray-300 group-hover:text-gray-400 transition-colors">Ã¢â€ â€”</span>
+        <span className="text-[10px] font-black text-gray-300 group-hover:text-gray-400 transition-colors">←</span>
       </div>
       <div>
         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</h4>
@@ -3331,9 +3351,9 @@ function ViewDelivery() {
 
   // --- DATOS DEL DELIVERY ---
   const metricasDelivery = [
-    { label: 'Pedidos hoy', value: '47', sub: 'Ã¢â€ â€˜ +12 vs ayer', icon: '🐟', color: 'orange', delta: 'up' },
-    { label: 'Entregados', value: '40', sub: '85.1% tasa éxito', icon: 'Ã¢Å“â€¦', color: 'emerald', delta: 'ok' },
-    { label: 'Tiempo prom.', value: '38 min', sub: 'Ã¢â€ â€˜ +4 min vs meta', icon: 'Ã¢ÂÂ±Ã¯Â¸Â', color: 'orange', delta: 'warn' },
+    { label: 'Pedidos hoy', value: '47', sub: '↑ +12 vs ayer', icon: '🐟', color: 'orange', delta: 'up' },
+    { label: 'Entregados', value: '40', sub: '85.1% tasa éxito', icon: '✔¦', color: 'emerald', delta: 'ok' },
+    { label: 'Tiempo prom.', value: '38 min', sub: '↑ +4 min vs meta', icon: '⏱️', color: 'orange', delta: 'warn' },
     { label: 'Cancelaciones', value: '4', sub: '8.5% – revisar', icon: '🐟', color: 'red', delta: 'bad' },
     { label: 'Ingresos delivery', value: '$3.2M', sub: 'COP hoy', icon: '🍰', color: 'blue', delta: 'ok' },
     { label: 'Margen neto', value: '22%', sub: 'tras comisiones', icon: '🐟', color: 'pink', delta: 'ok' }
@@ -3376,8 +3396,8 @@ function ViewDelivery() {
 
   const resenas = [
     { star: '★★★★★', txt: 'Llegó super rápido y el ramen estaba perfecto.', canal: 'Propio', t: 'hace 2h' },
-    { star: '★★★★Ã¢Ëœâ€ ', txt: 'Muy buena comida pero tardó casi 50 minutos.', canal: 'Rappi', t: 'hace 4h' },
-    { star: '★★★Ã¢Ëœâ€ Ã¢Ëœâ€ ', txt: 'El empaque del banh mi llegó abierto.', canal: 'iFood', t: 'hace 5h' }
+    { star: '★★★★★ ', txt: 'Muy buena comida pero tardó casi 50 minutos.', canal: 'Rappi', t: 'hace 4h' },
+    { star: '★★★★ ★ ', txt: 'El empaque del banh mi llegó abierto.', canal: 'iFood', t: 'hace 5h' }
   ];
 
   const platosPopulares = [
@@ -3579,7 +3599,7 @@ function ViewDelivery() {
                 </div>
                 <div className="text-right">
                   <p className={`text-xs font-black ${dom.t.includes('44') ? 'text-rose-500' : 'text-slate-700'}`}>{dom.t}</p>
-                  <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-tighter">Ã¢â€”Â {dom.status}</p>
+                  <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-tighter">● {dom.status}</p>
                 </div>
               </div>
             ))}
@@ -3604,7 +3624,7 @@ function ViewDelivery() {
             <div className="pt-4 border-t border-gray-50">
                <div className="bg-amber-50 p-3 rounded-xl border border-amber-100">
                   <p className="text-[10px] text-amber-800 font-bold leading-tight">
-                    🐟 <span className="font-black italic">Insight:</span> Chapinero Norte pide pero está a 5.1 km. Ã‚Â¿Considerar ampliar cobertura?
+                    🐟 <span className="font-black italic">Insight:</span> Chapinero Norte pide pero está a 5.1 km. ¿Considerar ampliar cobertura?
                   </p>
                </div>
             </div>
@@ -4304,7 +4324,7 @@ function ViewMarketingFidelizacion() {
             </div>
          </div>
          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-gray-300 transition-all">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Reputación Online <span className="text-lg">Ã¢Â­Â</span></p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Reputación Online <span className="text-lg">⭐</span></p>
             <p className="text-2xl font-black text-slate-800">4.6 ★</p>
             <div className="flex items-center gap-2 mt-2">
                <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+0.2</span>
@@ -4479,7 +4499,7 @@ function ViewMarketingFidelizacion() {
                </div>
             </div>
             <button className="w-full mt-4 py-3 bg-rose-50 text-rose-600 text-xs font-black rounded-xl hover:bg-rose-100 transition-colors uppercase tracking-widest border border-rose-100 flex items-center justify-center gap-2">
-               Ã¢Å¡Â Ã¯Â¸Â Recuperar clientes en riesgo
+               ⚠️ Recuperar clientes en riesgo
             </button>
          </div>
       </div>
@@ -4505,7 +4525,7 @@ function ViewMarketingFidelizacion() {
                </button>
                <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200">
                   <div className="flex items-center gap-3">
-                     <span className="text-xl">Ã¢Â­Â</span>
+                     <span className="text-xl">⭐</span>
                      <span className="text-xs font-black text-slate-700">Responder reseñas negativas</span>
                   </div>
                   <span className="text-gray-400 group-hover:text-slate-800 transition-colors">→</span>
@@ -4686,7 +4706,7 @@ function ViewMarketingFidelizacion() {
                <ul className="space-y-2 text-xs font-bold text-slate-700">
                   <li className="flex items-center gap-2"><span>🐟</span> 1 pto por cada $1.000 COP</li>
                   <li className="flex items-center gap-2"><span>🐟</span> 50 ptos bienvenida</li>
-                  <li className="flex items-center gap-2"><span>Ã¢Â­Â</span> 30 ptos por reseña Google</li>
+                  <li className="flex items-center gap-2"><span>⭐</span> 30 ptos por reseña Google</li>
                   <li className="flex items-center gap-2"><span>🐟</span> 100 ptos por referido</li>
                </ul>
             </div>
@@ -4704,7 +4724,7 @@ function ViewMarketingFidelizacion() {
             <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
                <p className="text-[10px] font-bold text-gray-500 text-center">45 clientes tienen puntos listos para canjear hoy.</p>
                <button className="w-full py-2 bg-white border border-gray-200 text-slate-700 text-xs font-black rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                  Ã¢Å¡â„¢Ã¯Â¸Â Editar Reglas
+                  ⚖️ Editar Reglas
                </button>
             </div>
          </div>
@@ -4718,7 +4738,7 @@ function ViewMarketingFidelizacion() {
                {[
                   { i: '🐟', n: 'Feliz Cumpleaños', t: 'Automático', p: '62% conv.', c: 'emerald', s: 'Activa' },
                   { i: '🐟', n: 'Recuperación 30d', t: 'En Riesgo', p: '24% conv.', c: 'amber', s: 'Activa' },
-                  { i: 'Ã¢Å“â€°Ã¯Â¸Â', n: 'Bienvenida VIP', t: 'Nuevos', p: '85% apert.', c: 'emerald', s: 'Activa' },
+                  { i: '✔°️', n: 'Bienvenida VIP', t: 'Nuevos', p: '85% apert.', c: 'emerald', s: 'Activa' },
                   { i: '🐟 ', n: 'Encuesta Post-Cena', t: 'Post-pago', p: '15% conv.', c: 'rose', s: 'Activa' },
                   { i: '🐟', n: 'Promo Jueves', t: 'Frecuentes', p: 'Envíos: 150', c: 'blue', s: 'En progreso' }
                ].map((c, i) => (
@@ -4923,8 +4943,8 @@ function ViewMarketingFidelizacion() {
                   </label>
                   <textarea 
                      className="w-full bg-gray-50 border border-gray-200 text-sm font-medium text-slate-700 rounded-xl px-3 py-2.5 outline-none focus:border-emerald-500 transition-colors resize-none h-20"
-                     placeholder="Ã‚Â¡Hola! Te extrañamos en La Leña. Ven este finde y..."
-                     defaultValue="Ã‚Â¡Hola! Hace tiempo que no te vemos por La Leña. Queremos invitarte a que vuelvas este fin de semana con un postre de cortesía enseñando este mensaje. Ã‚Â¡Te esperamos!"
+                     placeholder="¡Hola! Te extrañamos en La Leña. Ven este finde y..."
+                     defaultValue="¡Hola! Hace tiempo que no te vemos por La Leña. Queremos invitarte a que vuelvas este fin de semana con un postre de cortesía enseñando este mensaje. ¡Te esperamos!"
                   ></textarea>
                </div>
 
@@ -5247,7 +5267,7 @@ function ViewEventos() {
                <div className="grid grid-cols-1 gap-2">
                   {[
                     { icon: '🐟', label: 'Generar cotización personalizada', color: 'bg-amber-50 text-amber-600' },
-                    { icon: 'Ã¢Å“â€°Ã¯Â¸Â', label: 'Enviar confirmación al cliente', color: 'bg-emerald-50 text-emerald-600' },
+                    { icon: '✔°️', label: 'Enviar confirmación al cliente', color: 'bg-emerald-50 text-emerald-600' },
                     { icon: '🐟', label: 'Crear factura de anticipo', color: 'bg-blue-50 text-blue-600' },
                     { icon: '🐟', label: 'Bloquear fecha en calendario', color: 'bg-purple-50 text-purple-600' },
                   ].map((a, i) => (
@@ -5451,7 +5471,7 @@ function ViewRRHH() {
             <div className="mt-8 p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
                <div className="flex justify-between items-center mb-2">
                   <p className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">% nómina sobre ventas</p>
-                  <span className="text-[10px] font-black text-emerald-700">26% Ã¢Å“â€œ saludable</span>
+                  <span className="text-[10px] font-black text-emerald-700">26% ✔œ saludable</span>
                </div>
                <div className="h-2 bg-white border border-emerald-100 rounded-full overflow-hidden p-0.5">
                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: '26%' }}></div>
@@ -5477,13 +5497,13 @@ function ViewRRHH() {
                         <p className="text-[11px] font-black text-slate-800 truncate">{d.name}</p>
                         <div className="flex text-amber-400 text-[10px] mt-0.5">
                            {[...Array(5)].map((_, si) => (
-                             <span key={si}>{si < Math.floor(d.score) ? '★' : 'Ã¢Ëœâ€ '}</span>
+                             <span key={si}>{si < Math.floor(d.score) ? '★' : '★ '}</span>
                            ))}
                         </div>
                      </div>
                      <div className="flex items-center gap-2">
                         <span className="text-xs font-black text-slate-700">{d.score}</span>
-                        {d.up !== null && <span className={`text-[10px] font-black ${d.up ? 'text-emerald-500' : 'text-red-500'}`}>{d.up ? 'Ã¢â€“Â²' : 'Ã¢â€“Â¼'}</span>}
+                        {d.up !== null && <span className={`text-[10px] font-black ${d.up ? 'text-emerald-500' : 'text-red-500'}`}>{d.up ? '▲' : '▼'}</span>}
                      </div>
                   </div>
                ))}
@@ -5502,10 +5522,10 @@ function ViewRRHH() {
             <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6">Clima laboral</h4>
             <div className="grid grid-cols-2 gap-3 mb-6">
                {[
-                 { label: 'Satisfacción', val: '7.8', color: 'text-emerald-600', bg: 'bg-emerald-50', sub: 'Ã¢â€“Â² 0.4 vs mar' },
-                 { label: 'Equipo', val: '8.2', color: 'text-blue-600', bg: 'bg-blue-50', sub: 'Ã¢â€“Â² 0.2 vs mar' },
+                 { label: 'Satisfacción', val: '7.8', color: 'text-emerald-600', bg: 'bg-emerald-50', sub: '▲ 0.4 vs mar' },
+                 { label: 'Equipo', val: '8.2', color: 'text-blue-600', bg: 'bg-blue-50', sub: '▲ 0.2 vs mar' },
                  { label: 'Liderazgo', val: '7.5', color: 'text-purple-600', bg: 'bg-purple-50', sub: '→ Sin cambio' },
-                 { label: 'Carga laboral', val: '6.4', color: 'text-amber-600', bg: 'bg-amber-50', sub: 'Ã¢â€“Â¼ 0.6 vs mar' },
+                 { label: 'Carga laboral', val: '6.4', color: 'text-amber-600', bg: 'bg-amber-50', sub: '▼ 0.6 vs mar' },
                ].map((c, i) => (
                   <div key={i} className={`p-4 rounded-2xl border border-transparent transition-all ${c.bg}`}>
                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter mb-1">{c.label}</p>
@@ -5603,7 +5623,7 @@ function ViewRRHH() {
                   </div>
                ))}
             </div>
-            <p className="mt-4 text-[9px] text-amber-600 font-black italic bg-amber-50 p-2 rounded-xl text-center">Ã¢Å¡Â  Solapamiento: Julián R. y María G. el 5–œ7 de mayo.</p>
+            <p className="mt-4 text-[9px] text-amber-600 font-black italic bg-amber-50 p-2 rounded-xl text-center">⚠ Solapamiento: Julián R. y María G. el 5–œ7 de mayo.</p>
          </div>
 
          {/* VENCIMIENTOS */}
@@ -5650,8 +5670,8 @@ function ViewRRHH() {
                {[
                  { icon: '🐟', label: 'Programar turnos', color: 'bg-emerald-50 text-emerald-600' },
                  { icon: '🐟', label: 'Nuevo colaborador', color: 'bg-purple-50 text-purple-600' },
-                 { icon: 'Ã¢Å“â€¦', label: 'Aprobar pendientes', color: 'bg-amber-50 text-amber-600' },
-                 { icon: 'Ã¢Å¡Â Ã¯Â¸Â', label: 'Renovar Santiago V.', color: 'bg-red-50 text-red-600' },
+                 { icon: '✔¦', label: 'Aprobar pendientes', color: 'bg-amber-50 text-amber-600' },
+                 { icon: '⚠️', label: 'Renovar Santiago V.', color: 'bg-red-50 text-red-600' },
                  { icon: '🐟 ', label: 'Reporte de nómina', color: 'bg-blue-50 text-blue-600' },
                  { icon: '🐟 ', label: 'IA Brain para turnos', color: 'bg-pink-50 text-pink-600' },
                ].map((a, i) => (
@@ -5739,7 +5759,7 @@ function ViewData() {
         <StatCard label="Ticket Promedio" value="$68.4K" delta="5.2%" isUp vsText="vs sem. ant." icon="🐟" />
         <StatCard label="Pedidos" value="1,247" delta="8.9%" isUp vsText="vs sem. ant." icon="🐟" />
         <StatCard label="Ocupación Mesas" value="74%" delta="0.3%" vsText="estable" icon="🐟 " />
-        <StatCard label="Costo / Venta" value="31.2%" delta="1.8%" isUp vsText="mejoría" icon="Ã¢Å¡â€“Ã¯Â¸Â" />
+        <StatCard label="Costo / Venta" value="31.2%" delta="1.8%" isUp vsText="mejoría" icon="⚖️" />
         <StatCard label="Satisfacción" value="4.6 ★" delta="0.2" isUp vsText="vs anterior" icon="🐟 " />
       </div>
 
@@ -6029,7 +6049,7 @@ function ViewData() {
                         </div>
                         <div>
                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Margen de Error</p>
-                           <p className="text-2xl font-black text-slate-400">Ã‚Â±2.4%</p>
+                           <p className="text-2xl font-black text-slate-400">±2.4%</p>
                         </div>
                      </div>
                   </div>
@@ -6080,10 +6100,10 @@ function ViewData() {
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { type: 'Oportunidad', icon: '🐟', color: 'emerald', title: 'Menú ejecutivo dinámico', text: 'El 67% de clientes de mediodía repiten plato. Implementar menú fijo reduciría tiempos un 22%.' },
-              { type: 'Alerta', icon: 'Ã¢Å¡Â Ã¯Â¸Â', color: 'amber', title: 'Jueves de bajo tráfico', text: 'Ocupación -34% vs viernes. Un "After Office" 2x1 bebidas generaría $180K adicionales.' },
+              { type: 'Alerta', icon: '⚠️', color: 'amber', title: 'Jueves de bajo tráfico', text: 'Ocupación -34% vs viernes. Un "After Office" 2x1 bebidas generaría $180K adicionales.' },
               { type: 'Retención', icon: '🐟', color: 'blue', title: '124 clientes en riesgo', text: 'No han regresado en 21 días. Campaña de reactivación (15% off) tiene alta efectividad.' },
               { type: 'Costo', icon: '🐟', color: 'red', title: 'Ingredientes +9% este mes', text: 'Pollo y lácteos al alza. Ajustar porciones en 3 platos recuperaría 1.2% de margen.' },
-              { type: 'Reputación', icon: 'Ã¢Â­Â', color: 'emerald', title: 'Feedback excepcional', text: 'NPS subió a 4.6. Usa testimonios sobre "sabor" en tu próxima campaña de Instagram.' },
+              { type: 'Reputación', icon: '⭐', color: 'emerald', title: 'Feedback excepcional', text: 'NPS subió a 4.6. Usa testimonios sobre "sabor" en tu próxima campaña de Instagram.' },
               { type: 'Predicción', icon: '🐟', color: 'purple', title: 'Fin de semana pico', text: '+18% demanda estimada por evento local. Refuerza inventario y equipo de salón.' },
             ].map((ins, i) => (
                <div key={i} className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group flex gap-4">
@@ -6153,7 +6173,7 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
   const [formError, setFormError] = React.useState('');
   
   const COLORES = ['#7C3AED','#DC2626','#2563EB','#16A34A','#D97706','#DB2777','#0891B2','#475569'];
-  const ICONOS = ['🐟','🐟','🍷','🍰','🥗','🥩','🍺','🐟','🥤','🐟','Ã¢Â­Â','🐟'];
+  const ICONOS = ['🐟','🐟','🍷','🍰','🥗','🥩','🍺','🐟','🥤','🐟','⭐','🐟'];
   const DESTINOS = ['Cocina Principal', 'Horno', 'Barra', 'Bar', 'Sin Impresión'];
   const IMPUESTOS = ['8% Impoconsumo', '19% IVA', 'Exento (0%)'];
   const DIAS_SEMANA = [{ id: 'LUN', lbl: 'L' }, { id: 'MAR', lbl: 'M' }, { id: 'MIE', lbl: 'X' }, { id: 'JUE', lbl: 'J' }, { id: 'VIE', lbl: 'V' }, { id: 'SAB', lbl: 'S' }, { id: 'DOM', lbl: 'D' }];
@@ -6264,7 +6284,7 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
   const handleToggleEstado = (cat) => {
     const nuevoEstado = cat.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA';
     if (nuevoEstado === 'INACTIVA') {
-      const ok = window.confirm(`Ã¢Å¡Â Ã¯Â¸Â Al desactivar "${cat.nombre}" sus platos dejarán de aparecer en la carta.\n\nÃ‚Â¿Continuar?`);
+      const ok = window.confirm(`⚠️ Al desactivar "${cat.nombre}" sus platos dejarán de aparecer en la carta.\n\n¿Continuar?`);
       if (!ok) return;
     }
     setCategorias(categorias.map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
@@ -6277,7 +6297,7 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
   };
 
   const handleDelete = (cat) => {
-    const ok = window.confirm(`🐟 Ã‚Â¿Eliminar la categoría "${cat.nombre}"?\n\nEsta acción es irreversible.`);
+    const ok = window.confirm(`🐟 ¿Eliminar la categoría "${cat.nombre}"?\n\nEsta acción es irreversible.`);
     if (!ok) return;
     setCategorias(categorias.filter(c => c.id !== cat.id));
   };
@@ -6361,7 +6381,7 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
                 >
                   <td className="px-3 py-3 w-28" style={{display:'none'}}>
                     <div className="flex items-center gap-2">
-                       <span className="text-gray-300 hover:text-indigo-400 cursor-grab text-lg tracking-[-2px] -ml-1">Ã¢Â Â¿</span>
+                       <span className="text-gray-300 hover:text-indigo-400 cursor-grab text-lg tracking-[-2px] -ml-1">⠿</span>
                        <span className="w-2 h-2 rounded-full shrink-0" style={{backgroundColor: cat.color}}></span>
                        <span className="w-8 h-8 flex items-center justify-center rounded-xl text-lg shadow-sm font-black" style={{backgroundColor: `${cat.color}20`}}>{cat.icono}</span>
                     </div>
@@ -6404,7 +6424,7 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
                         <div className="w-3 h-3 bg-white rounded-full shadow-md transition-transform" style={{ transform: cat.horario ? 'translateX(16px)' : 'translateX(0)' }}></div>
                       </div>
                       <div className="flex items-center gap-1 cursor-pointer" onClick={() => toggleScheduleRow(cat.id, cat.horario)}>
-                         {cat.horario && <span style={{fontSize:'12px', lineHeight:1}}>Ã¢ÂÂ°</span>}
+                         {cat.horario && <span style={{fontSize:'12px', lineHeight:1}}>⏰</span>}
                          <span className={`text-[9px] font-bold hover:underline decoration-dashed ${cat.horario ? 'text-indigo-600' : 'text-gray-400'}`}>{formatHorario(cat.horario)}</span>
                       </div>
                     </div>
@@ -6478,12 +6498,12 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 max-h-[90vh] flex flex-col">
             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">{editingCategory ? 'Ã¢Å“Â Editar Categoría' : '✨ Nueva Categoría'}</h3>
-              <button type="button" onClick={() => setShowModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1.5 rounded-xl border border-gray-200 transition-colors shadow-sm">Ã¢Å“â€¢</button>
+              <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">{editingCategory ? '✍ Editar Categoría' : '✨ Nueva Categoría'}</h3>
+              <button type="button" onClick={() => setShowModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1.5 rounded-xl border border-gray-200 transition-colors shadow-sm">✔¢</button>
             </div>
             
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-              {formError && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-bold mb-5 flex items-center gap-2"><span>Ã¢Å¡Â Ã¯Â¸Â</span> {formError}</div>}
+              {formError && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-bold mb-5 flex items-center gap-2"><span>⚠️</span> {formError}</div>}
               
               <div className="space-y-6">
                 <div>
@@ -6810,7 +6830,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
   };
 
   const handleDeletePlato = (plato) => {
-    if (window.confirm(`Ã‚Â¿Eliminar "${plato.nombre}"? Esta acción no se puede deshacer.`)) {
+    if (window.confirm(`¿Eliminar "${plato.nombre}"? Esta acción no se puede deshacer.`)) {
       setPlatos((platos || []).filter(p => p.id !== plato.id));
     }
   };
@@ -6856,7 +6876,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
       <div className="bg-gray-50/30 flex-1 relative min-h-[200px]">
         {activeCatNames.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-300 text-3xl">Ã¢Å Å¾</div>
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-300 text-3xl">⊞</div>
             <h4 className="text-sm font-bold text-slate-600 mb-2">Activa una categoría arriba para ver sus platos</h4>
             <p className="text-xs text-gray-400 max-w-sm">Usa los toggles en la tabla de Categorías para seleccionar qué grupos quieres revisar.</p>
           </div>
@@ -6865,7 +6885,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
             {/* COLUMN HEADERS – shown once above all groups */}
             <div className="hidden md:grid bg-gray-50 border border-gray-200 rounded-xl px-3 py-2" style={{gridTemplateColumns:'28px 1fr 100px 80px 100px 130px 130px',gap:'8px',alignItems:'center'}}>
               {/* col Foto eliminada */}
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Ã¢Â Â¿</span>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">⠿</span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre del Plato</span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Precio Venta</span>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Margen</span>
@@ -6901,7 +6921,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                       <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{platosCat.length} ítems</span>
                       {cat.estado === 'INACTIVA' && <span className="text-[10px] font-black text-red-500 uppercase bg-red-50 px-2 py-0.5 rounded tracking-widest">Inactiva</span>}
                     </div>
-                    <span className="text-gray-400 text-xs transition-transform" style={{transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}}>Ã¢â€“Â¼</span>
+                    <span className="text-gray-400 text-xs transition-transform" style={{transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}}>▼</span>
                   </div>
 
                   {/* ACCORDION BODY */}
@@ -6936,7 +6956,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                                   </div>
 
                                   {/* COL 2 – DRAG */}
-                                  <div className="flex items-center justify-center text-gray-300 text-lg cursor-grab hover:text-gray-500 select-none" title="Arrastrar para reordenar">Ã¢Â Â¿</div>
+                                  <div className="flex items-center justify-center text-gray-300 text-lg cursor-grab hover:text-gray-500 select-none" title="Arrastrar para reordenar">⠿</div>
 
                                   {/* COL 3 – NOMBRE + CATEGORáA */}
                                   <div className="min-w-0">
@@ -6974,8 +6994,8 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                                         borderColor: plato.estado === 'DISPONIBLE' ? '#86EFAC' : plato.estado === 'AGOTADO' ? '#FCA5A5' : '#FCD34D',
                                       }}
                                     >
-                                      <option value="DISPONIBLE">Ã¢Å“â€¦ Disponible</option>
-                                      <option value="AGOTADO">Ã¢â€ºâ€ Agotado</option>
+                                      <option value="DISPONIBLE">✔¦ Disponible</option>
+                                      <option value="AGOTADO">⛔ Agotado</option>
                                       <option value="TEMPORAL">🐟 Temporal</option>
                                     </select>
                                     {plato.estado === 'TEMPORAL' && dateLabel && !isShowingTemporal && (
@@ -7012,7 +7032,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                                       <input type="date" value={tempHasta} onChange={e => setTempHasta(e.target.value)} className="text-xs border border-amber-300 rounded-lg px-2 py-1 outline-none focus:border-amber-500 bg-white"/>
                                     </div>
                                     <button onClick={() => handleSaveTemporalDates(plato.id)} className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-colors">OK</button>
-                                    <button onClick={() => setShowTemporalFor(null)} className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold">Ã¢Å“â€¢</button>
+                                    <button onClick={() => setShowTemporalFor(null)} className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold">✔¢</button>
                                   </div>
                                 )}
 
@@ -7048,7 +7068,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th style={{display:'none'}}></th>
-                    <th className="px-2 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Ã¢Â Â¿</th>
+                    <th className="px-2 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">⠿</th>
                     <th className="px-3 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre del Plato</th>
                     <th className="px-3 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Precio Venta</th>
                     <th className="px-3 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Margen</th>
@@ -7084,7 +7104,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                             </div>
                           </td>
                           {/* DRAG */}
-                          <td className="px-2 py-2 text-center text-gray-300 text-lg cursor-grab hover:text-gray-500 select-none">Ã¢Â Â¿</td>
+                          <td className="px-2 py-2 text-center text-gray-300 text-lg cursor-grab hover:text-gray-500 select-none">⠿</td>
                           {/* NOMBRE */}
                           <td className="px-3 py-2">
                             <p className="font-bold text-slate-800 text-sm leading-tight">{plato.nombre}</p>
@@ -7110,8 +7130,8 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                           <td className="px-3 py-2 text-center">
                             <div className="flex flex-col items-center gap-1">
                               <select value={plato.estado} onChange={(e) => handleEstadoChange(plato, e.target.value)} className="text-xs font-bold rounded-lg border outline-none cursor-pointer" style={{padding:'4px 6px',background: plato.estado==='DISPONIBLE'?'#F0FDF4':plato.estado==='AGOTADO'?'#FEF2F2':'#FFFBEB',color:plato.estado==='DISPONIBLE'?'#15803D':plato.estado==='AGOTADO'?'#DC2626':'#B45309',borderColor:plato.estado==='DISPONIBLE'?'#86EFAC':plato.estado==='AGOTADO'?'#FCA5A5':'#FCD34D'}}>
-                                <option value="DISPONIBLE">Ã¢Å“â€¦ Disponible</option>
-                                <option value="AGOTADO">Ã¢â€ºâ€ Agotado</option>
+                                <option value="DISPONIBLE">✔¦ Disponible</option>
+                                <option value="AGOTADO">⛔ Agotado</option>
                                 <option value="TEMPORAL">🐟 Temporal</option>
                               </select>
                               {plato.estado === 'TEMPORAL' && dateLabel && !isShowingTemporal && <span style={{fontSize:'9px',color:'#B45309',fontWeight:700}}>{dateLabel}</span>}
@@ -7126,11 +7146,11 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                             <div className="flex flex-col gap-1 items-center">
                               <div className="flex gap-1">
                                 <button title="Ver" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{background:'#F0FDF4',color:'#15803D',border:'1px solid #BBF7D0'}} onClick={() => handleOpenForm(plato)}>🐟</button>
-                                <button title="Editar" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{background:'#EEF2FF',color:'#4338CA',border:'1px solid #C7D2FE'}} onClick={() => handleOpenForm(plato)}>Ã¢Å“Â</button>
+                                <button title="Editar" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{background:'#EEF2FF',color:'#4338CA',border:'1px solid #C7D2FE'}} onClick={() => handleOpenForm(plato)}>✍</button>
                                 <button title="Eliminar" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{background:'#FEF2F2',color:'#DC2626',border:'1px solid #FECACA'}} onClick={() => handleDeletePlato(plato)}>🐟</button>
                               </div>
                               <div className="flex gap-1">
-                                <button title="Duplicar" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{background:'#F9FAFB',color:'#6B7280',border:'1px solid #E5E7EB'}} onClick={() => handleDuplicatePlato(plato)}>Ã¢Â§â€°</button>
+                                <button title="Duplicar" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{background:'#F9FAFB',color:'#6B7280',border:'1px solid #E5E7EB'}} onClick={() => handleDuplicatePlato(plato)}>⧉</button>
                                 <button title="Análisis" className="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style={{background:'#EFF6FF',color:'#2563EB',border:'1px solid #BFDBFE'}}>🐟 </button>
                               </div>
                             </div>
@@ -7146,7 +7166,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                                 <label style={{fontSize:'10px',fontWeight:700,color:'#92400E'}}>Hasta</label>
                                 <input type="date" value={tempHasta} onChange={e=>setTempHasta(e.target.value)} className="text-xs border border-amber-300 rounded-lg px-2 py-1 outline-none bg-white"/>
                                 <button onClick={()=>handleSaveTemporalDates(plato.id)} className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold">OK</button>
-                                <button onClick={()=>setShowTemporalFor(null)} className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold">Ã¢Å“â€¢</button>
+                                <button onClick={()=>setShowTemporalFor(null)} className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold">✔¢</button>
                               </div>
                             </td>
                           </tr>
@@ -7170,14 +7190,14 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                 <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">🍽</div>
                 <h3 className="font-black text-slate-800">{editingPlato ? 'Editar Plato' : 'Crear Plato Individual'}</h3>
               </div>
-              <button onClick={() => setShowFormModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200">Ã¢Å“â€¢</button>
+              <button onClick={() => setShowFormModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200">✔¢</button>
             </div>
 
             <div className="overflow-y-auto flex-1 p-6">
               <form id="platoFormNew" onSubmit={handleSavePlato}>
                 {formError && (
                   <div className="mb-5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-start gap-3 text-sm">
-                    <span>Ã¢Å¡Â Ã¯Â¸Â</span><p className="font-bold">{formError}</p>
+                    <span>⚠️</span><p className="font-bold">{formError}</p>
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
@@ -7197,8 +7217,8 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                   <div>
                     <label className="text-xs font-bold text-slate-700 mb-1.5 block">Estado Operativo <span className="text-red-500">*</span></label>
                     <select value={formData.estado} onChange={(e) => setFormData({...formData, estado: e.target.value})} className="w-full text-sm p-3 rounded-xl border border-gray-300 focus:border-emerald-500 outline-none bg-white" required>
-                      <option value="DISPONIBLE">Ã¢Å“â€¦ Disponible</option>
-                      <option value="AGOTADO">Ã¢â€ºâ€ Agotado</option>
+                      <option value="DISPONIBLE">✔¦ Disponible</option>
+                      <option value="AGOTADO">⛔ Agotado</option>
                       <option value="TEMPORAL">🐟 Temporal</option>
                     </select>
                   </div>
@@ -7282,7 +7302,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
               <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-100 text-slate-700 text-sm font-bold rounded-xl transition-colors">Cancelar</button>
               <button type="submit" form="platoFormNew" className="flex-[2] py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-emerald-600/20 flex justify-center items-center gap-2">
-                <span style={{fontSize:18}}>Ã¢Å“â€¦</span> Guardar Plato en Carta
+                <span style={{fontSize:18}}>✔¦</span> Guardar Plato en Carta
               </button>
             </div>
           </div>
@@ -7298,7 +7318,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
                 <div className="w-10 h-10 rounded-full bg-slate-800 text-emerald-400 flex items-center justify-center border border-slate-700">🐟</div>
                 <h3 className="font-black text-lg">Importación Masiva (CSV)</h3>
               </div>
-              <button onClick={() => setShowImportModal(false)} className="text-slate-400 hover:text-white bg-slate-800 p-1.5 rounded-lg border border-slate-700 transition-colors">Ã¢Å“â€¢</button>
+              <button onClick={() => setShowImportModal(false)} className="text-slate-400 hover:text-white bg-slate-800 p-1.5 rounded-lg border border-slate-700 transition-colors">✔¢</button>
             </div>
             <div className="p-6 space-y-5">
               <div className="bg-slate-800/50 border border-slate-700 p-4 rounded-xl space-y-3">
@@ -7311,7 +7331,7 @@ function MenuPlatosBlock({ vistaPlatos, showFormModal, setShowFormModal, showImp
               <div className="bg-slate-800/50 border border-slate-700 p-4 rounded-xl space-y-3">
                 <h4 className="text-sm font-bold text-slate-300">→ Paso 2: Sube el archivo</h4>
                 <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-800 transition-colors cursor-pointer">
-                  <p className="text-sm font-bold text-slate-300">Ã¢ËœÂ Arrastra tu archivo .CSV aquí</p>
+                  <p className="text-sm font-bold text-slate-300">☁ Arrastra tu archivo .CSV aquí</p>
                   <p className="text-[10px] text-slate-500 mt-1">Máximo 500 filas por importación.</p>
                   <button className="mt-4 text-xs font-bold bg-slate-700 text-white px-5 py-2 rounded-full border border-slate-600">Seleccionar Archivo</button>
                 </div>
@@ -7421,7 +7441,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
     if (nuevoEstado === 'INACTIVO' && (grupo.tipo_seleccion === 'UNICA' || grupo.tipo_seleccion === 'MULTIPLE')) {
       const isLinked = vinculos.some(v => v.grupo_id === grupo.id);
       if (isLinked) {
-        if (!window.confirm(`Ã¢Å¡Â Ã¯Â¸Â Este grupo es obligatorio en uno o más platos. Desactivarlo puede impedir tomar órdenes correctamente.\nÃ‚Â¿Deseas continuar?`)) return;
+        if (!window.confirm(`⚠️ Este grupo es obligatorio en uno o más platos. Desactivarlo puede impedir tomar órdenes correctamente.\n¿Deseas continuar?`)) return;
       }
     }
     setGrupos(grupos.map(g => g.id === grupo.id ? { ...g, estado: nuevoEstado } : g));
@@ -7469,7 +7489,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
       setOpciones(opciones.map(o => o.id === editingOption.id ? nuevaOpcion : o));
       // Automatización 4: Conservar precio en ordenes abiertas
       if (editingOption.precio_adicional !== nuevaOpcion.precio_adicional) {
-        console.log('Ã¢Å¡Â Ã¯Â¸Â [Regla 6 Aplicada] Precio de opción editado. Las órdenes ABIERTAS conservan el precio original.');
+        console.log('⚠️ [Regla 6 Aplicada] Precio de opción editado. Las órdenes ABIERTAS conservan el precio original.');
       }
     } else {
       setOpciones([...opciones, nuevaOpcion]);
@@ -7490,7 +7510,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
       // Automatización 5: Desvincular obligatorio
       const grupo = grupos.find(g => g.id === grupoId);
       if (grupo && (grupo.tipo_seleccion === 'UNICA' || grupo.tipo_seleccion === 'MULTIPLE')) {
-        console.log(`Ã¢Å¡Â Ã¯Â¸Â [Alerta Generada] Desvinculaste el grupo obligatorio "${grupo.nombre}" del plato.`);
+        console.log(`⚠️ [Alerta Generada] Desvinculaste el grupo obligatorio "${grupo.nombre}" del plato.`);
       }
       setVinculos(vinculos.filter(v => !(v.plato_id === platoId && v.grupo_id === grupoId)));
       console.log(`[Evento] Modificador desvinculado de plato.`);
@@ -7538,8 +7558,8 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
                             </div>
                             <p className="text-[10px] font-medium text-gray-500 flex items-center gap-2">
                                {isRequired ? <span className="text-red-500 font-bold border border-red-200 bg-red-50 px-1 rounded">OBLIGATORIO</span> : <span className="text-gray-400 border border-gray-200 px-1 rounded">OPCIONAL</span>}
-                               <span>Min: {grupo.min_selecciones} | Max: {grupo.max_selecciones || 'Ã¢Ë†Å¾'}</span>
-                               <span>Ã¢â‚¬Â¢ En {vincsCount} platos</span>
+                               <span>Min: {grupo.min_selecciones} | Max: {grupo.max_selecciones || '∞'}</span>
+                               <span>• En {vincsCount} platos</span>
                             </p>
                          </div>
                          <div className="flex flex-col items-end gap-2">
@@ -7572,7 +7592,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
                                         <option value="DISPONIBLE">Disp.</option>
                                         <option value="AGOTADO">Agot.</option>
                                      </select>
-                                     <button onClick={() => handleOpenOptionForm(grupo.id, op)} className="text-gray-400 hover:text-indigo-600"><span style={{fontSize:'15px', lineHeight:1}}>Ã¢Å¡â„¢</span></button>
+                                     <button onClick={() => handleOpenOptionForm(grupo.id, op)} className="text-gray-400 hover:text-indigo-600"><span style={{fontSize:'15px', lineHeight:1}}>⚖</span></button>
                                   </div>
                                </div>
                             ))}
@@ -7627,7 +7647,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
                             <p className="text-xs text-gray-500 font-bold mt-1">Precio Base: {formatCOP(plato.precio_venta)}</p>
                          </div>
                          <div className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold shadow-sm flex items-center gap-2">
-                           Ã¢Å Å¾ {gruposVinculados.length} Modificadores
+                           ⊞ {gruposVinculados.length} Modificadores
                          </div>
                        </div>
                        
@@ -7645,7 +7665,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
                                className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-all ${isLinked ? 'bg-white border-orange-500 shadow-md ring-1 ring-orange-500' : 'bg-white border-gray-200 hover:border-gray-300 opacity-70'}`}
                              >
                                 <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border ${isLinked ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white border-gray-300 text-transparent'}`}>
-                                  {isLinked ? <span style={{fontSize:'18px'}}>Ã¢Å“â€¦</span> : <span style={{fontSize:'18px'}}>Ã¢Å“â€¦</span>}
+                                  {isLinked ? <span style={{fontSize:'18px'}}>✔¦</span> : <span style={{fontSize:'18px'}}>✔¦</span>}
                                 </div>
                                 <div className="flex-1">
                                    <div className="flex items-center gap-2 mb-1">
@@ -7679,14 +7699,14 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <h3 className="font-black text-slate-800 flex items-center gap-2">Ã¢Å Å¾ {editingGroup ? 'Editar Grupo' : 'Nuevo Grupo de Modificadores'}</h3>
-                <button onClick={() => setShowGroupModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200">Ã¢Å“â€¢</button>
+                <h3 className="font-black text-slate-800 flex items-center gap-2">⊞ {editingGroup ? 'Editar Grupo' : 'Nuevo Grupo de Modificadores'}</h3>
+                <button onClick={() => setShowGroupModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200">✔¢</button>
              </div>
              
              <form onSubmit={handleSaveGroup} className="p-6">
                 {formError && (
                   <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-start gap-3 text-sm">
-                    <span style={{fontSize:'15px', lineHeight:1}}>Ã¢Å¡Â Ã¯Â¸Â</span>
+                    <span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>
                     <p className="font-semibold">{formError}</p>
                   </div>
                 )}
@@ -7743,7 +7763,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
           <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <h3 className="font-black text-slate-800">{editingOption ? 'Editar Opción' : 'Nueva Opción'}</h3>
-                <button onClick={() => setShowOptionModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200">Ã¢Å“â€¢</button>
+                <button onClick={() => setShowOptionModal(false)} className="text-gray-400 hover:text-slate-800 bg-white p-1 rounded-lg border border-gray-200">✔¢</button>
              </div>
              
              <form onSubmit={handleSaveOption} className="p-6 space-y-5">
@@ -7757,7 +7777,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
                 <div>
                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex justify-between items-center">
                                      <span>Precio Adicional (COP) <span className="text-red-500">*</span></span>
-                                     <span className="text-[9px] bg-slate-100 px-1 rounded text-slate-500 font-black">Ã¢â€°Â¥ $0</span>
+                                     <span className="text-[9px] bg-slate-100 px-1 rounded text-slate-500 font-black">≥ $0</span>
                                    </label>
                                    <div className="relative">
                                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
@@ -7781,7 +7801,7 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
 function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
   const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ STATE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── STATE ───────────────────────────────────────────────────────────────────
   // Panel open state: stores plato.id | null
   const [expandedPlato, setExpandedPlato] = React.useState(null);
   // Each plato has its own lineas state, keyed by plato.id -> []
@@ -7790,7 +7810,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
 
   const UNIDADES = ['g', 'kg', 'ml', 'l', 'und', 'cc'];
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HELPERS  Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── HELPERS  ─────────────────────────────────────────────────────────────────
   const fmt = (val) => {
     if (val === null || val === undefined || isNaN(Number(val))) return null;
     return '$' + Math.round(Number(val)).toLocaleString('es-CO');
@@ -7836,7 +7856,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
     return { color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' };
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ESCANDALLO OPEN/CLOSE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── ESCANDALLO OPEN/CLOSE ────────────────────────────────────────────────────
   const toggleEscandallo = (plato) => {
     if (expandedPlato === plato.id) { setExpandedPlato(null); return; }
     // Load lines if not already loaded for this plato
@@ -7896,7 +7916,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
     }));
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ FORMATO DE MONEDA Y PORCENTAJE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── FORMATO DE MONEDA Y PORCENTAJE ─────────────────────────────────────────────────────────────
   const formatCOP = (val) => {
     const n = parseFloat(val);
     if (isNaN(n) || val === null || val === undefined) return '–';
@@ -7910,7 +7930,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
     return (n * 100).toFixed(1) + '%';
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ENRICH PLATOS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── ENRICH PLATOS ─────────────────────────────────────────────────────────────
   // Lee directamente los campos enriquecidos que vienen del parser de 5_RECETAS
   const platosEnriquecidos = (platos || []).map(plato => {
     const pNorm = norm(plato.nombre);
@@ -7928,7 +7948,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
     };
   });;
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ ESCANDALLO PANEL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── ESCANDALLO PANEL ─────────────────────────────────────────────────────────
   const EscandalloPanel = ({ plato }) => {
     const lineas = getLineas(plato.id);
     const costoTotal = lineas.reduce((acc, l) => {
@@ -7946,14 +7966,14 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
             {/* HEADER */}
             <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14}}>
               <div style={{display:'flex', alignItems:'center', gap:10}}>
-                <span style={{fontSize:17}}>Ã¢Å“ÂÃ¯Â¸Â</span>
+                <span style={{fontSize:17}}>✍️</span>
                 <span style={{fontWeight:700, color:'#1E293B', fontSize:14}}>Escandallo – {plato.nombre}</span>
                 <span style={{fontSize:'9px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', background:'#F3F4F6', color:'#6B7280', borderRadius:5, padding:'2px 8px'}}>COMPOSICIÓN TÁ°CNICA</span>
               </div>
               <button
                 onClick={() => setExpandedPlato(null)}
                 style={{background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:8, padding:'4px 12px', fontSize:12, fontWeight:700, color:'#64748B', cursor:'pointer'}}
-              >Ã¢Å“â€¢ Cerrar</button>
+              >✔¢ Cerrar</button>
             </div>
 
             {/* SEARCH ROW */}
@@ -8070,7 +8090,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                               onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.color = '#DC2626'; }}
                               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#CBD5E1'; }}
                               title="Eliminar ingrediente"
-                            >Ã¢Å“â€¢</button>
+                            >✔¢</button>
                           </td>
                         </tr>
                       );
@@ -8122,7 +8142,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                   setExpandedPlato(null);
                 }}
                 style={{background:'#059669', color:'white', fontWeight:700, fontSize:13, padding:'8px 20px', borderRadius:12, border:'none', cursor:'pointer', boxShadow:'0 2px 8px rgba(5,150,105,0.25)'}}
-              >Ã¢Å“â€œ Guardar Receta</button>
+              >✔œ Guardar Receta</button>
             </div>
           </div>
         </td>
@@ -8130,7 +8150,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
     );
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RENDER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // ─── RENDER ───────────────────────────────────────────────────────────────────
   return (
     <div className="bg-white rounded-3xl border border-gray-200 shadow-sm flex flex-col overflow-hidden" style={{borderLeft:'4px solid #7C3AED'}}>
       {activeTab === 'platos' && (
@@ -8193,13 +8213,13 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                       {/* ALERTA FUGAS */}
                       <td className="px-4 py-3 text-center">
                         {plato.alertaState === 'sync' && (
-                          <span className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-2 py-1 border" style={{background:'#F0FDF4',color:'#15803D',borderColor:'#BBF7D0'}}>Ã¢Å“â€œ Sincronizado</span>
+                          <span className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-2 py-1 border" style={{background:'#F0FDF4',color:'#15803D',borderColor:'#BBF7D0'}}>✔œ Sincronizado</span>
                         )}
                         {plato.alertaState === 'fuga' && (
-                          <span className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-2 py-1 border" style={{background:'#FFFBEB',color:'#92400E',borderColor:'#FCD34D'}}>Ã¢Å¡Â  {plato.fugaMsg}</span>
+                          <span className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-2 py-1 border" style={{background:'#FFFBEB',color:'#92400E',borderColor:'#FCD34D'}}>⚠ {plato.fugaMsg}</span>
                         )}
                         {plato.alertaState === 'no_registrado' && (
-                          <span className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-2 py-1 border" style={{background:'#FEF2F2',color:'#DC2626',borderColor:'#FECACA'}}>Ã¢Å â€” {plato.fugaMsg || 'Consumo no registrado'}</span>
+                          <span className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-2 py-1 border" style={{background:'#FEF2F2',color:'#DC2626',borderColor:'#FECACA'}}>⊢” {plato.fugaMsg || 'Consumo no registrado'}</span>
                         )}
                       </td>
                       {/* ACCIONES */}
@@ -8224,7 +8244,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ TAB INSUMOS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* ── TAB INSUMOS ─────────────────────────────────────────────────────────── */}
       {activeTab === 'inventario' && (
         <div className="overflow-x-auto rounded-b-3xl">
           <table className="w-full text-left text-sm border-collapse bg-white">
@@ -8242,7 +8262,7 @@ function MenuRecetasBlock({ activeTab, platos, recetas, inventario }) {
                   <td className="p-4">
                     <span className="font-bold text-slate-700 block">{i.nombre}</span>
                     {i.stock_minimo_alerta > 0 && i.stock_actual <= i.stock_minimo_alerta && (
-                      <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Ã¢Å¡Â Ã¯Â¸Â CRáTICO</span>
+                      <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">⚠️ CRáTICO</span>
                     )}
                   </td>
                   <td className="p-4 text-slate-500 uppercase text-[11px] font-black tracking-wider bg-slate-50 w-32 border-x border-gray-50 text-center">{i.unidad_compra}</td>
@@ -8409,7 +8429,7 @@ function ViewMenu({
 
   const handleLimpiarCarta = async () => {
     const confirmado = window.confirm(
-      'Ã‚Â¿Estás seguro? Esto eliminará todas las categorías, platos, modificadores, recetas e inventario cargados. Esta acción no se puede deshacer.'
+      '¿Estás seguro? Esto eliminará todas las categorías, platos, modificadores, recetas e inventario cargados. Esta acción no se puede deshacer.'
     );
     if (!confirmado) return;
     setCategorias([]);
@@ -8435,7 +8455,7 @@ function ViewMenu({
   };
 
   const handleDescargarDB = () => {
-    const formato = window.prompt("Ã‚Â¿En qué formato deseas descargar? (Escribe 'CSV' o 'EXCEL')", "EXCEL");
+    const formato = window.prompt("¿En qué formato deseas descargar? (Escribe 'CSV' o 'EXCEL')", "EXCEL");
     if (!formato) return;
 
     if (formato.toUpperCase().trim() === 'EXCEL' && window.XLSX) {
@@ -8818,13 +8838,13 @@ function ViewMenu({
         setImporting(false);
         const platosConReceta = platosEnriquecidos.filter(p => p.tiene_receta).length;
         const platosSinReceta = platosEnriquecidos.filter(p => !p.tiene_receta).length;
-        alert(`Ã¢Å“â€¦ Importación exitosa:\n  🐟 ${cats.length} categorías\n  🍽 ${platosEnriquecidos.length} platos\n  🐟 ${Object.keys(platoData).length} platos con receta y análisis de margen\n  Ã¢Å¡Â Ã¯Â¸Â ${platosSinReceta} platos sin receta registrada en 5_RECETAS`);
+        alert(`✔¦ Importación exitosa:\n  🐟 ${cats.length} categorías\n  🍽 ${platosEnriquecidos.length} platos\n  🐟 ${Object.keys(platoData).length} platos con receta y análisis de margen\n  ⚠️ ${platosSinReceta} platos sin receta registrada en 5_RECETAS`);
 
       } catch (err) {
         console.error('Error Crítico Importación:', err);
         setImportError('Error al procesar el archivo. Asegúrate de que el formato sea correcto.');
         setImporting(false);
-        alert('Ã¢ÂÅ’ Error al importar: ' + err.message);
+        alert('❓ Error al importar: ' + err.message);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -8893,13 +8913,13 @@ function ViewMenu({
 
            {/* Importación Masiva – debajo del banner */}
            <div style={{background:'#0F1117', borderRadius:'var(--border-radius-lg)', padding:'1.5rem', position:'relative', overflow:'hidden'}}>
-             <div className="absolute -right-10 -bottom-10 text-slate-800 opacity-20">Ã¢ËœÂ</div>
+             <div className="absolute -right-10 -bottom-10 text-slate-800 opacity-20">☁</div>
              <div style={{display:'flex', alignItems:'center', justifyBetween:'space-between', position:'relative', zIndex:10}}>
                <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
-                 <span style={{fontSize:'20px', color:'white'}}>Ã¢Â¬â€ </span>
+                 <span style={{fontSize:'20px', color:'white'}}>⬆</span>
                  <div>
                    <h3 style={{fontWeight:500, fontSize:'16px', margin:0, color:'white'}}>Importación Masiva (CSV / Excel)</h3>
-                   <p style={{fontSize:'12px', color:'#9CA3AF', margin:0}}>Ã‚Â¿Tienes cientos de platos? Sube tu base de datos con un clic siguiendo la estructura requerida.</p>
+                   <p style={{fontSize:'12px', color:'#9CA3AF', margin:0}}>¿Tienes cientos de platos? Sube tu base de datos con un clic siguiendo la estructura requerida.</p>
                  </div>
                </div>
                <div style={{display:'flex', flexWrap:'wrap', gap:'8px'}}>
@@ -8922,7 +8942,7 @@ function ViewMenu({
                  <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'3px'}}>
                    <button onClick={handleSubirArchivo} style={{padding:'8px 16px', fontSize:'13px', border:'none', borderRadius:'6px', background:'#00A066', color:'white', cursor:'pointer', fontWeight:500}}>2. Subir Archivo CSV</button>
                    {fechaCarga && (
-                     <span style={{fontSize:'10px', color:'#9CA3AF', fontFamily:'monospace'}}>Ã¢Å“â€œ Cargado el {fechaCarga}</span>
+                     <span style={{fontSize:'10px', color:'#9CA3AF', fontFamily:'monospace'}}>✔œ Cargado el {fechaCarga}</span>
                    )}
                  </div>
                  <button onClick={handleGuardarCambios} className={`bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-2 rounded-xl shadow-sm cursor-pointer transition-colors ${loading ? 'opacity-75 cursor-wait' : ''}`} disabled={loading} style={{border:'none', display:'flex', alignItems:'center', gap:'8px', fontWeight:500, height:'36px'}}>
@@ -8945,7 +8965,7 @@ function ViewMenu({
               <h3 className="text-xl font-bold border-b border-gray-200 pb-2 mb-2 text-slate-800">CATEGORáA BASE – Estructura del Menú</h3>
               <p className="text-sm text-gray-500 mb-4">Se configura una vez. Es la base de todo lo demás.</p>
            </div>
-{/* Ã¢â€â‚¬Ã¢â€â‚¬ ACORDEÓN 1: CATEGORáAS Ã¢â€â‚¬Ã¢â€â‚¬ */}
+{/* ── ACORDEÓN 1: CATEGORáAS ── */}
             <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-indigo-500">
              <div
                 onClick={() => toggleSeccion('categorias')}
@@ -8970,7 +8990,7 @@ function ViewMenu({
                        onClick={(e) => { e.stopPropagation(); () => { window.alert("Funcionalidad CSV en desarrollo"); } }} 
                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-[10px] font-bold rounded-lg border border-gray-200 transition-colors flex items-center gap-1.5"
                     >
-                       Ã¢ËœÂ CSV
+                       ☁ CSV
                     </button>
                     <button 
                        onClick={(e) => { e.stopPropagation(); setShowModalCat(true); }} 
@@ -9002,7 +9022,7 @@ function ViewMenu({
                        </div>
                      </div>
                      <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                       <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-3 text-xl">Ã¢Å Å¾</div>
+                       <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-3 text-xl">⊞</div>
                        <h4 className="text-sm font-bold text-slate-700 mb-1">Aún no tienes categorías creadas</h4>
                        <p className="text-xs text-gray-400 max-w-sm leading-relaxed">Sube tu plantilla Excel para importar categorías masivamente, o crea una manualmente con el botón <strong>+ Nueva Categoría</strong> que aparecerá aquí.</p>
                      </div>
@@ -9014,7 +9034,7 @@ function ViewMenu({
              )}
            </div>
 
-           {/* Ã¢â€â‚¬Ã¢â€â‚¬ ACORDEÓN 2: PLATOS Ã¢â€â‚¬Ã¢â€â‚¬ */}
+           {/* ── ACORDEÓN 2: PLATOS ── */}
            <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-emerald-500">
             <div
                 onClick={() => toggleSeccion('platos')}
@@ -9040,7 +9060,7 @@ function ViewMenu({
                         onClick={() => setVistaPlatos('accordion')}
                         className={`px-2 py-1 rounded text-[10px] font-black transition-all ${vistaPlatos === 'accordion' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-400 hover:text-slate-600'}`}
                         title="Vista Acordeón"
-                      >Ã¢â€°Â¡</button>
+                      >≡</button>
                       {/* Vista tabla eliminada */}
                     </div>
 
@@ -9048,7 +9068,7 @@ function ViewMenu({
                        onClick={(e) => { e.stopPropagation(); setShowModalImportPlato(true); }} 
                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-[10px] font-bold rounded-lg border border-gray-200 transition-colors flex items-center gap-1.5"
                     >
-                       Ã¢ËœÂ CSV
+                       ☁ CSV
                     </button>
                     <button 
                        onClick={(e) => { e.stopPropagation(); setShowModalPlato(true); }} 
@@ -9096,14 +9116,14 @@ function ViewMenu({
              )}
            </div>
 
-           {/* Ã¢â€â‚¬Ã¢â€â‚¬ ACORDEÓN 3: MODIFICADORES Ã¢â€â‚¬Ã¢â€â‚¬ */}
+           {/* ── ACORDEÓN 3: MODIFICADORES ── */}
            <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-orange-500">
             <div
                 onClick={() => toggleSeccion('modificadores')}
                 className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-base shrink-0">Ã¢Å¡â„¢</div>
+                  <div className="w-9 h-9 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-base shrink-0">⚖</div>
                   <div className="text-left">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-black text-slate-800">3. Modificadores y Variantes</span>
@@ -9119,7 +9139,7 @@ function ViewMenu({
                          <button 
                             onClick={() => setViewModeMod('biblioteca')} 
                             className={`px-3 py-1.5 text-[9px] font-black rounded-md transition-all ${viewModeMod === 'biblioteca' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-500'}`}
-                         >Ã¢Å Å¾ Biblioteca</button>
+                         >⊞ Biblioteca</button>
                          <button 
                             onClick={() => setViewModeMod('por_plato')} 
                             className={`px-3 py-1.5 text-[9px] font-black rounded-md transition-all ${viewModeMod === 'por_plato' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-500'}`}
@@ -9150,12 +9170,12 @@ function ViewMenu({
                    <div className="bg-white">
                      <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/40">
                        <div className="flex gap-2 opacity-50">
-                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 py-2 bg-white rounded-lg border border-gray-200">Ã¢Å Å¾ Biblioteca de grupos</span>
+                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 py-2 bg-white rounded-lg border border-gray-200">⊞ Biblioteca de grupos</span>
                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 py-2 bg-white rounded-lg border border-gray-200">🍽 Asignación por plato</span>
                        </div>
                      </div>
                      <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                       <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-3 text-xl">Ã¢Å¡â„¢</div>
+                       <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-3 text-xl">⚖</div>
                        <h4 className="text-sm font-bold text-slate-700 mb-1">Aún no hay modificadores configurados</h4>
                        <p className="text-xs text-gray-400 max-w-sm leading-relaxed">Los modificadores se habilitarán una vez tengas platos activos en tu carta. Podrás crear grupos de opciones como términos de cocción, adiciones o exclusiones.</p>
                      </div>
@@ -9167,7 +9187,7 @@ function ViewMenu({
              )}
            </div>
 
-           {/* Ã¢â€â‚¬Ã¢â€â‚¬ ACORDEÓN 4: RECETAS Ã¢â€â‚¬Ã¢â€â‚¬ */}
+           {/* ── ACORDEÓN 4: RECETAS ── */}
            <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden border-l-4 border-l-purple-500">
             <div
                 onClick={() => toggleSeccion('recetas')}
@@ -9220,7 +9240,7 @@ function ViewMenu({
            {/* CATEGORáA A – Inteligencia Financiera */}
            <div className="mt-12 mb-6">
               <h3 className="text-xl font-bold border-b border-gray-200 pb-2 mb-2 text-indigo-900">CATEGORáA A – Inteligencia Financiera</h3>
-              <p className="text-sm text-gray-500 mb-4">Ã‚Â¿Estoy ganando o perdiendo dinero con cada plato?</p>
+              <p className="text-sm text-gray-500 mb-4">¿Estoy ganando o perdiendo dinero con cada plato?</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
               <div 
@@ -9231,7 +9251,7 @@ function ViewMenu({
                    <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">✨</div>
                    <h4 className="text-sm font-black text-slate-800">Simulador de Rentabilidad</h4>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed mb-4">Ã‚Â¿Qué pasa con tu margen si un insumo sube un 10%? Ã‚Â¿A qué precio debes vender para mantener el margen objetivo? Proyecta escenarios antes de que el problema llegue a la caja.</p>
+                <p className="text-xs text-gray-500 leading-relaxed mb-4">¿Qué pasa con tu margen si un insumo sube un 10%? ¿A qué precio debes vender para mantener el margen objetivo? Proyecta escenarios antes de que el problema llegue a la caja.</p>
                 <div className="flex flex-wrap gap-1.5">
                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🐟 Finanzas</span>
                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">🐟 Recetas e Inventario</span>
@@ -9251,7 +9271,7 @@ function ViewMenu({
              </div>
              <div className="bg-white border border-gray-200 text-left rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-blue-200">
                 <div className="flex items-center gap-3 mb-3">
-                   <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 text-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">Ã¢Å¡â€“Ã¯Â¸Â</div>
+                   <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 text-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">⚖️</div>
                    <h4 className="text-sm font-black text-slate-800">Costo Teórico vs. Costo Real</h4>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed mb-4">Compara lo que debió gastarse según las recetas con lo que realmente se gastó según el inventario físico. La diferencia revela desperdicios, porciones mal servidas o fugas.</p>
@@ -9263,7 +9283,7 @@ function ViewMenu({
              </div>
              <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-orange-200">
                 <div className="flex items-center gap-3 mb-3">
-                   <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 text-lg group-hover:bg-orange-600 group-hover:text-white transition-colors">Ã¢Â­Â</div>
+                   <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 text-lg group-hover:bg-orange-600 group-hover:text-white transition-colors">⭐</div>
                    <h4 className="text-sm font-black text-slate-800">Clasificación BCG del Plato</h4>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed mb-4">Clasifica automáticamente cada plato como Estrella, Caballo de Batalla, Puzle o Perro según su rentabilidad y popularidad. Decide qué promover, reformular o retirar de la carta.</p>
@@ -9279,7 +9299,7 @@ function ViewMenu({
            {/* CATEGORáA B – Control de Cocina y Producción */}
            <div className="mt-12 mb-6">
               <h3 className="text-xl font-bold border-b border-gray-200 pb-2 mb-2 text-emerald-900">CATEGORáA B – Control de Cocina y Producción</h3>
-              <p className="text-sm text-gray-500 mb-4">Ã‚Â¿Estoy cocinando al costo correcto y sin pérdidas ocultas?</p>
+              <p className="text-sm text-gray-500 mb-4">¿Estoy cocinando al costo correcto y sin pérdidas ocultas?</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
              <div className="bg-white border border-gray-200 text-left rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-yellow-300">
@@ -9308,7 +9328,7 @@ function ViewMenu({
              </div>
              <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-cyan-200">
                 <div className="flex items-center gap-3 mb-3">
-                   <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 text-lg group-hover:bg-cyan-600 group-hover:text-white transition-colors">Ã¢Å¡â€“Ã¯Â¸Â</div>
+                   <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 text-lg group-hover:bg-cyan-600 group-hover:text-white transition-colors">⚖️</div>
                    <h4 className="text-sm font-black text-slate-800">Conversión de Unidades de Compra vs. Unidades de Receta</h4>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed mb-4">El sistema traduce automáticamente entre la unidad en que compras (bulto, caja, litro) y la unidad en que cocinas (gramos, mililitros, unidades). El costo unitario siempre será exacto.</p>
@@ -9324,7 +9344,7 @@ function ViewMenu({
            {/* CATEGORáA C – Operaciones y Alertas en Tiempo Real */}
            <div className="mt-12 mb-6">
               <h3 className="text-xl font-bold border-b border-gray-200 pb-2 mb-2 text-red-900">CATEGORáA C – Operaciones y Alertas en Tiempo Real</h3>
-              <p className="text-sm text-gray-500 mb-4">Ã‚Â¿Algo está fallando ahora mismo?</p>
+              <p className="text-sm text-gray-500 mb-4">¿Algo está fallando ahora mismo?</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
              <div className="bg-white border text-left border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-300 group hover:border-red-200">
@@ -9395,7 +9415,7 @@ function ViewMenu({
           </div>
 
           <div>
-             <h3 className="dash-row-title mb-4">Ã¢ËœÂ 1. Origen de Datos del Menú</h3>
+             <h3 className="dash-row-title mb-4">☁ 1. Origen de Datos del Menú</h3>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm flex flex-col justify-center relative overflow-hidden hover:border-blue-300 transition-colors cursor-pointer group">
                    <div className="flex items-start justify-between mb-4">
@@ -9429,7 +9449,7 @@ function ViewMenu({
                       <div className="matrix-quadrant border-b border-r border-border">
                          <div className="flex justify-between items-start mb-2">
                             <span className="q-badge q-enigma"><span style={{fontSize:'15px', lineHeight:1}}>🐟</span> Enigmas (Puzzles)</span>
-                            <span className="text-xs font-black text-gray-400">Alto $ Ã¢â‚¬Â¢ Baja Pop.</span>
+                            <span className="text-xs font-black text-gray-400">Alto $ • Baja Pop.</span>
                          </div>
                          <p className="text-[10px] text-gray-500 mb-4 leading-relaxed">Muy rentables pero se venden poco. Necesitan visibilidad o nuevo nombre.</p>
                          <div className="space-y-2 mt-auto">
@@ -9441,10 +9461,10 @@ function ViewMenu({
                       <div className="matrix-quadrant border-b border-border bg-amber-50/10">
                          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-amber-100 to-transparent opacity-50"></div>
                          <div className="flex justify-between items-start mb-2 relative z-10">
-                            <span className="q-badge q-estrella"><span style={{fontSize:'16px', lineHeight:1}}>Ã¢Â­Â</span> Estrellas</span>
-                            <span className="text-xs font-black text-amber-600">Alto $ Ã¢â‚¬Â¢ Alta Pop.</span>
+                            <span className="q-badge q-estrella"><span style={{fontSize:'16px', lineHeight:1}}>⭐</span> Estrellas</span>
+                            <span className="text-xs font-black text-amber-600">Alto $ • Alta Pop.</span>
                          </div>
-                         <p className="text-[10px] text-gray-500 mb-4 leading-relaxed">Tus ganadores. Alta rentabilidad y muy populares. Ã‚Â¡No los toques, promociónalos!</p>
+                         <p className="text-[10px] text-gray-500 mb-4 leading-relaxed">Tus ganadores. Alta rentabilidad y muy populares. ¡No los toques, promociónalos!</p>
                          <div className="space-y-2 mt-auto relative z-10">
                             <div className="flex justify-between items-center bg-white p-1.5 rounded text-xs border border-amber-100 shadow-sm"><span className="font-bold text-slate-800 truncate">Lomo Fino Pimienta</span><span className="text-amber-600 font-black ml-2">65%</span></div>
                             <div className="flex justify-between items-center bg-white p-1.5 rounded text-xs border border-amber-100 shadow-sm"><span className="font-bold text-slate-800 truncate">Margarita Clásica</span><span className="text-amber-600 font-black ml-2">80%</span></div>
@@ -9454,8 +9474,8 @@ function ViewMenu({
 
                       <div className="matrix-quadrant border-r border-border bg-red-50/30">
                          <div className="flex justify-between items-start mb-2">
-                            <span className="q-badge q-perro"><span style={{fontSize:'15px', lineHeight:1}}>Ã¢â€ Ëœ</span> Perros (Dogs)</span>
-                            <span className="text-xs font-black text-red-400">Bajo $ Ã¢â‚¬Â¢ Baja Pop.</span>
+                            <span className="q-badge q-perro"><span style={{fontSize:'15px', lineHeight:1}}>↋œ</span> Perros (Dogs)</span>
+                            <span className="text-xs font-black text-red-400">Bajo $ • Baja Pop.</span>
                          </div>
                          <p className="text-[10px] text-gray-500 mb-4 leading-relaxed">Baja rentabilidad y nadie los pide. Ocupan espacio, inventario y tiempo.</p>
                          <div className="space-y-2 mt-auto">
@@ -9467,7 +9487,7 @@ function ViewMenu({
                       <div className="matrix-quadrant">
                          <div className="flex justify-between items-start mb-2">
                             <span className="q-badge q-caballo"><span style={{fontSize:'16px', lineHeight:1}}>🐟</span> Caballos (Plowhorses)</span>
-                            <span className="text-xs font-black text-blue-500">Bajo $ Ã¢â‚¬Â¢ Alta Pop.</span>
+                            <span className="text-xs font-black text-blue-500">Bajo $ • Alta Pop.</span>
                          </div>
                          <p className="text-[10px] text-gray-500 mb-4 leading-relaxed">Populares pero poco rentables. Reducir porción o subir precio sutilmente.</p>
                          <div className="space-y-2 mt-auto">
@@ -9602,12 +9622,12 @@ function ViewMenu({
         <React.Fragment>
           <div className="fixed inset-0 bg-black/10 z-[9998]" onClick={() => setShowToast(false)}></div>
           <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-emerald-200 shadow-2xl rounded-2xl px-8 py-5 flex gap-4 items-center z-[9999] transition-all" style={{ animation: 'toast-in 200ms ease-out forwards' }}>
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xl font-black shrink-0">Ã¢Å“â€œ</div>
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xl font-black shrink-0">✔œ</div>
             <p className="font-semibold text-slate-800 text-sm max-w-[260px] m-0 leading-tight">
               Tus cambios han sido guardados de manera automática exitosamente
             </p>
             <button onClick={() => setShowToast(false)} className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 flex items-center justify-center text-sm font-bold transition-colors ml-2 shrink-0 border-none cursor-pointer">
-              Ã¢Å“â€¢
+              ✔¢
             </button>
           </div>
           <style dangerouslySetInnerHTML={{__html: `
@@ -9692,7 +9712,7 @@ function ViewBrain() {
 
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-opacity-10">
           <div className="brain-chat-bubble brain-chat-user shadow-sm">
-            Ã‚Â¿Qué plato me está comiendo el margen esta semana?
+            ¿Qué plato me está comiendo el margen esta semana?
           </div>
           
           <div className="brain-chat-bubble brain-chat-ai flex flex-col gap-3 relative">
@@ -9720,8 +9740,8 @@ function ViewBrain() {
 
         <div className="p-4 bg-white border-t border-gray-100">
           <div className="flex gap-2 mb-3 overflow-x-auto pb-2 scrollbar-hide">
-            <button className="quick-prompt-btn">Ã‚Â¿Por qué bajaron mis ventas el martes?</button>
-            <button className="quick-prompt-btn">Ã‚Â¿Cuándo debo contratar otro mesero?</button>
+            <button className="quick-prompt-btn">¿Por qué bajaron mis ventas el martes?</button>
+            <button className="quick-prompt-btn">¿Cuándo debo contratar otro mesero?</button>
             <button className="quick-prompt-btn">Resumen de nómina</button>
           </div>
           <div className="relative flex items-center">
@@ -9737,7 +9757,7 @@ function ViewBrain() {
           <div className="bg-white rounded-2xl border-l-4 border-l-red-500 border-y border-r border-gray-200 p-5 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 w-16 h-16 bg-red-50 rounded-bl-full -z-0"></div>
             <div className="flex items-center gap-2 mb-3 relative z-10">
-              <span style={{fontSize:'15px', lineHeight:1}}>Ã¢Å¡Â Ã¯Â¸Â</span>
+              <span style={{fontSize:'15px', lineHeight:1}}>⚠️</span>
               <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Peligro</span>
             </div>
             <h4 className="text-sm font-bold text-slate-800 mb-2">Food Cost Crítico</h4>
@@ -9770,7 +9790,7 @@ function ViewBrain() {
           <div className="bg-white rounded-2xl border-l-4 border-l-blue-500 border-y border-r border-gray-200 p-5 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 w-16 h-16 bg-blue-50 rounded-bl-full -z-0"></div>
             <div className="flex items-center gap-2 mb-3 relative z-10">
-              <span style={{fontSize:'15px', lineHeight:1}}>Ã¢â€ºâ€¦</span>
+              <span style={{fontSize:'15px', lineHeight:1}}>⛔¦</span>
               <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Predicción 7 Días</span>
             </div>
             <h4 className="text-sm font-bold text-slate-800 mb-2">Demanda Fin de Semana</h4>
@@ -9809,12 +9829,12 @@ function ViewConectores() {
       </div>
 
       <div className="mt-10">
-        <h3 className="dash-row-title">Ã¢Å Å¾ Ecosistema Extendido & Especializado</h3>
+        <h3 className="dash-row-title">⊞ Ecosistema Extendido & Especializado</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
           <IntegrationCard title="Inventario & Proveedores" desc="Control de mermas y costos." icon={<span style={{fontSize:'15px', lineHeight:1}}>🐟</span>} badgeText="Importante" badgeType="blue" isSmall items={[{ name: "MarketMan" }, { name: "BlueCart" }]} />
           <IntegrationCard title="Nómina & Personal" desc="Productividad laboral." icon={<span style={{fontSize:'15px', lineHeight:1}}>🥗</span>} badgeText="Importante" badgeType="blue" isSmall items={[{ name: "7shifts", highlight: "#1 Restaurantes" }, { name: "Deputy" }]} />
           <IntegrationCard title="Contabilidad" desc="Sincronización de libros." icon={<span style={{fontSize:'15px', lineHeight:1}}>🐟</span>} badgeText="Importante" badgeType="blue" isSmall items={[{ name: "QuickBooks" }, { name: "Siigo (Colombia)" }]} />
-          <IntegrationCard title="Reseñas & Reputación" desc="Visibilidad directa." icon={<span style={{fontSize:'16px', lineHeight:1}}>Ã¢Â­Â</span>} badgeText="Visible en Dash" badgeType="gray" isSmall items={[{ name: "Google Business Profile" }, { name: "TripAdvisor" }]} />
+          <IntegrationCard title="Reseñas & Reputación" desc="Visibilidad directa." icon={<span style={{fontSize:'16px', lineHeight:1}}>⭐</span>} badgeText="Visible en Dash" badgeType="gray" isSmall items={[{ name: "Google Business Profile" }, { name: "TripAdvisor" }]} />
           <IntegrationCard title="Marketing & Fidelización" desc="Retención de clientes." icon={<span style={{fontSize:'15px', lineHeight:1}}>🐟</span>} badgeText="Growth" badgeType="gray" isSmall items={[{ name: "Mailchimp" }, { name: "WhatsApp Business API" }]} />
           <IntegrationCard title="Cocina & Operación" desc="Visualización de pedidos." icon={<span style={{fontSize:'15px', lineHeight:1}}>🐟</span>} badgeText="Operativo" badgeType="gray" isSmall items={[{ name: "Toast KDS" }, { name: "Square KDS" }]} />
         </div>
@@ -9916,9 +9936,9 @@ function ViewBilling() {
               {section.features.map((feature, fIdx) => (
                 <div className="pt-row" key={fIdx}>
                   <div className="pt-cell feature-col">{feature.name}</div>
-                  <div className="pt-cell">{feature.tiers[0] ? <span style={{fontSize:'18px'}}>Ã¢Å“â€¦</span> : <span style={{fontSize:'16px', lineHeight:1}}>Ã¢Ë†â€™</span>}</div>
-                  <div className="pt-cell bg-emerald-50/30">{feature.tiers[1] ? <span style={{fontSize:'18px'}}>Ã¢Å“â€¦</span> : <span style={{fontSize:'16px', lineHeight:1}}>Ã¢Ë†â€™</span>}</div>
-                  <div className="pt-cell">{feature.tiers[2] ? <span style={{fontSize:'18px'}}>Ã¢Å“â€¦</span> : <span style={{fontSize:'16px', lineHeight:1}}>Ã¢Ë†â€™</span>}</div>
+                  <div className="pt-cell">{feature.tiers[0] ? <span style={{fontSize:'18px'}}>✔¦</span> : <span style={{fontSize:'16px', lineHeight:1}}>−</span>}</div>
+                  <div className="pt-cell bg-emerald-50/30">{feature.tiers[1] ? <span style={{fontSize:'18px'}}>✔¦</span> : <span style={{fontSize:'16px', lineHeight:1}}>−</span>}</div>
+                  <div className="pt-cell">{feature.tiers[2] ? <span style={{fontSize:'18px'}}>✔¦</span> : <span style={{fontSize:'16px', lineHeight:1}}>−</span>}</div>
                 </div>
               ))}
             </React.Fragment>
@@ -10014,7 +10034,7 @@ function getTabTitle(tab) {
   return titles[tab] || 'Módulo Operativo';
 }
       
-      // Ã¢â€â‚¬Ã¢â€â‚¬ MOUNT: setTimeout para esperar transpilación de Babel Ã¢â€â‚¬Ã¢â€â‚¬
+      // ── MOUNT: setTimeout para esperar transpilación de Babel ──
       setTimeout(function() {
         try {
           const rootEl = document.getElementById('root');
@@ -10026,7 +10046,7 @@ function getTabTitle(tab) {
           console.error('Mount error:', e);
           const el = document.getElementById('root');
           if (el) el.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#DC2626;background:#FEF2F2;border-radius:12px;margin:20px">' +
-            '<h2 style="margin:0 0 12px">Ã¢Å¡Â Ã¯Â¸Â Error al cargar CartaYa</h2>' +
+            '<h2 style="margin:0 0 12px">⚠️ Error al cargar CartaYa</h2>' +
             '<p style="margin:0 0 8px"><strong>' + e.message + '</strong></p>' +
             '<p style="margin:0;color:#6B7280;font-size:13px">Abre la consola (F12) para ver el stack trace completo.</p>' +
             '</div>';
@@ -10069,7 +10089,7 @@ function SimuladorRentabilidad({ onClose, platos = [], inventario = [], recetas 
       <div className="flex items-center justify-between mb-8">
         <div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-800 flex items-center gap-2 text-sm font-bold mb-2 transition-colors">
-            Ã¢â€ Â Volver a Carta & Menú
+            ← Volver a Carta & Menú
           </button>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">Simulador de Rentabilidad</h2>
           <p className="text-slate-500 text-sm">Laboratorio de experimentación financiera para la optimización de márgenes.</p>
@@ -10167,7 +10187,7 @@ function SimuladorRentabilidad({ onClose, platos = [], inventario = [], recetas 
           </div>
 
           <div className="bg-indigo-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
-            <div className="absolute right-0 top-0 opacity-10 text-4xl p-4">Ã¢Å¡â€“Ã¯Â¸Â</div>
+            <div className="absolute right-0 top-0 opacity-10 text-4xl p-4">⚖️</div>
             <h4 className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-4">Impacto Mensual Estimado</h4>
             <div className="flex items-end gap-2 mb-1">
               <span className={`text-3xl font-black ${impactoPesos >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -10332,7 +10352,7 @@ function ActualizacionCostosProveedor({ onClose, platos = [], inventario = [], r
       <div className="flex items-center justify-between mb-8">
         <div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-800 flex items-center gap-2 text-sm font-bold mb-2 transition-colors">
-            Ã¢â€ Â Volver a Carta & Menú
+            ← Volver a Carta & Menú
           </button>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">Gestión de Costos por Proveedor</h2>
           <p className="text-slate-500 text-sm">Monitoreo dinámico de variaciones en insumos y su impacto en la carta.</p>
@@ -10449,7 +10469,7 @@ function ActualizacionCostosProveedor({ onClose, platos = [], inventario = [], r
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                              <span className={`text-sm font-black ${projectedMargen < 25 ? 'text-red-500' : 'text-amber-500'}`}>{projectedMargen.toFixed(1)}%</span>
-                             {projectedMargen < 25 && <span className="animate-pulse text-xs">Ã¢Å¡Â Ã¯Â¸Â</span>}
+                             {projectedMargen < 25 && <span className="animate-pulse text-xs">⚠️</span>}
                           </div>
                         </td>
                         <td className="px-6 py-4">
