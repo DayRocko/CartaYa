@@ -146,6 +146,120 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  // --- NUEVOS ENDPOINTS API (POST, PUT, DELETE) ---
+
+  // POST: Crear Plato
+  if (req.url === '/api/platos' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        const stmt = db.prepare(`
+          INSERT INTO platos_menu (nombre, categoria_nombre, precio_venta, descripcion_carta, foto_url, es_destacado, tiempo_prep_min, estado_inicial)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        const info = stmt.run(data.nombre, data.categoria_nombre, data.precio_venta, data.descripcion_carta, data.foto_url, data.es_destacado, data.tiempo_prep_min, data.estado || 'ACTIVO');
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'success', id: info.lastInsertRowid }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // PUT: Actualizar Plato
+  if (req.url.startsWith('/api/platos/') && req.method === 'PUT') {
+    const id = req.url.split('/').pop();
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        const stmt = db.prepare(`
+          UPDATE platos_menu 
+          SET nombre = ?, categoria_nombre = ?, precio_venta = ?, descripcion_carta = ?, foto_url = ?, es_destacado = ?, tiempo_prep_min = ?, estado_inicial = ?
+          WHERE id = ?
+        `);
+        stmt.run(data.nombre, data.categoria_nombre, data.precio_venta, data.descripcion_carta, data.foto_url, data.es_destacado, data.tiempo_prep_min, data.estado || 'ACTIVO', id);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'success' }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // DELETE: Eliminar Plato
+  if (req.url.startsWith('/api/platos/') && req.method === 'DELETE') {
+    const id = req.url.split('/').pop();
+    try {
+      db.prepare('DELETE FROM platos_menu WHERE id = ?').run(id);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'success' }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // POST: Crear Pedido (con lógica de inventario)
+  if (req.url === '/api/pedidos' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const order = JSON.parse(body);
+        
+        const transaction = db.transaction(() => {
+          const stmtPedido = db.prepare(`
+            INSERT INTO pedidos (mesa_numero, cliente_nombre, total, metodo_pago, canal)
+            VALUES (?, ?, ?, ?, ?)
+          `);
+          const info = stmtPedido.run(order.mesa_numero, order.cliente_nombre, order.total, order.metodo_pago, order.canal || 'LOCAL');
+          const pedidoId = info.lastInsertRowid;
+
+          const stmtItem = db.prepare(`
+            INSERT INTO items_pedido (pedido_id, plato_nombre, cantidad, precio_unitario, subtotal, modificadores)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `);
+
+          order.items.forEach(item => {
+            stmtItem.run(pedidoId, item.nombre, item.cantidad, item.precio_unitario, item.subtotal, JSON.stringify(item.modificadores));
+
+            const ingredientes = db.prepare('SELECT ingrediente_nombre, cantidad FROM recetas_ingredientes WHERE nombre_plato = ?').all(item.nombre);
+            ingredientes.forEach(ing => {
+              db.prepare(`
+                UPDATE inventario_insumos 
+                SET stock_actual = stock_actual - ? 
+                WHERE nombre = ?
+              `).run(ing.cantidad * item.cantidad, ing.ingrediente_nombre);
+            });
+          });
+
+          return pedidoId;
+        });
+
+        const pedidoId = transaction();
+        if (typeof broadcast === 'function') {
+          broadcast({ type: 'pedido.nuevo', pedidoId, total: order.total });
+        }
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'success', id: pedidoId }));
+      } catch (err) {
+        console.error('Error en POST /api/pedidos:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // POST: Toggle estado de categoría
   if (req.url === '/api/categorias/toggle' && req.method === 'POST') {
     let body = '';

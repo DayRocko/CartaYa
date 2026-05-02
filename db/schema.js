@@ -127,6 +127,34 @@ function initDB() {
     )
   `).run();
 
+  // TABLA: Pedidos
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS pedidos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      mesa_numero TEXT,
+      cliente_nombre TEXT,
+      total REAL,
+      estado TEXT DEFAULT 'PENDIENTE',
+      metodo_pago TEXT,
+      canal TEXT DEFAULT 'LOCAL',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
+  // TABLA: Items de Pedido
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS items_pedido (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pedido_id INTEGER,
+      plato_nombre TEXT,
+      cantidad INTEGER,
+      precio_unitario REAL,
+      subtotal REAL,
+      modificadores TEXT,
+      FOREIGN KEY(pedido_id) REFERENCES pedidos(id)
+    )
+  `).run();
+
   console.log(`[DB] Base de datos lista en: ${dbPath}`);
 }
 
