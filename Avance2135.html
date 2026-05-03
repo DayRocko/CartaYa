@@ -10,7 +10,7 @@
 
     
     <script>
-      const originalWarn = console.warn;
+      /* Suppressing repeated originalWarn */
       console.warn = function(...args) {
         if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) {
           return;
@@ -21,7 +21,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
-    const originalWarn = console.warn;
+    /* Suppressing repeated originalWarn */
     console.warn = (...args) => {
       const msg = args[0] || '';
       if (typeof msg === 'string' && (
@@ -615,7 +615,22 @@ function App() {
   const [platos, setPlatos] = useState([]);
   const [recetas, setRecetas] = useState([]); // FIX: Array instead of object to avoid filter() crash
   const [inventario, setInventario] = useState([]);
+  // STORE CENTRAL
+  /* cleaned */
+  const [stockMovimientos, setStockMovimientos] = useState([]);
   const [alertasInventario, setAlertasInventario] = useState([]);
+  const [transacciones, setTransacciones] = useState([]);
+
+  const onRegistrarPago = React.useCallback((payload) => {
+    setTransacciones(prev => [{
+      id: Date.now(),
+      fecha: new Date().toLocaleDateString('es-CO'),
+      total: payload.total || 0,
+    }, ...prev]);
+  }, []);
+  /* duplicate removed */
+
+  /* duplicate function removed */
   const [gruposMod, setGruposMod] = useState([]);
   const [opcionesMod, setOpcionesMod] = useState([]);
   const [vinculosMod, setVinculosMod] = useState([]);
@@ -905,7 +920,17 @@ function App() {
                 vinculosMod={vinculosMod}
               />
             )}
-            {activeTab === 'ventas-finanzas' && <ViewVentasFinanzas platos={platos} recetas={recetas} inventario={inventario} gruposMod={gruposMod} opcionesMod={opcionesMod} vinculosMod={vinculosMod} />}
+            {activeTab === 'ventas-finanzas' && (
+              <ViewVentasFinanzas
+                platos={platos}
+                recetas={recetas}
+                inventario={inventario}
+                gruposMod={gruposMod}
+                opcionesMod={opcionesMod}
+                vinculosMod={vinculosMod}
+                transacciones={transacciones}
+              />
+            )}
             {activeTab === 'inventario' && <ViewInventario inventario={inventario} setInventario={setInventario} platos={platos} recetas={recetas} />}
             {activeTab === 'delivery' && <ViewDelivery />}
             
@@ -939,7 +964,7 @@ function App() {
   );
 }
 
-function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [], vinculosMod = [] }) {
+function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [], vinculosMod = [], onRegistrarPago }) {
   const [posTab, setPosTab] = React.useState('caja'); // 'caja', 'mapa', 'cocina'
   const [activeZone, setActiveZone] = React.useState('Salón Principal');
   const [selectedMesa, setSelectedMesa] = React.useState(null);
@@ -1644,7 +1669,21 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                     {/* 7. ACCIONES */}
                     <div className="p-8 border-t border-slate-50 bg-slate-50/30 shrink-0">
                        <button 
-                         onClick={() => setCheckoutSuccess(true)}
+                         onClick={() => {
+    if (typeof onRegistrarPago === 'function') {
+      onRegistrarPago({
+        mesa: selectedMesa,
+        items: orderItems,
+        subtotal,
+        discountAmount,
+        impuesto,
+        tipAmount,
+        total,
+        metodoPago: paymentMethod,
+      });
+    }
+    onRegistrarPago({ mesa: selectedMesa, items: orderItems, total, subtotal, impuesto, tipAmount, discountAmount, metodoPago: paymentMethod }); setCheckoutSuccess(true);
+  }}
                          className="w-full bg-[#02a96b] hover:bg-[#028f5a] text-white py-6 rounded-[24px] font-black text-lg shadow-xl shadow-emerald-600/10 transition-all active:scale-[0.98] uppercase tracking-[0.1em] mb-4"
                        >
                          Registrar Pago
@@ -2332,7 +2371,7 @@ function ViewDashboard() {
          <h3 className="dash-row-title mb-4"><span style={{fontSize:'16px', lineHeight:1}}>🍰</span> Bloque 1: Ventas (El Pulso del Día)</h3>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Ingresos Totales (Hoy)" value="$3,250,000" delta="+12.5%" isUp vsText="vs. el martes pasado" icon={<span style={{fontSize:'16px', lineHeight:1}}>🍰</span>} />
-            <StatCard label="Ticket Promedio" value="$45,200" delta="+2.1%" isUp vsText="vs. promedio mensual" icon={<span style={{fontSize:'16px', lineHeight:1}}>🐟</span>} />
+            <StatCard label="Ticket Promedio" value="$45{kpis.ticketPromedio}" delta="+2.1%" isUp vsText="vs. promedio mensual" icon={<span style={{fontSize:'16px', lineHeight:1}}>🐟</span>} />
             <StatCard label="Clientes Atendidos" value="72 pax" delta="+5 pax" isUp vsText="Flujo constante" icon={<span style={{fontSize:'15px', lineHeight:1}}>🥗</span>} />
             <StatCard label="Avance Meta Diaria" value="85%" delta="Faltan $500k" isDanger={false} vsText="Meta: $3,750,000" highlightBadge="En Camino" icon={<span style={{fontSize:'15px', lineHeight:1}}>🐟</span>} />
          </div>
@@ -2454,7 +2493,19 @@ function ViewDashboard() {
 // =========================================================================
 // 2. VENTAS & FINANZAS (MÓDULO UNIFICADO)
 // =========================================================================
-function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [] }) {
+function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transacciones = [] }) {
+  const META_DIARIA = 2500000;
+
+  const kpis = React.useMemo(() => {
+    const hoy = new Date().toLocaleDateString('es-CO');
+    const tx = transacciones.filter(t => t.fecha === hoy);
+    const ingresos       = tx.reduce((s, t) => s + (t.total || 0), 0);
+    const tickets        = tx.length;
+    const ticketPromedio = tickets > 0 ? Math.round(ingresos / tickets) : 0;
+    const clientes       = tickets; // 1 mesa = 1 pax group
+    const avanceMeta     = Math.min(100, Math.round((ingresos / META_DIARIA) * 100));
+    return { ingresos, tickets, ticketPromedio, clientes, avanceMeta };
+  }, [transacciones]);
   const formatearMonto = (monto) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
   const compactMonto = (monto) => new Intl.NumberFormat('es-CO', { notation: "compact", compactDisplay: "short" }).format(monto);
 
@@ -2469,7 +2520,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [] }) {
   ];
   const maxVenta = Math.max(...ventasHora.map(d => d.v)) || 1;
 
-  const transacciones = [
+  const transaccionesMock = [
     { id: '1042', hora: '12:15', cliente: 'Mesa 4', canal: 'Salón', items: 4, total: 66000, estado: 'Pagado', eColor: 'emerald' },
     { id: '1043', hora: '12:30', cliente: 'Juan Pérez', canal: 'Delivery', items: 2, total: 48000, estado: 'En Ruta', eColor: 'purple' },
     { id: '1044', hora: '12:45', cliente: 'Ana Gómez', canal: 'Para llevar', items: 1, total: 34000, estado: 'Pagado', eColor: 'emerald' },
@@ -2526,7 +2577,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [] }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Ingresos Totales ({periodo}) <span className="text-lg">🍰</span></p>
-              <p className="text-2xl font-black text-slate-800">$2,105,000</p>
+              <p className="text-2xl font-black text-slate-800">$2{kpis.ingresos}</p>
               <div className="flex items-center gap-2 mt-2">
                  <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+14%</span>
                  <span className="text-[10px] font-bold text-gray-400">vs. el martes pasado</span>
@@ -2542,7 +2593,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [] }) {
            </div>
            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Clientes Atendidos <span className="text-lg">🥗</span></p>
-              <p className="text-2xl font-black text-slate-800">42 pax</p>
+              <p className="text-2xl font-black text-slate-800">{kpis.clientes} pax</p>
               <div className="flex items-center gap-2 mt-2">
                  <span className="text-[10px] font-black bg-gray-100 text-slate-600 px-1.5 py-0.5 rounded">+8</span>
                  <span className="text-[10px] font-bold text-gray-400">Flujo constante</span>
@@ -2550,9 +2601,9 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [] }) {
            </div>
            <div className="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm bg-emerald-50/30 flex flex-col justify-between relative overflow-hidden">
               <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex justify-between">Avance vs Meta Diaria <span className="text-lg">🐟</span></p>
-              <p className="text-2xl font-black text-emerald-700">84%</p>
+              <p className="text-2xl font-black text-emerald-700">{kpis.avanceMeta}%</p>
               <div className="mt-2">
-                 <div className="w-full bg-emerald-100 h-1.5 rounded-full overflow-hidden mb-1"><div className="bg-emerald-500 h-full rounded-full" style={{width: '84%'}}></div></div>
+                 <div className="w-full bg-emerald-100 h-1.5 rounded-full overflow-hidden mb-1"><div className="bg-emerald-500 h-full rounded-full" style={{width: '{kpis.avanceMeta}%'}}></div></div>
                  <span className="text-[10px] font-bold text-emerald-600">$2.1M / $2.5M · En Camino</span>
               </div>
            </div>
@@ -6284,7 +6335,9 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
   const handleToggleEstado = (cat) => {
     const nuevoEstado = cat.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA';
     if (nuevoEstado === 'INACTIVA') {
-      const ok = window.confirm(`⚠️ Al desactivar "${cat.nombre}" sus platos dejarán de aparecer en la carta.\n\n¿Continuar?`);
+      const ok = window.confirm(`⚠️ Al desactivar "${cat.nombre}" sus platos dejarán de aparecer en la carta.
+
+¿Continuar?`);
       if (!ok) return;
     }
     setCategorias(categorias.map(c => c.id === cat.id ? { ...c, estado: nuevoEstado } : c));
@@ -6297,7 +6350,9 @@ function MenuCategoriasBlock({ showModal, setShowModal, restauranteId, categoria
   };
 
   const handleDelete = (cat) => {
-    const ok = window.confirm(`🐟 ¿Eliminar la categoría "${cat.nombre}"?\n\nEsta acción es irreversible.`);
+    const ok = window.confirm(`🐟 ¿Eliminar la categoría "${cat.nombre}"?
+
+Esta acción es irreversible.`);
     if (!ok) return;
     setCategorias(categorias.filter(c => c.id !== cat.id));
   };
@@ -7441,7 +7496,8 @@ function MenuModificadoresBlock({ viewMode, showGroupModal, setShowGroupModal, r
     if (nuevoEstado === 'INACTIVO' && (grupo.tipo_seleccion === 'UNICA' || grupo.tipo_seleccion === 'MULTIPLE')) {
       const isLinked = vinculos.some(v => v.grupo_id === grupo.id);
       if (isLinked) {
-        if (!window.confirm(`⚠️ Este grupo es obligatorio en uno o más platos. Desactivarlo puede impedir tomar órdenes correctamente.\n¿Deseas continuar?`)) return;
+        if (!window.confirm(`⚠️ Este grupo es obligatorio en uno o más platos. Desactivarlo puede impedir tomar órdenes correctamente.
+¿Deseas continuar?`)) return;
       }
     }
     setGrupos(grupos.map(g => g.id === grupo.id ? { ...g, estado: nuevoEstado } : g));
@@ -8838,7 +8894,11 @@ function ViewMenu({
         setImporting(false);
         const platosConReceta = platosEnriquecidos.filter(p => p.tiene_receta).length;
         const platosSinReceta = platosEnriquecidos.filter(p => !p.tiene_receta).length;
-        alert(`✔¦ Importación exitosa:\n  🐟 ${cats.length} categorías\n  🍽 ${platosEnriquecidos.length} platos\n  🐟 ${Object.keys(platoData).length} platos con receta y análisis de margen\n  ⚠️ ${platosSinReceta} platos sin receta registrada en 5_RECETAS`);
+        alert(`✔¦ Importación exitosa:
+  🐟 ${cats.length} categorías
+  🍽 ${platosEnriquecidos.length} platos
+  🐟 ${Object.keys(platoData).length} platos con receta y análisis de margen
+  ⚠️ ${platosSinReceta} platos sin receta registrada en 5_RECETAS`);
 
       } catch (err) {
         console.error('Error Crítico Importación:', err);
