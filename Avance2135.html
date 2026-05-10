@@ -619,14 +619,71 @@ function App() {
   /* cleaned */
   const [stockMovimientos, setStockMovimientos] = useState([]);
   const [alertasInventario, setAlertasInventario] = useState([]);
-  const [transacciones, setTransacciones] = useState([]);
+  const [toastMessage, setToastMessage] = useState(null);
+  const showToast = (tipo, mensaje) => {
+    setToastMessage({ tipo, mensaje });
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const [transacciones, setTransacciones] = useState(() => {
+    try {
+      const saved = localStorage.getItem('longitudinal_ingresos_hoy');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.transacciones || [];
+      }
+    } catch (e) {
+      console.warn('Error loading transacciones:', e);
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('longitudinal_ingresos_hoy');
+      const current = saved ? JSON.parse(saved) : { total: 0, cantidadVentas: 0, transacciones: [] };
+      current.transacciones = transacciones;
+      current.total = transacciones.reduce((sum, t) => sum + (t.total || 0), 0);
+      current.cantidadVentas = transacciones.length;
+      localStorage.setItem('longitudinal_ingresos_hoy', JSON.stringify(current));
+    } catch (e) {
+      console.warn('Error saving transacciones:', e);
+    }
+  }, [transacciones]);
+
+  const handleCierreCaja = () => {
+    const confirmar = window.confirm('¿Confirmas el cierre de caja? Se reiniciarán los ingresos del día. Esta acción no se puede deshacer.');
+    if (!confirmar) return;
+
+    try {
+      const historial = JSON.parse(localStorage.getItem('longitudinal_historial_cierres') || '[]');
+      historial.push({
+        transacciones,
+        fechaCierre: new Date().toLocaleString('es-CO'),
+        timestamp: Date.now()
+      });
+      localStorage.setItem('longitudinal_historial_cierres', JSON.stringify(historial));
+      
+      setTransacciones([]);
+      localStorage.removeItem('longitudinal_ingresos_hoy');
+      showToast('success', '✅ Cierre de caja ejecutado · Ingresos reiniciados a $0');
+    } catch(e) {
+      console.warn('Error en cierre de caja:', e);
+    }
+  };
 
   const onRegistrarPago = React.useCallback((payload) => {
     setTransacciones(prev => [{
       id: Date.now(),
       fecha: new Date().toLocaleDateString('es-CO'),
       total: payload.total || 0,
+      metodoPago: payload.metodoPago || 'Efectivo',
+      mesa: payload.mesa ? payload.mesa.numero : '—',
+      items: payload.items || [],
+      hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      vuelto: payload.metodoPago === 'Efectivo' ? (payload.efectivoRecibido - payload.total || 0) : 0
     }, ...prev]);
+    showToast('success', `✅ Pago registrado · $${(payload.total || 0).toLocaleString()} · ${payload.metodoPago || 'Efectivo'}`);
   }, []);
   /* duplicate removed */
 
@@ -910,7 +967,7 @@ function App() {
           )}
 
           <div className="flex-1 overflow-y-auto p-10">
-            {activeTab === 'dashboard' && <ViewDashboard />}
+            {activeTab === 'dashboard' && <ViewDashboard transacciones={transacciones} />}
             {activeTab === 'pos' && (
               <ViewPOS
                 categorias={categorias}
@@ -918,6 +975,7 @@ function App() {
                 gruposMod={gruposMod}
                 opcionesMod={opcionesMod}
                 vinculosMod={vinculosMod}
+                onRegistrarPago={onRegistrarPago}
               />
             )}
             {activeTab === 'ventas-finanzas' && (
@@ -929,6 +987,7 @@ function App() {
                 opcionesMod={opcionesMod}
                 vinculosMod={vinculosMod}
                 transacciones={transacciones}
+                onCierreCaja={handleCierreCaja}
               />
             )}
             {activeTab === 'inventario' && <ViewInventario inventario={inventario} setInventario={setInventario} platos={platos} recetas={recetas} />}
@@ -960,6 +1019,13 @@ function App() {
           </div>
         </main>
       </div>
+      
+      {/* TOAST NOTIFICATIONS */}
+      {toastMessage && (
+        <div className={`fixed bottom-6 right-6 p-4 rounded-xl text-[13px] font-bold text-white shadow-xl z-[9999] transition-all animate-in slide-in-from-bottom-4 ${toastMessage.tipo === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
+          {toastMessage.mensaje}
+        </div>
+      )}
     </>
   );
 }
@@ -1019,6 +1085,7 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
   const [searchQuery, setSearchQuery] = React.useState('');
   const [tipPercentage, setTipPercentage] = React.useState(10);
   const [discountPercentage, setDiscountPercentage] = React.useState(0);
+  const [isProcessingPago, setIsProcessingPago] = React.useState(false);
 
   const getStatusConfig = (status) => {
     switch (status) {
@@ -1669,24 +1736,36 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
                     {/* 7. ACCIONES */}
                     <div className="p-8 border-t border-slate-50 bg-slate-50/30 shrink-0">
                        <button 
+                         disabled={isProcessingPago}
                          onClick={() => {
-    if (typeof onRegistrarPago === 'function') {
-      onRegistrarPago({
-        mesa: selectedMesa,
-        items: orderItems,
-        subtotal,
-        discountAmount,
-        impuesto,
-        tipAmount,
-        total,
-        metodoPago: paymentMethod,
-      });
-    }
-    onRegistrarPago({ mesa: selectedMesa, items: orderItems, total, subtotal, impuesto, tipAmount, discountAmount, metodoPago: paymentMethod }); setCheckoutSuccess(true);
-  }}
-                         className="w-full bg-[#02a96b] hover:bg-[#028f5a] text-white py-6 rounded-[24px] font-black text-lg shadow-xl shadow-emerald-600/10 transition-all active:scale-[0.98] uppercase tracking-[0.1em] mb-4"
+                           if (isProcessingPago) return;
+                           setIsProcessingPago(true);
+                           if (typeof onRegistrarPago === 'function') {
+                             let methodToSave = paymentMethod;
+                             if (paymentMethod === 'Tarjeta') methodToSave = 'Tarjeta crédito';
+                             else if (['Nequi', 'Daviplata'].includes(paymentMethod)) methodToSave = 'Transferencia';
+                             else if (paymentMethod === 'Cortesía') methodToSave = 'Otros';
+
+                             onRegistrarPago({
+                               mesa: selectedMesa,
+                               items: orderItems,
+                               subtotal,
+                               discountAmount,
+                               impuesto,
+                               tipAmount,
+                               total,
+                               metodoPago: methodToSave,
+                               efectivoRecibido: Number(cashReceived) || total
+                             });
+                           }
+                           setTimeout(() => {
+                             setIsProcessingPago(false);
+                             setCheckoutSuccess(true);
+                           }, 300);
+                         }}
+                         className={`w-full bg-[#02a96b] hover:bg-[#028f5a] text-white py-6 rounded-[24px] font-black text-lg shadow-xl shadow-emerald-600/10 transition-all uppercase tracking-[0.1em] mb-4 ${isProcessingPago ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98]'}`}
                        >
-                         Registrar Pago
+                         {isProcessingPago ? 'Procesando...' : 'Registrar Pago'}
                        </button>
                        <div className="grid grid-cols-2 gap-3">
                           <button 
@@ -2359,21 +2438,35 @@ function ViewPOS({ categorias = [], platos = [], gruposMod = [], opcionesMod = [
     </div>
   );
 }
+
 // =========================================================================
 // 1. DASHBOARD PRINCIPAL (ACTUALIZADO SEGÚN REGLAS Y REQUISITOS)
 // =========================================================================
-function ViewDashboard() {
+function ViewDashboard({ transacciones = [] }) {
+  const META_DIARIA = 3750000;
+  const kpis = React.useMemo(() => {
+    const hoy = new Date().toLocaleDateString('es-CO');
+    const tx = transacciones.filter(t => t.fecha === hoy);
+    const ingresos = tx.reduce((s, t) => s + (t.total || 0), 0);
+    const tickets = tx.length;
+    const ticketPromedio = tickets > 0 ? Math.round(ingresos / tickets) : 0;
+    const clientes = tickets; 
+    const avanceMeta = Math.min(100, Math.round((ingresos / META_DIARIA) * 100));
+    return { ingresos, tickets, ticketPromedio, clientes, avanceMeta };
+  }, [transacciones]);
+  const formatearMonto = (monto) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-10">
       
-      {/* Bloque 1 – Ventas (resumen financiero del día) */}
+      {/* Bloque 1 –  Ventas (resumen financiero del día) */}
       <div>
          <h3 className="dash-row-title mb-4"><span style={{fontSize:'16px', lineHeight:1}}>🍰</span> Bloque 1: Ventas (El Pulso del Día)</h3>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Ingresos Totales (Hoy)" value="$3,250,000" delta="+12.5%" isUp vsText="vs. el martes pasado" icon={<span style={{fontSize:'16px', lineHeight:1}}>🍰</span>} />
-            <StatCard label="Ticket Promedio" value="$45{kpis.ticketPromedio}" delta="+2.1%" isUp vsText="vs. promedio mensual" icon={<span style={{fontSize:'16px', lineHeight:1}}>🐟</span>} />
-            <StatCard label="Clientes Atendidos" value="72 pax" delta="+5 pax" isUp vsText="Flujo constante" icon={<span style={{fontSize:'15px', lineHeight:1}}>🥗</span>} />
-            <StatCard label="Avance Meta Diaria" value="85%" delta="Faltan $500k" isDanger={false} vsText="Meta: $3,750,000" highlightBadge="En Camino" icon={<span style={{fontSize:'15px', lineHeight:1}}>🐟</span>} />
+            <StatCard label="Ingresos Totales (Hoy)" value={formatearMonto(kpis.ingresos)} delta="+12.5%" isUp vsText="vs. el martes pasado" icon={<span style={{fontSize:'16px', lineHeight:1}}>🍰</span>} />
+            <StatCard label="Ticket Promedio" value={formatearMonto(kpis.ticketPromedio)} delta="+2.1%" isUp vsText="vs. promedio mensual" icon={<span style={{fontSize:'16px', lineHeight:1}}>🐟</span>} />
+            <StatCard label="Clientes Atendidos" value={`${kpis.clientes} pax`} delta="+5 pax" isUp vsText="Flujo constante" icon={<span style={{fontSize:'15px', lineHeight:1}}>🥗</span>} />
+            <StatCard label="Avance Meta Diaria" value={`${kpis.avanceMeta}%`} delta={`Faltan ${formatearMonto(META_DIARIA - kpis.ingresos)}`} isDanger={false} vsText={`Meta: ${formatearMonto(META_DIARIA)}`} highlightBadge="En Camino" icon={<span style={{fontSize:'15px', lineHeight:1}}>🐟</span>} />
          </div>
       </div>
 
@@ -2493,7 +2586,7 @@ function ViewDashboard() {
 // =========================================================================
 // 2. VENTAS & FINANZAS (MÓDULO UNIFICADO)
 // =========================================================================
-function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transacciones = [] }) {
+function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transacciones = [], onCierreCaja }) {
   const META_DIARIA = 2500000;
 
   const kpis = React.useMemo(() => {
@@ -2506,6 +2599,23 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
     const avanceMeta     = Math.min(100, Math.round((ingresos / META_DIARIA) * 100));
     return { ingresos, tickets, ticketPromedio, clientes, avanceMeta };
   }, [transacciones]);
+
+  const desgloseMetodos = React.useMemo(() => {
+    const hoy = new Date().toLocaleDateString('es-CO');
+    const tx = transacciones.filter(t => t.fecha === hoy);
+    const metodos = { 'Efectivo': 0, 'Tarjeta débito': 0, 'Tarjeta crédito': 0, 'Transferencia': 0, 'Otros': 0 };
+    tx.forEach(t => {
+      const p = t.metodoPago || 'Efectivo';
+      const m = t.total || 0;
+      if (metodos[p] !== undefined) {
+        metodos[p] += m;
+      } else {
+        metodos['Otros'] += m;
+      }
+    });
+    return metodos;
+  }, [transacciones]);
+
   const formatearMonto = (monto) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
   const compactMonto = (monto) => new Intl.NumberFormat('es-CO', { notation: "compact", compactDisplay: "short" }).format(monto);
 
@@ -2564,7 +2674,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
            <button className="px-4 py-2 bg-white border border-gray-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-tight hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
               🥗 Exportar P&L
            </button>
-           <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-tight hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-100">
+           <button onClick={onCierreCaja} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-tight hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-100">
               Cierre de Caja
            </button>
         </div>
@@ -2577,7 +2687,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Ingresos Totales ({periodo}) <span className="text-lg">🍰</span></p>
-              <p className="text-2xl font-black text-slate-800">$2{kpis.ingresos}</p>
+              <p className="text-2xl font-black text-slate-800">{formatearMonto(kpis.ingresos)}</p>
               <div className="flex items-center gap-2 mt-2">
                  <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+14%</span>
                  <span className="text-[10px] font-bold text-gray-400">vs. el martes pasado</span>
@@ -2585,7 +2695,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
            </div>
            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex justify-between">Ticket Promedio <span className="text-lg">🐟</span></p>
-              <p className="text-2xl font-black text-slate-800">$65,200</p>
+              <p className="text-2xl font-black text-slate-800">{formatearMonto(kpis.ticketPromedio)}</p>
               <div className="flex items-center gap-2 mt-2">
                  <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">+5%</span>
                  <span className="text-[10px] font-bold text-gray-400">vs. promedio mensual</span>
@@ -2624,31 +2734,27 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
               </div>
            </div>
            <div className="lg:col-span-4 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
-              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Mix de Canales</h3>
-              <div className="space-y-5 flex-1 justify-center flex flex-col">
-                 <div>
-                    <div className="flex justify-between items-center mb-1">
-                       <span className="text-xs font-black text-slate-800 flex items-center gap-2">🍽 Salón <span className="text-[9px] text-gray-400">(60%)</span></span>
-                       <span className="text-xs font-black text-slate-800">$1.26M</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden mb-1"><div className="h-full bg-indigo-500 rounded-full" style={{width: '60%'}}></div></div>
-                    <p className="text-[9px] text-gray-400 font-bold text-right">+2% vs ayer</p>
+              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Desglose por Método de Pago</h3>
+              <div className="space-y-4 flex-1 justify-center flex flex-col">
+                 <div className="flex justify-between items-center pb-2 border-b border-gray-50">
+                    <span className="text-xs font-black text-slate-800 flex items-center gap-2">💵 Efectivo</span>
+                    <span className="text-xs font-black text-emerald-600" id="desglose-efectivo">{formatearMonto(desgloseMetodos['Efectivo'])}</span>
                  </div>
-                 <div>
-                    <div className="flex justify-between items-center mb-1">
-                       <span className="text-xs font-black text-slate-800 flex items-center gap-2">🐟 Delivery <span className="text-[9px] text-gray-400">(30%)</span></span>
-                       <span className="text-xs font-black text-slate-800">$630K</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden mb-1"><div className="h-full bg-emerald-500 rounded-full" style={{width: '30%'}}></div></div>
-                    <p className="text-[9px] text-gray-400 font-bold text-right">-1.5% vs ayer</p>
+                 <div className="flex justify-between items-center pb-2 border-b border-gray-50">
+                    <span className="text-xs font-black text-slate-800 flex items-center gap-2">💳 Tarjeta débito</span>
+                    <span className="text-xs font-black text-slate-800" id="desglose-tarjeta-debito">{formatearMonto(desgloseMetodos['Tarjeta débito'])}</span>
                  </div>
-                 <div>
-                    <div className="flex justify-between items-center mb-1">
-                       <span className="text-xs font-black text-slate-800 flex items-center gap-2">🐟 Para Llevar <span className="text-[9px] text-gray-400">(10%)</span></span>
-                       <span className="text-xs font-black text-slate-800">$215K</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden mb-1"><div className="h-full bg-amber-500 rounded-full" style={{width: '10%'}}></div></div>
-                    <p className="text-[9px] text-gray-400 font-bold text-right">+4% vs ayer</p>
+                 <div className="flex justify-between items-center pb-2 border-b border-gray-50">
+                    <span className="text-xs font-black text-slate-800 flex items-center gap-2">💳 Tarjeta crédito</span>
+                    <span className="text-xs font-black text-slate-800" id="desglose-tarjeta-credito">{formatearMonto(desgloseMetodos['Tarjeta crédito'])}</span>
+                 </div>
+                 <div className="flex justify-between items-center pb-2 border-b border-gray-50">
+                    <span className="text-xs font-black text-slate-800 flex items-center gap-2">📲 Transferencia</span>
+                    <span className="text-xs font-black text-slate-800" id="desglose-transferencia">{formatearMonto(desgloseMetodos['Transferencia'])}</span>
+                 </div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-xs font-black text-slate-800 flex items-center gap-2">🔄 Otros</span>
+                    <span className="text-xs font-black text-slate-800" id="desglose-otros">{formatearMonto(desgloseMetodos['Otros'])}</span>
                  </div>
               </div>
            </div>
@@ -2683,13 +2789,13 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
                     <tbody className="divide-y divide-gray-50">
                        {transacciones.map((t, i) => (
                           <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                             <td className="p-3 pl-6 text-xs font-black text-slate-800">#{t.id}</td>
-                             <td className="p-3 text-xs font-bold text-gray-500">{t.hora}</td>
-                             <td className="p-3 text-xs font-bold text-slate-700">{t.cliente}</td>
-                             <td className="p-3"><span className="text-[9px] font-black px-2 py-1 rounded bg-gray-100 text-slate-600">{t.canal}</span></td>
-                             <td className="p-3 text-xs font-bold text-gray-500 text-center">{t.items}</td>
+                             <td className="p-3 pl-6 text-xs font-black text-slate-800">#{String(t.id).slice(-6)}</td>
+                             <td className="p-3 text-xs font-bold text-gray-500">{t.hora || '-'}</td>
+                             <td className="p-3 text-xs font-bold text-slate-700">{t.mesa ? `Mesa ${t.mesa}` : 'Mostrador'}</td>
+                             <td className="p-3"><span className="text-[9px] font-black px-2 py-1 rounded bg-gray-100 text-slate-600">{t.metodoPago || 'Efectivo'}</span></td>
+                             <td className="p-3 text-xs font-bold text-gray-500 text-center">{t.items?.length || 0}</td>
                              <td className="p-3 text-xs font-black text-slate-800">{formatearMonto(t.total)}</td>
-                             <td className="p-3"><span className={`text-[9px] font-black px-2 py-1 rounded bg-${t.eColor}-50 text-${t.eColor}-600 border border-${t.eColor}-100`}>{t.estado}</span></td>
+                             <td className="p-3"><span className="text-[9px] font-black px-2 py-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">Pagado</span></td>
                              <td className="p-3 text-right pr-6"><button onClick={() => setOrdenSeleccionada(t)} className="text-[10px] font-black text-emerald-600 hover:text-emerald-800 uppercase tracking-tight">Ver Detalle</button></td>
                           </tr>
                        ))}
