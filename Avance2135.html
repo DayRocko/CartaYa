@@ -20,6 +20,7 @@
     </script>
 <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <script>
     /* Suppressing repeated originalWarn */
     console.warn = (...args) => {
@@ -684,10 +685,9 @@ function App() {
       vuelto: payload.metodoPago === 'Efectivo' ? (payload.efectivoRecibido - payload.total || 0) : 0
     }, ...prev]);
     showToast('success', `✅ Pago registrado · $${(payload.total || 0).toLocaleString()} · ${payload.metodoPago || 'Efectivo'}`);
+    document.dispatchEvent(new CustomEvent('pago-registrado'));
   }, []);
-  /* duplicate removed */
 
-  /* duplicate function removed */
   const [gruposMod, setGruposMod] = useState([]);
   const [opcionesMod, setOpcionesMod] = useState([]);
   const [vinculosMod, setVinculosMod] = useState([]);
@@ -2446,7 +2446,8 @@ function ViewDashboard({ transacciones = [] }) {
   const META_DIARIA = 3750000;
   const kpis = React.useMemo(() => {
     const hoy = new Date().toLocaleDateString('es-CO');
-    const tx = transacciones.filter(t => t.fecha === hoy);
+    // Consider both the live array and what's in storage to ensure today's data is accurate
+    const tx = (transacciones || []).filter(t => t && t.fecha === hoy);
     const ingresos = tx.reduce((s, t) => s + (t.total || 0), 0);
     const tickets = tx.length;
     const ticketPromedio = tickets > 0 ? Math.round(ingresos / tickets) : 0;
@@ -2590,19 +2591,17 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
   const META_DIARIA = 2500000;
 
   const kpis = React.useMemo(() => {
-    const hoy = new Date().toLocaleDateString('es-CO');
-    const tx = transacciones.filter(t => t.fecha === hoy);
+    const tx = transaccionesVisibles || [];
     const ingresos       = tx.reduce((s, t) => s + (t.total || 0), 0);
     const tickets        = tx.length;
     const ticketPromedio = tickets > 0 ? Math.round(ingresos / tickets) : 0;
     const clientes       = tickets; // 1 mesa = 1 pax group
     const avanceMeta     = Math.min(100, Math.round((ingresos / META_DIARIA) * 100));
     return { ingresos, tickets, ticketPromedio, clientes, avanceMeta };
-  }, [transacciones]);
+  }, [transaccionesVisibles]);
 
   const desgloseMetodos = React.useMemo(() => {
-    const hoy = new Date().toLocaleDateString('es-CO');
-    const tx = transacciones.filter(t => t.fecha === hoy);
+    const tx = transaccionesVisibles || [];
     const metodos = { 'Efectivo': 0, 'Tarjeta débito': 0, 'Tarjeta crédito': 0, 'Transferencia': 0, 'Otros': 0 };
     tx.forEach(t => {
       const p = t.metodoPago || 'Efectivo';
@@ -2614,7 +2613,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
       }
     });
     return metodos;
-  }, [transacciones]);
+  }, [transaccionesVisibles]);
 
   const formatearMonto = (monto) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(monto);
   const compactMonto = (monto) => new Intl.NumberFormat('es-CO', { notation: "compact", compactDisplay: "short" }).format(monto);
@@ -2622,34 +2621,189 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
   const [periodo, setPeriodo] = React.useState('Hoy');
   const [ordenSeleccionada, setOrdenSeleccionada] = React.useState(null);
 
-  // MOCK DATA VENTAS
-  const ventasHora = [
-    {h: '11am', v: 0}, {h: '12pm', v: 140000}, {h: '1pm', v: 260000}, {h: '2pm', v: 180000}, {h: '3pm', v: 60000},
-    {h: '4pm', v: 0}, {h: '5pm', v: 45000}, {h: '6pm', v: 190000}, {h: '7pm', v: 380000}, {h: '8pm', v: 420000},
-    {h: '9pm', v: 310000}, {h: '10pm', v: 120000}
-  ];
-  const maxVenta = Math.max(...ventasHora.map(d => d.v)) || 1;
-
-  const transaccionesMock = [
-    { id: '1042', hora: '12:15', cliente: 'Mesa 4', canal: 'Salón', items: 4, total: 66000, estado: 'Pagado', eColor: 'emerald' },
-    { id: '1043', hora: '12:30', cliente: 'Juan Pérez', canal: 'Delivery', items: 2, total: 48000, estado: 'En Ruta', eColor: 'purple' },
-    { id: '1044', hora: '12:45', cliente: 'Ana Gómez', canal: 'Para llevar', items: 1, total: 34000, estado: 'Pagado', eColor: 'emerald' },
-    { id: '1045', hora: '13:10', cliente: 'Mesa 12', canal: 'Salón', items: 4, total: 100000, estado: 'Abierta', eColor: 'blue' },
-    { id: '1046', hora: '13:25', cliente: 'Carlos R.', canal: 'Delivery', items: 2, total: 66000, estado: 'Pagado', eColor: 'emerald' },
-  ];
-
-  const topPlatos = [
-    { nombre: 'Pizza Margherita', ventas: 392000, qty: 14, pct: 100 },
-    { nombre: 'Lasagna della Nonna', ventas: 280000, qty: 10, pct: 71 },
-    { nombre: 'Fettuccine al Funghi', ventas: 192000, qty: 6, pct: 49 },
-    { nombre: 'Tiramisú', ventas: 128000, qty: 8, pct: 33 },
-    { nombre: 'Calzone di Napoli', ventas: 90000, qty: 3, pct: 23 },
-  ];
+  const topPlatos = React.useMemo(() => {
+    const tx = transaccionesVisibles || [];
+    const conteo = {};
+    tx.forEach(t => {
+      (t.items || []).forEach(item => {
+        if (!conteo[item.nombre]) {
+          conteo[item.nombre] = { nombre: item.nombre, ventas: 0, qty: 0 };
+        }
+        conteo[item.nombre].ventas += (item.total || 0);
+        conteo[item.nombre].qty += (item.cantidad || 1);
+      });
+    });
+    const lista = Object.values(conteo).sort((a, b) => b.ventas - a.ventas).slice(0, 5);
+    const max = lista.length > 0 ? lista[0].ventas : 1;
+    return lista.map(p => ({ ...p, pct: Math.round((p.ventas / max) * 100) }));
+  }, [transaccionesVisibles]);
 
   const flujoSemanal = [
     { d: 'L', in: 1.2, out: 0.8 }, { d: 'M', in: 0.9, out: 0.6 }, { d: 'M', in: 1.4, out: 0.9 },
     { d: 'J', in: 1.6, out: 1.1 }, { d: 'V', in: 2.1, out: 1.3 }, { d: 'S', in: 2.4, out: 1.4 }, { d: 'D', in: 1.9, out: 1.2 }
   ];
+
+  const [fechaGrafica, setFechaGrafica] = React.useState(new Date().toISOString().split('T')[0]);
+
+  const transaccionesVisibles = React.useMemo(() => {
+    const safeTx = transacciones || [];
+    const hoyISO = new Date().toISOString().split('T')[0];
+    if (fechaGrafica === hoyISO) {
+      return safeTx.filter(t => t && t.fecha === new Date().toLocaleDateString('es-CO'));
+    }
+    try {
+      const historialRaw = localStorage.getItem('longitudinal_historial_cierres');
+      if (!historialRaw) return [];
+      const historial = JSON.parse(historialRaw);
+      const cierreDelDia = historial.find(cierre => {
+        const fechaCierre = new Date(cierre.timestamp).toISOString().split('T')[0];
+        return fechaCierre === fechaGrafica;
+      });
+      return cierreDelDia ? (cierreDelDia.transacciones || []) : [];
+    } catch(e) {
+      console.warn('Error leyendo transacciones:', e);
+      return [];
+    }
+  }, [fechaGrafica, transacciones]);
+
+  React.useEffect(() => {
+    let graficaHora = null;
+
+    function agruparPorHora(trans) {
+      const safe = trans || [];
+      const horas = {};
+      for (let h = 0; h < 24; h++) {
+        const hLabel = h === 0 ? '12' : (h > 12 ? h - 12 : h);
+        const ampm = h < 12 ? 'a. m.' : 'p. m.';
+        const label = `${hLabel}:00 ${ampm}`;
+        horas[h] = { label: label, total: 0, cantidad: 0 };
+      }
+      safe.forEach(t => {
+        if (!t.hora) return;
+        let hora = 0;
+        if (typeof t.hora === 'string') {
+          const partes = t.hora.split(':');
+          let hParsed = parseInt(partes[0], 10);
+          const timeStr = t.hora.toLowerCase();
+          
+          if ((timeStr.includes('p') || timeStr.includes('pm')) && hParsed < 12) {
+            hParsed += 12;
+          } else if ((timeStr.includes('a') || timeStr.includes('am')) && hParsed === 12) {
+            hParsed = 0;
+          }
+          
+          if (hParsed >= 0 && hParsed < 24) {
+            horas[hParsed].total += (t.total || t.monto || 0);
+            horas[hParsed].cantidad += 1;
+          }
+        }
+      });
+      return Object.values(horas);
+    }
+
+    function construirGrafica() {
+      const trans = transaccionesVisibles || [];
+      const datosPorHora = agruparPorHora(trans);
+      
+      const horasVisibles = datosPorHora;
+
+      const labels = horasVisibles.map(h => h.label);
+      const totales = horasVisibles.map(h => h.total);
+      const cantidades = horasVisibles.map(h => h.cantidad);
+      const mayorVenta = Math.max(...totales);
+      const totalDia = totales.reduce((a, b) => a + b, 0);
+
+      const elMayorVenta = document.getElementById('kpi-mayor-venta');
+      const elTotalDia = document.getElementById('kpi-total-dia-grafica');
+      
+      if (elMayorVenta) elMayorVenta.textContent = formatearCOPGrafica(mayorVenta);
+      if (elTotalDia) elTotalDia.textContent = formatearCOPGrafica(totalDia);
+
+      if (graficaHora) {
+        graficaHora.destroy();
+        graficaHora = null;
+      }
+      const canvas = document.getElementById('grafica-comportamiento-hora');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const gradiente = ctx.createLinearGradient(0, 0, 0, 180);
+      gradiente.addColorStop(0, 'rgba(16,185,129,0.25)');
+      gradiente.addColorStop(1, 'rgba(16,185,129,0.01)');
+
+      graficaHora = new window.Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Ventas ($)', data: totales, borderColor: '#10b981', borderWidth: 2.5, backgroundColor: gradiente, fill: true, tension: 0.4, pointBackgroundColor: '#10b981', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 7, pointHoverBackgroundColor: '#10b981', yAxisID: 'y'
+            },
+            {
+              label: 'Transacciones', data: cantidades, borderColor: 'rgba(16,185,129,0.35)', borderWidth: 1.5, borderDash: [4, 4], backgroundColor: 'transparent', fill: false, tension: 0.4, pointBackgroundColor: 'rgba(16,185,129,0.5)', pointBorderColor: '#ffffff', pointBorderWidth: 1.5, pointRadius: 3, pointHoverRadius: 5, yAxisID: 'y2'
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1f2937', titleColor: '#f9fafb', bodyColor: '#d1d5db', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, padding: 12, cornerRadius: 10,
+              callbacks: {
+                title: function(items) { return '🕐 ' + items[0].label; },
+                label: function(item) {
+                  if (item.datasetIndex === 0) return ' Ventas: ' + formatearCOPGrafica(item.raw);
+                  else return ' Transacciones: ' + item.raw;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, border: { display: false }, ticks: { color: '#9ca3af', font: { size: 11, weight: '500' }, maxRotation: 0 } },
+            y: {
+              position: 'left', grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false }, border: { display: false, dash: [4, 4] },
+              ticks: {
+                color: '#9ca3af', font: { size: 10 },
+                callback: function(valor) {
+                  if (valor >= 1000000) return '$' + (valor/1000000).toFixed(1) + 'M';
+                  else if (valor >= 1000) return '$' + (valor/1000).toFixed(0) + 'k';
+                  return '$' + valor;
+                }
+              }
+            },
+            y2: {
+              position: 'right', grid: { display: false }, border: { display: false },
+              ticks: {
+                color: 'rgba(16,185,129,0.5)', font: { size: 10 }, stepSize: 1,
+                callback: function(v) { return Number.isInteger(v) ? v : ''; }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function formatearCOPGrafica(valor) {
+      if (!valor || valor === 0) return '$0';
+      return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(valor);
+    }
+
+    if (window.Chart) {
+      construirGrafica();
+    } else {
+      const checkChart = setInterval(() => {
+        if (window.Chart) {
+          clearInterval(checkChart);
+          construirGrafica();
+        }
+      }, 100);
+      return () => clearInterval(checkChart);
+    }
+
+    return () => {
+      if (graficaHora) graficaHora.destroy();
+    };
+  }, [transaccionesVisibles]);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-10">
@@ -2722,15 +2876,47 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
         {/* GRáFICO + MIX */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
            <div className="lg:col-span-8 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
-              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Comportamiento por Hora</h3>
-              <div className="flex-1 flex items-end gap-2 h-40">
-                 {ventasHora.map((v, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative">
-                       <div className="w-full bg-emerald-500 rounded-t-md hover:bg-emerald-600 transition-colors" style={{ height: `${(v.v / maxVenta) * 100}%`, minHeight: v.v > 0 ? '4px' : '0' }}></div>
-                       <span className="text-[9px] font-black text-gray-400">{v.h}</span>
-                       {v.v > 0 && <div className="absolute -top-6 bg-slate-800 text-white text-[9px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">{compactMonto(v.v)}</div>}
+              <div id="comportamiento-hora-wrapper" style={{ width: '100%', padding: '0px', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '3px', height: '18px', background: '#10b981', borderRadius: '2px' }}></div>
+                    <span style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '1px', color: '#374151', textTransform: 'uppercase' }}>Comportamiento por Hora</span>
+                  </div>
+
+                  <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
+                    <div style={{ display: 'flex', gap: '16px', marginRight: '8px' }}>
+                      <div style={{ textAlign:'center' }}>
+                        <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: '500' }}>Mayor venta</div>
+                        <div id="kpi-mayor-venta" style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>$0</div>
+                      </div>
+                      <div style={{ textAlign:'center' }}>
+                        <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: '500' }}>Total del día</div>
+                        <div id="kpi-total-dia-grafica" style={{ fontSize: '14px', fontWeight: '700', color: '#111' }}>$0</div>
+                      </div>
                     </div>
-                 ))}
+                    <input 
+                      type="date" 
+                      value={fechaGrafica}
+                      onChange={(e) => setFechaGrafica(e.target.value)}
+                      style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 12px', fontSize: '13px', fontWeight: '500', color: '#374151', cursor: 'pointer', outline: 'none' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ position: 'relative', height: '180px' }}>
+                  <canvas id="grafica-comportamiento-hora" style={{ width:'100%', height:'180px' }}></canvas>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginTop: '12px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                    <div style={{ width: '12px', height: '3px', background: '#10b981', borderRadius: '2px' }}></div>
+                    <span style={{ fontSize:'11px', color:'#9ca3af' }}>Ventas ($)</span>
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                    <div style={{ width: '10px', height: '10px', background: 'rgba(16,185,129,0.15)', borderRadius: '50%' }}></div>
+                    <span style={{ fontSize:'11px', color:'#9ca3af' }}>Transacciones (cantidad)</span>
+                  </div>
+                </div>
               </div>
            </div>
            <div className="lg:col-span-4 bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 flex flex-col">
@@ -2766,9 +2952,12 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
               <div className="p-5 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
                  <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><span className="w-1 h-4 bg-slate-900 rounded-full"></span>Transacciones del Día</h3>
                  <div className="flex gap-2">
-                    <select className="bg-white border border-gray-200 text-xs font-bold text-slate-600 rounded-lg px-2 py-1 outline-none"><option>Hora: Todas</option></select>
-                    <select className="bg-white border border-gray-200 text-xs font-bold text-slate-600 rounded-lg px-2 py-1 outline-none"><option>Canal: Todos</option></select>
-                    <select className="bg-white border border-gray-200 text-xs font-bold text-slate-600 rounded-lg px-2 py-1 outline-none"><option>Estado: Todos</option></select>
+                    <input 
+                      type="date" 
+                      value={fechaGrafica}
+                      onChange={(e) => setFechaGrafica(e.target.value)}
+                      className="bg-white border border-gray-200 text-slate-700 rounded-lg px-3 py-1 text-xs font-bold shadow-sm outline-none cursor-pointer hover:bg-gray-50"
+                    />
                     <button className="px-3 py-1 bg-white border border-gray-200 text-slate-700 rounded-lg text-xs font-black uppercase tracking-tight hover:bg-gray-50 flex items-center gap-1 shadow-sm">🥗 Exportar</button>
                  </div>
               </div>
@@ -2787,7 +2976,7 @@ function ViewVentasFinanzas({ platos = [], recetas = [], inventario = [], transa
                        </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                       {transacciones.map((t, i) => (
+                       {transaccionesVisibles.map((t, i) => (
                           <tr key={i} className="hover:bg-gray-50/50 transition-colors">
                              <td className="p-3 pl-6 text-xs font-black text-slate-800">#{String(t.id).slice(-6)}</td>
                              <td className="p-3 text-xs font-bold text-gray-500">{t.hora || '-'}</td>
